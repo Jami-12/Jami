@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="Product image unavailable">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EDF2F8"/>
+      <stop offset="1" stop-color="#DCE5EF"/>
+    </linearGradient>
+    <linearGradient id="obj" x1="280" y1="260" x2="520" y2="540" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2C4561"/>
+      <stop offset="1" stop-color="#7DD3FC"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <circle cx="400" cy="380" r="196" fill="#FFFFFF" opacity=".55"/>
+  <path d="M400 220 508 502H292L400 220Z" fill="url(#obj)" opacity=".9"/>
+  <ellipse cx="400" cy="580" rx="150" ry="22" fill="#2C4561" opacity=".12"/>
+  <text x="400" y="650" text-anchor="middle" font-family="'Plus Jakarta Sans',Segoe UI,sans-serif" font-size="26" font-weight="600" fill="#2C4561" opacity=".65">AETHER</text>
+</svg>

@@ -1,0 +1,49 @@
+{
+  "name": "aether-commerce",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aether — a production-quality 3D commerce experience for design-led objects.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^7.0.1",
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "@stripe/react-stripe-js": "^7.0.1",
+    "@stripe/stripe-js": "^10.2.1",
+    "@tanstack/react-query": "^5.105.3",
+    "axios": "^1.21.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "14.9.1",
+    "lucide-react": "1.68.0",
+    "next": "16.4.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-hook-form": "^7.91.0",
+    "recharts": "3.10.1",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.3.1",
+    "three": "0.187.0",
+    "zod": "4.6.7",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "4.3.4",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.187.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.5",
+    "tailwindcss": "4.3.4",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
