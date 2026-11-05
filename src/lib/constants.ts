@@ -32,6 +32,41 @@ export const GOOGLE_AUTH_URL = `${API_BASE_URL}/auth/google`;
 
 export const CURRENCY = (process.env.NEXT_PUBLIC_CURRENCY ?? "BDT").toUpperCase();
 
+/**
+ * Mirrors the seeded backend categories. The live category grid fetches the
+ * authoritative list from `/categories`; these values are used for navigation
+ * shortcuts and search suggestions when the API is still loading.
+ */
+export const CATEGORIES = [
+  { value: "shoes", label: "Shoes" },
+  { value: "electronics", label: "Electronics" },
+  { value: "fashion", label: "Fashion" },
+  { value: "home-decor", label: "Home Decor" },
+] as const;
+
+export const CATEGORY_LABEL = CATEGORIES.reduce<Record<string, string>>(
+  (accumulator, category) => {
+    accumulator[category.value] = category.label;
+    return accumulator;
+  },
+  {},
+);
+
+/** Matches the backend's `FREE_SHIPPING_THRESHOLD` (base currency: BDT). */
+export const FREE_SHIPPING_THRESHOLD = Number(
+  process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD ?? 1000,
+);
+
+/** Matches the backend's `SHIPPING_FLAT_RATE` (base currency: BDT). */
+export const SHIPPING_FLAT_RATE = Number(
+  process.env.NEXT_PUBLIC_SHIPPING_FLAT_RATE ?? 60,
+);
+
+/** Base currency used by the backend. All API amounts are expressed in it. */
+export const BASE_CURRENCY = (process.env.NEXT_PUBLIC_BASE_CURRENCY ?? "BDT").toUpperCase();
+
+export const USD_TO_BDT = Number(process.env.NEXT_PUBLIC_USD_TO_BDT ?? 120);
+
 export const MAIN_NAV = [
   { label: "Shop all", href: "/products" },
   { label: "3D showroom", href: "/#showroom" },
@@ -142,6 +177,17 @@ export const INVENTORY_MOVEMENTS: InventoryMovementType[] = [
 
 export type Tone = "neutral" | "success" | "warning" | "danger" | "info" | "accent";
 
+/** Mirrors the backend's `ALLOWED_TRANSITIONS` map in order.service.ts. */
+export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["SHIPPED"],
+  SHIPPED: ["DELIVERED"],
+  DELIVERED: ["RETURNED"],
+  CANCELLED: [],
+  RETURNED: [],
+};
+
 export const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: Tone }> = {
   PENDING: { label: "Pending", tone: "warning" },
   CONFIRMED: { label: "Confirmed", tone: "info" },
@@ -234,6 +280,7 @@ export const INVENTORY_MOVEMENT_LABEL: Record<InventoryMovementType, string> = {
 export const CUSTOMER_NAV = [
   { label: "Overview", href: "/account", icon: "layout" },
   { label: "Orders", href: "/account/orders", icon: "receipt" },
+  { label: "Profile", href: "/account/profile", icon: "user" },
   { label: "Addresses", href: "/account/addresses", icon: "map" },
   { label: "Wishlist", href: "/account/wishlist", icon: "heart" },
   { label: "Notifications", href: "/account/notifications", icon: "bell" },
@@ -250,6 +297,7 @@ export const ADMIN_NAV = [
   { label: "Coupons", href: "/admin/coupons", icon: "ticket", superOnly: false },
   { label: "Reviews", href: "/admin/reviews", icon: "star", superOnly: false },
   { label: "Expenses", href: "/admin/expenses", icon: "wallet", superOnly: false },
+  { label: "Notifications", href: "/admin/notifications", icon: "bell", superOnly: false },
   { label: "Analytics", href: "/super-admin/analytics", icon: "chart", superOnly: true },
   { label: "Accounting", href: "/super-admin/accounting", icon: "calculator", superOnly: true },
   { label: "Users", href: "/super-admin/users", icon: "users", superOnly: true },
@@ -262,9 +310,11 @@ export const SUPER_ADMIN_NAV = [
   { label: "Transactions", href: "/super-admin/transactions", icon: "arrow", },
   { label: "Users", href: "/super-admin/users", icon: "users" },
   { label: "Expenses", href: "/super-admin/expenses", icon: "wallet" },
+  { label: "Discounts", href: "/super-admin/discounts", icon: "ticket" },
   { label: "Investments", href: "/super-admin/investments", icon: "trending" },
   { label: "Employees", href: "/super-admin/employees", icon: "id" },
   { label: "Salaries", href: "/super-admin/salaries", icon: "banknote" },
+  { label: "Notifications", href: "/super-admin/notifications", icon: "bell" },
   { label: "Audit logs", href: "/super-admin/audit", icon: "scroll" },
   { label: "Admin console", href: "/admin", icon: "shield" },
 ] as const;

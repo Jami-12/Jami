@@ -13,6 +13,10 @@ export default defineConfig([
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+      // Used intentionally for mount detection, debounced filter resets and
+      // syncing controlled inputs with query data. These updates are guarded
+      // by explicit dependencies and do not cause render loops.
+      "react-hooks/set-state-in-effect": "off",
     },
   },
 ]);

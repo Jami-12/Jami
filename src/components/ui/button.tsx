@@ -1,4 +1,11 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import {
+  Children,
+  cloneElement,
+  forwardRef,
+  isValidElement,
+  type ButtonHTMLAttributes,
+  type ReactElement,
+} from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -55,12 +62,38 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  /** Render the single child element (for example a `Link`) with button styles. */
+  asChild?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant = "primary", size = "md", loading = false, children, disabled, type = "button", ...props },
+  {
+    className,
+    variant = "primary",
+    size = "md",
+    loading = false,
+    asChild = false,
+    children,
+    disabled,
+    type = "button",
+    ...props
+  },
   ref,
 ) {
+  if (asChild) {
+    const child = Children.only(children);
+    if (!isValidElement(child)) return null;
+
+    const childElement = child as ReactElement<{ className?: string }>;
+    return cloneElement(childElement, {
+      className: cn(
+        buttonVariants({ variant, size }),
+        childElement.props.className,
+        className,
+      ),
+    });
+  }
+
   return (
     <button
       ref={ref}

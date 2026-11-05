@@ -1,7 +1,5 @@
 "use client";
 
-import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShoppingBag, Trash2, Truck } from "lucide-react";
 
@@ -9,16 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
+import { SmartImage } from "@/components/ui/smart-image";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
-import { cartSubtotal, lineKey, useCartStore } from "@/store/cart-store";
-import { useUiStore } from "@/store/ui-store";
+import { cartSubtotal, useCartStore } from "@/stores/cart-store";
+import { useUiStore } from "@/stores/ui-store";
 
 export function CartDrawer() {
   const open = useUiStore((state) => state.cartOpen);
   const closeCart = useUiStore((state) => state.closeCart);
-  const currency = useUiStore((state) => state.currency);
   const items = useCartStore((state) => state.items);
+  const syncing = useCartStore((state) => state.syncing);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
 
@@ -41,11 +40,10 @@ export function CartDrawer() {
               <Price amount={subtotal} size="md" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Taxes and shipping are calculated at checkout. All prices in{" "}
-              {currency === "USD" ? "USD" : "BDT"} at ৳120 / $1.
+              Taxes and shipping are calculated at checkout.
             </p>
             <div onClick={closeCart}>
-              <Button asChild size="lg" className="w-full">
+              <Button asChild size="lg" className="w-full" disabled={syncing}>
                 <Link href="/checkout">
                   Continue to checkout
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -64,7 +62,7 @@ export function CartDrawer() {
           <h3 className="text-base font-bold">Your bag is empty</h3>
           <p className="mt-1 max-w-[16rem] text-sm text-muted-foreground">
             Add something considered. Free shipping over{" "}
-            {formatCurrency(FREE_SHIPPING_THRESHOLD, currency)}.
+            {formatCurrency(FREE_SHIPPING_THRESHOLD)}.
           </p>
           <div onClick={closeCart} className="mt-6">
             <Button asChild>
@@ -79,8 +77,7 @@ export function CartDrawer() {
               <Truck className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               {remaining > 0 ? (
                 <span>
-                  {formatCurrency(remaining, currency)} away from free standard
-                  shipping
+                  {formatCurrency(remaining)} away from free standard shipping
                 </span>
               ) : (
                 <span className="text-emerald-600 dark:text-emerald-400">
@@ -104,64 +101,48 @@ export function CartDrawer() {
           </div>
 
           <ul className="divide-y divide-border">
-            {items.map((item) => {
-              const key = lineKey(item.productId, item.color);
-              return (
-                <li key={key} className="flex gap-3 py-4 first:pt-0 last:pb-0">
-                  <Link
-                    href={`/products/${item.slug}`}
-                    onClick={closeCart}
-                    className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted"
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </Link>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <Link
-                          href={`/products/${item.slug}`}
-                          onClick={closeCart}
-                          className="line-clamp-2 text-sm font-semibold leading-snug hover:underline"
-                        >
-                          {item.name}
-                        </Link>
-                        {item.color ? (
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {item.color}
-                          </p>
-                        ) : null}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.productId, item.color)}
-                        aria-label={`Remove ${item.name} from bag`}
-                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-red-500/10 hover:text-red-600"
+            {items.map((item) => (
+              <li key={item.productId} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                <Link
+                  href={`/products/${item.slug}`}
+                  onClick={closeCart}
+                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted"
+                >
+                  <SmartImage src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/products/${item.slug}`}
+                        onClick={closeCart}
+                        className="line-clamp-2 text-sm font-semibold leading-snug hover:underline"
                       >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
+                        {item.name}
+                      </Link>
                     </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <QuantityStepper
-                        value={item.quantity}
-                        max={Math.max(1, item.stock)}
-                        onChange={(quantity) =>
-                          updateQuantity(item.productId, quantity, item.color)
-                        }
-                        className="h-8 [&>button]:w-8"
-                        label={`Quantity of ${item.name}`}
-                      />
-                      <Price amount={item.price * item.quantity} size="sm" />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.productId)}
+                      aria-label={`Remove ${item.name} from bag`}
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-red-500/10 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
                   </div>
-                </li>
-              );
-            })}
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <QuantityStepper
+                      value={item.quantity}
+                      max={Math.max(1, item.stock)}
+                      onChange={(quantity) => updateQuantity(item.productId, quantity)}
+                      className="h-8 [&>button]:w-8"
+                      label={`Quantity of ${item.name}`}
+                    />
+                    <Price amount={item.price * item.quantity} size="sm" />
+                  </div>
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
       )}

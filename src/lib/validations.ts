@@ -70,6 +70,14 @@ export const profileSchema = z.object({
 
 export type ProfileValues = z.infer<typeof profileSchema>;
 
+/* ---------------------------- Newsletter -------------------------------- */
+
+export const newsletterSchema = z.object({
+  email,
+});
+
+export type NewsletterValues = z.infer<typeof newsletterSchema>;
+
 /* ---------------------------- Addresses --------------------------------- */
 
 export const addressSchema = z.object({
@@ -106,6 +114,49 @@ export const reviewSchema = z.object({
 export type ReviewValues = z.infer<typeof reviewSchema>;
 
 /* ----------------------------- Catalog ---------------------------------- */
+
+const optionalNumber = z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  z.coerce.number().finite().min(0).optional(),
+);
+
+const booleanFlag = z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  z
+    .enum(["true", "false", "1", "0"])
+    .transform((value) => value === "true" || value === "1")
+    .optional(),
+);
+
+export const PRODUCT_SORTS = [
+  "featured",
+  "newest",
+  "popular",
+  "price-asc",
+  "price-desc",
+  "title-asc",
+] as const;
+
+export type ProductSortValue = (typeof PRODUCT_SORTS)[number];
+
+export const productQuerySchema = z.object({
+  q: z.string().trim().max(200).optional(),
+  category: z.string().trim().max(200).optional(),
+  brand: z.string().trim().max(200).optional(),
+  minPrice: optionalNumber,
+  maxPrice: optionalNumber,
+  rating: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.coerce.number().min(0).max(5).optional(),
+  ),
+  inStock: booleanFlag,
+  onSale: booleanFlag,
+  sort: z.enum(PRODUCT_SORTS).default("featured"),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(48).default(12),
+});
+
+export type ProductQueryValues = z.infer<typeof productQuerySchema>;
 
 export const productFormSchema = z
   .object({
@@ -185,13 +236,35 @@ export const couponSchema = z
 
 export type CouponValues = z.infer<typeof couponSchema>;
 
-export const discountSchema = z.object({
-  discountType: z.enum(["PERCENTAGE", "FIXED_AMOUNT"]),
-  discountValue: z.coerce.number().min(0.01),
-  startDate: z.string().optional().or(z.literal("")),
-  endDate: z.string().min(1, "End date is required"),
-  isActive: z.boolean().optional(),
-});
+export const discountSchema = z
+  .object({
+    discountType: z.enum(["PERCENTAGE", "FIXED_AMOUNT"]),
+    discountValue: z.coerce.number().min(0.01),
+    startDate: z.string().optional().or(z.literal("")),
+    endDate: z.string().min(1, "End date is required"),
+    isActive: z.boolean().optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.discountType === "PERCENTAGE" && values.discountValue > 100) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discountValue"],
+        message: "Percentage discount cannot exceed 100",
+      });
+    }
+
+    if (values.startDate && values.endDate) {
+      const start = new Date(values.startDate).getTime();
+      const end = new Date(values.endDate).getTime();
+      if (Number.isFinite(start) && Number.isFinite(end) && end <= start) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["endDate"],
+          message: "End date must be after the start date",
+        });
+      }
+    }
+  });
 
 export type DiscountValues = z.infer<typeof discountSchema>;
 
@@ -253,3 +326,12 @@ export const createAdminSchema = z.object({
 });
 
 export type CreateAdminValues = z.infer<typeof createAdminSchema>;
+
+export const updateUserSchema = z.object({
+  name: z.string().trim().min(2, "Name is required").max(120),
+  email,
+  phone: z.string().trim().min(6).max(30).optional().or(z.literal("")),
+  image: z.string().trim().url("Enter a valid image URL").max(2000).optional().or(z.literal("")),
+});
+
+export type UpdateUserValues = z.infer<typeof updateUserSchema>;

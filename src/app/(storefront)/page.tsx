@@ -6,16 +6,26 @@ import { Hero } from "@/components/storefront/hero";
 import { JournalSection } from "@/components/storefront/journal-section";
 import { OfferBanner } from "@/components/storefront/offer-banner";
 import { ProductGrid } from "@/components/storefront/product-grid";
+import { Testimonials } from "@/components/storefront/testimonials";
 import { TrustStrip } from "@/components/storefront/trust-strip";
 import { VendorPanel } from "@/components/storefront/vendor-panel";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SITE } from "@/lib/constants";
-import { getFeaturedProducts, getTrendingProducts } from "@/data/products";
+import {
+  getCategories,
+  getFeaturedProducts,
+  getTrendingProducts,
+} from "@/services/catalog";
 
-export default function HomePage() {
-  const featured = getFeaturedProducts(8);
-  const trending = getTrendingProducts(8);
+export const revalidate = 120;
+
+export default async function HomePage() {
+  const [featured, trending, categories] = await Promise.all([
+    getFeaturedProducts(8),
+    getTrendingProducts(8),
+    getCategories(),
+  ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -36,12 +46,16 @@ export default function HomePage() {
       />
       <Hero />
       <TrustStrip />
-      <CategoryGrid />
+      <CategoryGrid categories={categories} />
+
+      <span id="showroom" className="sr-only">
+        3D showroom
+      </span>
 
       <section aria-labelledby="featured-heading" className="container-page py-14 sm:py-16">
         <SectionHeading
           eyebrow="The Aether edit"
-          title="Six pieces we reach for first"
+          title="Pieces we reach for first"
           description="Chosen by the studio for the way they feel, sound and age. Every object is in stock unless marked otherwise."
           action={
             <Button asChild variant="outline">
@@ -55,7 +69,13 @@ export default function HomePage() {
         <h2 id="featured-heading" className="sr-only">
           Featured objects
         </h2>
-        <ProductGrid products={featured} className="mt-7" priorityCount={2} />
+        <ProductGrid
+          products={featured}
+          className="mt-7"
+          priorityCount={2}
+          emptyTitle="The edit is being prepared"
+          emptyDescription="New objects are on their way. Browse the full collection meanwhile."
+        />
       </section>
 
       <OfferBanner />
@@ -64,7 +84,7 @@ export default function HomePage() {
         <SectionHeading
           eyebrow="Most wanted"
           title="Trending across the studios"
-          description="The objects our customers are talking about this week — from titanium rings to standing desks."
+          description="The objects our customers are talking about this week — ranked by what is actually selling."
           action={
             <Button asChild variant="outline">
               <Link href="/products?sort=popular">
@@ -82,6 +102,7 @@ export default function HomePage() {
 
       <VendorPanel />
       <JournalSection />
+      <Testimonials />
 
       <section id="story" className="container-page scroll-mt-24 pb-6 pt-8">
         <div className="relative overflow-hidden rounded-3xl border border-border bg-card px-6 py-10 shadow-soft sm:px-10 sm:py-12">

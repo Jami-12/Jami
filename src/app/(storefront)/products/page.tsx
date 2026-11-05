@@ -1,22 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { PackageSearch } from "lucide-react";
 
 import { ProductFilters } from "@/components/storefront/product-filters";
-import { ProductGrid } from "@/components/storefront/product-grid";
+import { WardrobeRail } from "@/components/storefront/wardrobe-rail";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
-import { Skeleton, ProductCardSkeleton } from "@/components/ui/skeleton";
 import { productQuerySchema } from "@/lib/validations";
-import { getProductFacets, queryProducts } from "@/services/products";
-import type { ProductQuery, ProductSort } from "@/types";
+import { catalog } from "@/services/catalog";
+import type { Product } from "@/types";
+import { mapSort } from "@/types/ui";
 
 export const metadata: Metadata = {
   title: "Shop all objects",
   description:
-    "Browse the full Aether collection: audio, wearables, lighting, workspace, home and accessories from three independent studios.",
+    "Browse the full Aether collection: audio, wearables, lighting, workspace, home and accessories from independent studios.",
   alternates: { canonical: "/products" },
 };
 
@@ -38,43 +37,85 @@ export default async function ProductsPage({
 }) {
   const raw = toRecord(await searchParams);
   const parsed = productQuerySchema.safeParse(raw);
-  const query: ProductQuery = parsed.success
+  const query = parsed.success
     ? parsed.data
-    : { page: 1, pageSize: 12 };
+    : {
+        sort: "featured" as const,
+        page: 1,
+        pageSize: 12,
+        q: undefined,
+        category: undefined,
+        brand: undefined,
+        minPrice: undefined,
+        maxPrice: undefined,
+        rating: undefined,
+        inStock: undefined,
+        onSale: undefined,
+      };
 
-  const result = queryProducts(query);
-  const facets = getProductFacets();
+  const sort = mapSort(query.sort);
 
-  const page = result.page;
-  const pageSize = result.pageSize;
-  const start = result.total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, result.total);
+  const [result, categories, brands] = await Promise.all([
+    catalog.products({
+      page: query.page,
+      limit: query.pageSize,
+      search: query.q,
+      category: query.category,
+      brand: query.brand,
+      minPrice: query.minPrice,
+      maxPrice: query.maxPrice,
+      inStock: query.inStock,
+      status: "ACTIVE",
+      sortBy: sort.sortBy,
+      sortOrder: sort.sortOrder,
+    }),
+    catalog.categories().catch(() => []),
+    catalog.brands().catch(() => []),
+  ]);
 
-  const buildPageHref = (nextPage: number): string => {
-    const params = new URLSearchParams();
-    if (query.q) params.set("q", query.q);
-    if (query.category) params.set("category", query.category);
-    if (query.minPrice !== undefined) params.set("minPrice", String(query.minPrice));
-    if (query.maxPrice !== undefined) params.set("maxPrice", String(query.maxPrice));
-    if (query.rating !== undefined) params.set("rating", String(query.rating));
-    if (query.inStock) params.set("inStock", "true");
-    if (query.onSale) params.set("onSale", "true");
-    if (query.sort && query.sort !== "featured") params.set("sort", query.sort);
-    if (nextPage > 1) params.set("page", String(nextPage));
-    const queryString = params.toString();
-    return queryString ? `/products?${queryString}` : "/products";
+  let items: Product[] = result.items;
+  if (query.rating) {
+    items = items.filter((product) => product.averageRating >= Number(query.rating));
+  }
+  if (query.onSale) {
+    items = items.filter((product) => product.finalPrice < product.originalPrice);
+  }
+
+  const page = result.meta.page;
+  const pageSize = result.meta.limit;
+  const start = result.meta.total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, result.meta.total);
+
+  const paginationParams = {
+    q: query.q,
+    category: query.category,
+    brand: query.brand,
+    minPrice: query.minPrice,
+    maxPrice: query.maxPrice,
+    rating: query.rating,
+    inStock: query.inStock,
+    onSale: query.onSale,
+    sort: query.sort !== "featured" ? query.sort : undefined,
+    pageSize: query.pageSize !== 12 ? query.pageSize : undefined,
   };
+
+  const priceRange = {
+    min: 0,
+    max: Math.max(1000, ...items.map((product) => Math.ceil(product.originalPrice))),
+  };
+
+  const activeCategory = categories.find((category) => category.slug === query.category);
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Aether collection",
-    numberOfItems: result.total,
-    itemListElement: result.items.map((product, index) => ({
+    numberOfItems: result.meta.total,
+    itemListElement: items.map((product, index) => ({
       "@type": "ListItem",
       position: index + 1,
       url: `/products/${product.slug}`,
-      name: product.name,
+      name: product.title,
     })),
   };
 
@@ -93,7 +134,9 @@ export default async function ProductsPage({
             </Link>
           </li>
           <li aria-hidden="true">/</li>
-          <li className="font-semibold text-foreground">Shop</li>
+          <li className="font-semibold text-foreground">
+            {activeCategory ? activeCategory.name : "Shop"}
+          </li>
         </ol>
       </nav>
 
@@ -102,71 +145,55 @@ export default async function ProductsPage({
           The collection
         </p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-          {query.category ? "A focused edit." : "Everything we make."}
+          {activeCategory ? activeCategory.name : "Everything we make."}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {result.total} considered objects, made by three independent studios.
-          Prices shown in USD with a live BDT conversion in the navbar.
+          {result.meta.total} considered object{result.meta.total === 1 ? "" : "s"},
+          made by independent studios. Prices show in your selected currency.
         </p>
       </header>
 
       <div className="mt-8">
-        <Suspense
-          fallback={
-            <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-              <Skeleton className="hidden h-96 rounded-2xl lg:block" />
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {[0, 1, 2, 3].map((item) => (
-                  <ProductCardSkeleton key={item} />
-                ))}
-              </div>
-            </div>
-          }
-        >
-          <ProductFilters facets={facets}>
-            <div className="flex items-center justify-between gap-3 pb-1">
-              <p className="text-xs text-muted-foreground sm:text-sm" aria-live="polite">
-                {result.total === 0
-                  ? "No objects match these filters"
-                  : `Showing ${start}–${end} of ${result.total}`}
-              </p>
-              <p className="hidden text-xs text-muted-foreground sm:block">
-                Free shipping over $150
-              </p>
-            </div>
+        <ProductFilters categories={categories} brands={brands} priceRange={priceRange}>
+          <div className="flex items-center justify-between gap-3 pb-1">
+            <p className="text-xs text-muted-foreground sm:text-sm" aria-live="polite">
+              {result.meta.total === 0
+                ? "No objects match these filters"
+                : `Showing ${start}–${end} of ${result.meta.total}`}
+            </p>
+            <p className="hidden text-xs text-muted-foreground sm:block">
+              Free shipping over ৳1,000
+            </p>
+          </div>
 
-            {result.items.length === 0 ? (
-              <EmptyState
-                icon={PackageSearch}
-                title="No objects found"
-                description="Try removing a filter, widening the price range, or searching a different term."
-                action={
-                  <Button asChild>
-                    <Link href="/products">Reset the collection</Link>
-                  </Button>
-                }
-              />
-            ) : (
-              <ProductGrid products={result.items} priorityCount={4} />
-            )}
-
-            <Pagination
-              page={page}
-              totalPages={result.totalPages}
-              buildHref={buildPageHref}
-              className="pt-6"
+          {items.length === 0 ? (
+            <EmptyState
+              icon={PackageSearch}
+              title="No objects found"
+              description="Try removing a filter, widening the price range, or searching a different term."
+              action={
+                <Button asChild>
+                  <Link href="/products">Reset the collection</Link>
+                </Button>
+              }
             />
-          </ProductFilters>
-        </Suspense>
+          ) : (
+            <WardrobeRail products={items} />
+          )}
+
+          <Pagination
+            page={page}
+            totalPages={result.meta.totalPages}
+            href={{ pathname: "/products", params: paginationParams }}
+            className="pt-6"
+          />
+        </ProductFilters>
       </div>
 
       {query.q ? (
         <p className="mt-8 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">Search:</span> “{query.q}”
-          — {result.total} result{result.total === 1 ? "" : "s"}.
-          {(query.sort as ProductSort | undefined) === "price-asc"
-            ? " Sorted by lowest price."
-            : ""}
+          — {result.meta.total} result{result.meta.total === 1 ? "" : "s"}.
         </p>
       ) : null}
     </div>

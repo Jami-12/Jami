@@ -78,7 +78,7 @@ export function Footer() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Secure checkout</span>
             {["Stripe", "Visa", "bKash", "Nagad", "COD"].map((method) => (
-              <Badge key={method} tone="outline" className="normal-case tracking-normal">
+              <Badge key={method} tone="neutral" className="normal-case tracking-normal">
                 {method}
               </Badge>
             ))}

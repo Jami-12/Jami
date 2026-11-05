@@ -1,20 +1,22 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Search, Tag } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, Loader2, Search, Tag } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Price } from "@/components/ui/price";
+import { SmartImage } from "@/components/ui/smart-image";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { productsApi } from "@/lib/api/services";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { searchProducts } from "@/services/products";
-import { useUiStore } from "@/store/ui-store";
+import { useUiStore } from "@/stores/ui-store";
+import { productImage, productName } from "@/types";
 
 export function SearchDialog() {
   const open = useUiStore((state) => state.searchOpen);
@@ -23,11 +25,16 @@ export function SearchDialog() {
   const router = useRouter();
   const [query, setQuery] = React.useState("");
   const [activeIndex, setActiveIndex] = React.useState(0);
-  const debounced = useDebouncedValue(query, 160);
-  const results = React.useMemo(
-    () => (debounced.trim() ? searchProducts(debounced, 6) : []),
-    [debounced],
-  );
+  const debounced = useDebouncedValue(query.trim(), 200);
+
+  const { data, isFetching } = useQuery({
+    queryKey: ["search", debounced],
+    queryFn: () =>
+      productsApi.list({ search: debounced, limit: 6, inStock: true, status: "ACTIVE" }),
+    enabled: open && debounced.length > 1,
+  });
+
+  const results = data?.items ?? [];
 
   React.useEffect(() => {
     setActiveIndex(0);
@@ -81,10 +88,17 @@ export function SearchDialog() {
         }}
       >
         <div className="relative">
-          <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
+          {isFetching ? (
+            <Loader2
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground"
+              aria-hidden="true"
+            />
+          ) : (
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+          )}
           <input
             data-autofocus
             type="search"
@@ -99,7 +113,7 @@ export function SearchDialog() {
       </form>
 
       <div className="mt-4" aria-live="polite">
-        {query.trim() && results.length === 0 ? (
+        {debounced.length > 1 && !isFetching && results.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
             <p className="text-sm font-semibold">No matches for “{query}”</p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -129,8 +143,8 @@ export function SearchDialog() {
                   )}
                 >
                   <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-                    <Image
-                      src={product.images[0]?.url ?? "/product-fallback.svg"}
+                    <SmartImage
+                      src={productImage(product)}
                       alt=""
                       fill
                       sizes="48px"
@@ -139,14 +153,14 @@ export function SearchDialog() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">
-                      {product.name}
+                      {productName(product)}
                     </span>
                     <span className="mt-0.5 flex items-center gap-2">
                       <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                        {CATEGORY_LABEL[product.category]}
+                        {product.category?.name ?? CATEGORY_LABEL[product.category?.slug ?? ""] ?? "Aether"}
                       </span>
                       <Price
-                        amount={product.price}
+                        amount={product.finalPrice}
                         className="text-xs text-muted-foreground"
                       />
                     </span>
@@ -205,9 +219,9 @@ export function SearchDialog() {
               ))}
             </div>
             <div className="mt-5 flex items-center gap-2">
-              <Badge tone="accent">Sandbox storefront</Badge>
+              <Badge tone="accent">Live catalog</Badge>
               <span className="text-xs text-muted-foreground">
-                Every order is a demo — no real charge.
+                Every result comes from the store&apos;s live inventory.
               </span>
             </div>
           </div>

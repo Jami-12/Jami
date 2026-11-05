@@ -20,9 +20,9 @@ import { ThemeToggle } from "./theme-toggle";
 import { Drawer } from "@/components/ui/drawer";
 import { MAIN_NAV, CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { cartItemCount, useCartStore } from "@/store/cart-store";
-import { useUiStore } from "@/store/ui-store";
-import { useWishlistStore } from "@/store/wishlist-store";
+import { cartItemCount, useCartStore } from "@/stores/cart-store";
+import { useUiStore } from "@/stores/ui-store";
+import { useWishlistStore } from "@/stores/wishlist-store";
 import { useHydrated } from "@/hooks/use-hydrated";
 
 export function Navbar() {
