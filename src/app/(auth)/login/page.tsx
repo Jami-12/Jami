@@ -24,7 +24,7 @@ export default async function LoginPage({
     <AuthShell
       eyebrow="Welcome back"
       title="Sign in to Aether"
-      description="Your orders, saved objects and delivery details, exactly where you left them."
+      description="Your orders, saved pieces and delivery details, exactly where you left them."
     >
       <LoginForm next={next} />
     </AuthShell>

@@ -63,7 +63,7 @@ export function CartView() {
       <EmptyState
         icon={ShoppingBag}
         title="Your bag is empty"
-        description="Objects you add will appear here. Start with the studio edit or the full collection."
+        description="Pieces you add will appear here. Start with the studio edit or the full collection."
         action={
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>
@@ -148,7 +148,7 @@ export function CartView() {
                       {item.name}
                     </Link>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>SKU item</span>
+                      <span>Aether piece</span>
                       {item.stock <= 5 ? (
                         <Badge tone="warning">Only {item.stock} left</Badge>
                       ) : (
@@ -255,7 +255,7 @@ export function CartView() {
 
           <ul className="mt-5 space-y-2 border-t border-border pt-4 text-[11px] text-muted-foreground">
             <li>Secure checkout · bKash, Nagad, card or cash on delivery</li>
-            <li>30-day returns on unused objects</li>
+            <li>30-day returns on unworn pieces</li>
             <li>Carbon-neutral delivery on every order</li>
           </ul>
         </div>

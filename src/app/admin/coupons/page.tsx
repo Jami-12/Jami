@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { CouponsAdmin } from "@/components/admin/coupons-admin";
+import { CouponsAdmin } from "@/components/admin/coupons";
 
 export const metadata: Metadata = { title: "Coupons" };
 

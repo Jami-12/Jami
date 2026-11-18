@@ -291,7 +291,7 @@ export function AccountingView() {
                   type="monotone"
                   dataKey="income"
                   name="Income"
-                  stroke="#38bdf8"
+                  stroke="#C6A46A"
                   strokeWidth={2}
                   fill="url(#accounting-profit)"
                 />
@@ -341,7 +341,7 @@ export function AccountingView() {
                     <XAxis type="number" {...axisProps} tickFormatter={(value: number) => formatCompact(value)} />
                     <YAxis type="category" dataKey="label" {...axisProps} width={104} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Bar dataKey="total" fill="#f59e0b" radius={[0, 6, 6, 0]} />
+                    <Bar dataKey="total" fill="#8C6C3A" radius={[0, 6, 6, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

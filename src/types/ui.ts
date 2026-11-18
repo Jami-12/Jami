@@ -44,7 +44,11 @@ export function productName(product: Product): string {
   return product.title || product.name;
 }
 
-export function productImage(product: Product): string | null {
+/**
+ * The image shown on the product card by default: the explicit primary image,
+ * then the first gallery image, then the legacy thumbnail.
+ */
+export function productPrimaryImage(product: Product): string | null {
   const primary = product.images.find((image) => image.isPrimary);
   return (
     primary?.url ??
@@ -54,6 +58,32 @@ export function productImage(product: Product): string | null {
     product.thumbnail ??
     null
   );
+}
+
+/**
+ * The alternate image revealed on hover. Prefers the next image in gallery
+ * order so it stays stable when the primary is changed from the admin.
+ */
+export function productSecondaryImage(product: Product): string | null {
+  const primaryUrl = productPrimaryImage(product);
+  const ordered = product.images
+    .slice()
+    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.sortOrder - b.sortOrder);
+
+  for (const image of ordered) {
+    const url = image.url || image.imageUrl;
+    if (url && url !== primaryUrl) return url;
+  }
+
+  if (product.thumbnail && product.thumbnail !== primaryUrl) {
+    return product.thumbnail;
+  }
+
+  return null;
+}
+
+export function productImage(product: Product): string | null {
+  return productPrimaryImage(product);
 }
 
 export function productImages(product: Product): string[] {

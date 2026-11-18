@@ -2,16 +2,15 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { SmartImage } from "@/components/ui/smart-image";
-import { CATEGORY_VISUALS, VISUALS } from "@/data/visuals";
 import type { Category } from "@/types";
 
 const FALLBACKS = [
-  VISUALS.audio,
-  VISUALS.lighting,
-  VISUALS.workspace,
-  VISUALS.home,
-  VISUALS.watch,
-  VISUALS.bag,
+  "/showcase/rail-tee-1.webp",
+  "/showcase/rail-rust-1.webp",
+  "/showcase/rail-wine-1.webp",
+  "/showcase/editorial-tee.webp",
+  "/showcase/editorial-rust.webp",
+  "/showcase/editorial-wine.webp",
 ];
 
 export function CategoryGrid({ categories }: { categories: Category[] }) {
@@ -22,33 +21,38 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
   }
 
   return (
-    <section aria-labelledby="categories-heading" className="container-page py-14 sm:py-16">
+    <section
+      id="categories"
+      aria-labelledby="categories-heading"
+      className="container-page scroll-mt-24 py-14 sm:py-20"
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
-            Shop by room
+          <p className="eyebrow text-primary-500 dark:text-accent-300">
+            Shop by category
           </p>
-          <h2 id="categories-heading" className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
-            Six ways into the collection
+          <h2
+            id="categories-heading"
+            className="mt-2 font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl"
+          >
+            Find your next everyday piece.
           </h2>
         </div>
         <Link
           href="/products"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline dark:text-accent-300"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:underline dark:text-accent-300"
         >
-          All objects
+          All pieces
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
 
-      <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((category, index) => {
-          const visual = CATEGORY_VISUALS[category.slug];
-          const image = category.image ?? visual?.image ?? FALLBACKS[index % FALLBACKS.length];
+          const image = category.image ?? FALLBACKS[index % FALLBACKS.length];
           const blurb =
             category.description ??
-            visual?.blurb ??
-            "Considered objects for the way you actually live.";
+            "Considered pieces for the way you actually dress.";
 
           return (
             <Link
@@ -63,20 +67,20 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <span className="absolute inset-0 bg-gradient-to-t from-primary-950/90 via-primary-950/35 to-primary-950/5" />
+              <span className="absolute inset-0 bg-gradient-to-t from-[#252B2B]/92 via-[#252B2B]/35 to-[#252B2B]/5" />
               <span className="relative mt-auto flex w-full items-end justify-between gap-3 p-5">
                 <span>
-                  <span className="block text-lg font-extrabold tracking-tight text-white">
+                  <span className="block font-display text-xl font-semibold tracking-tight text-white">
                     {category.name}
                   </span>
                   <span className="mt-1 block max-w-[18rem] text-xs leading-relaxed text-white/75">
                     {blurb}
                   </span>
-                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-accent-200">
-                    {category.productCount} object{category.productCount === 1 ? "" : "s"}
+                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#DFC48E]">
+                    {category.productCount} piece{category.productCount === 1 ? "" : "s"}
                   </span>
                 </span>
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition group-hover:bg-accent-300 group-hover:text-[#082f49]">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition group-hover:bg-accent-300 group-hover:text-[#172B3A]">
                   <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                 </span>
               </span>

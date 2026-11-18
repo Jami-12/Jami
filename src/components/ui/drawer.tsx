@@ -71,7 +71,7 @@ export function Drawer({
           >
             <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
               <div>
-                <h2 id={titleId} className="text-lg font-bold tracking-tight">
+                <h2 id={titleId} className="font-display text-xl font-semibold tracking-tight">
                   {title}
                 </h2>
                 {description ? (

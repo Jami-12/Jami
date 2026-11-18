@@ -9,6 +9,8 @@ import type {
   AuditLog,
   AuditLogListParams,
   AuthResult,
+  Banner,
+  BannerInput,
   BillFilter,
   Brand,
   BrandInput,
@@ -20,6 +22,8 @@ import type {
   CouponInput,
   CouponValidation,
   CreateAdminInput,
+  CustomerListParams,
+  CustomerSummary,
   DashboardOverview,
   Employee,
   EmployeeInput,
@@ -77,6 +81,29 @@ function clean<T extends Record<string, unknown>>(input: T): Record<string, unkn
       ([, value]) => value !== undefined && value !== null && value !== "",
     ),
   );
+}
+
+/** Appends a value only when it carries content; blank optional fields are omitted. */
+function appendOptional(formData: FormData, key: string, value: unknown): void {
+  if (value === undefined || value === null) return;
+  const text = typeof value === "string" ? value.trim() : String(value);
+  if (text === "") return;
+  formData.append(key, text);
+}
+
+/**
+ * Appends an explicitly nullable value. `undefined` means "leave unchanged",
+ * while `null` or a blank string is sent as an empty field so the API clears it.
+ */
+function appendNullable(formData: FormData, key: string, value: unknown): void {
+  if (value === undefined) return;
+  const text =
+    value === null ? "" : typeof value === "string" ? value.trim() : String(value);
+  formData.append(key, text);
+}
+
+function appendFile(formData: FormData, key: string, file?: File | null): void {
+  if (file) formData.append(key, file);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -170,6 +197,19 @@ export const usersApi = {
     apiRequest<{ id: string }>({ method: "DELETE", url: `/users/${id}` }),
 };
 
+/**
+ * Admin-safe customer directory. Read-only and limited to non-privileged
+ * fields — role and access-control changes stay in the super-admin user APIs.
+ */
+export const customersApi = {
+  list: (params: CustomerListParams = {}) =>
+    apiRequest<Paginated<CustomerSummary>>({
+      method: "GET",
+      url: "/admin/customers",
+      params: clean(params as Record<string, unknown>),
+    }),
+};
+
 /* -------------------------------------------------------------------------- */
 /* Catalog                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -192,20 +232,53 @@ export const categoriesApi = {
     return result.category;
   },
 
-  create: async (input: CategoryInput) => {
+  create: async (input: CategoryInput, imageFile?: File | null) => {
+    const formData = new FormData();
+    appendOptional(formData, "name", input.name);
+    appendOptional(formData, "slug", input.slug);
+    appendNullable(formData, "description", input.description);
+    if (imageFile) {
+      appendFile(formData, "image", imageFile);
+    } else {
+      appendNullable(formData, "image", input.image);
+    }
+
     const result = await apiRequest<{ category: Category }>({
       method: "POST",
       url: "/categories",
-      data: input,
+      data: formData,
     });
     return result.category;
   },
 
-  update: async (id: string, input: Partial<CategoryInput>) => {
+  update: async (
+    id: string,
+    input: Partial<CategoryInput>,
+    imageFile?: File | null,
+  ) => {
+    const formData = new FormData();
+    appendOptional(formData, "name", input.name);
+    appendOptional(formData, "slug", input.slug);
+    appendNullable(formData, "description", input.description);
+    if (imageFile) {
+      appendFile(formData, "image", imageFile);
+    } else {
+      appendNullable(formData, "image", input.image);
+    }
+
     const result = await apiRequest<{ category: Category }>({
       method: "PATCH",
       url: `/categories/${id}`,
-      data: input,
+      data: formData,
+    });
+    return result.category;
+  },
+
+  updateStatus: async (id: string, isActive: boolean) => {
+    const result = await apiRequest<{ category: Category }>({
+      method: "PATCH",
+      url: `/categories/${id}/status`,
+      data: { isActive },
     });
     return result.category;
   },
@@ -229,16 +302,53 @@ export const brandsApi = {
     return result.brand;
   },
 
-  create: async (input: BrandInput) => {
-    const result = await apiRequest<{ brand: Brand }>({ method: "POST", url: "/brands", data: input });
+  create: async (input: BrandInput, logoFile?: File | null) => {
+    const formData = new FormData();
+    appendOptional(formData, "name", input.name);
+    appendOptional(formData, "slug", input.slug);
+    appendNullable(formData, "description", input.description);
+    if (logoFile) {
+      appendFile(formData, "logo", logoFile);
+    } else {
+      appendNullable(formData, "logo", input.logo);
+    }
+
+    const result = await apiRequest<{ brand: Brand }>({
+      method: "POST",
+      url: "/brands",
+      data: formData,
+    });
     return result.brand;
   },
 
-  update: async (id: string, input: Partial<BrandInput>) => {
+  update: async (
+    id: string,
+    input: Partial<BrandInput>,
+    logoFile?: File | null,
+  ) => {
+    const formData = new FormData();
+    appendOptional(formData, "name", input.name);
+    appendOptional(formData, "slug", input.slug);
+    appendNullable(formData, "description", input.description);
+    if (logoFile) {
+      appendFile(formData, "logo", logoFile);
+    } else {
+      appendNullable(formData, "logo", input.logo);
+    }
+
     const result = await apiRequest<{ brand: Brand }>({
       method: "PATCH",
       url: `/brands/${id}`,
-      data: input,
+      data: formData,
+    });
+    return result.brand;
+  },
+
+  updateStatus: async (id: string, isActive: boolean) => {
+    const result = await apiRequest<{ brand: Brand }>({
+      method: "PATCH",
+      url: `/brands/${id}/status`,
+      data: { isActive },
     });
     return result.brand;
   },
@@ -282,6 +392,15 @@ export const productsApi = {
       method: "PATCH",
       url: `/products/${id}`,
       data: input,
+    });
+    return result.product;
+  },
+
+  updateStatus: async (id: string, status: Product["status"]) => {
+    const result = await apiRequest<{ product: Product }>({
+      method: "PATCH",
+      url: `/products/${id}/status`,
+      data: { status },
     });
     return result.product;
   },
@@ -533,7 +652,7 @@ export const ordersApi = {
   adminList: (params: OrderListParams = {}) =>
     apiRequest<Paginated<Order>>({
       method: "GET",
-      url: "/orders",
+      url: "/admin/orders",
       params: clean(params as Record<string, unknown>),
     }),
 
@@ -561,8 +680,20 @@ export const ordersApi = {
   updateStatus: async (id: string, status: OrderStatus) => {
     const result = await apiRequest<{ order: Order }>({
       method: "PATCH",
-      url: `/orders/${id}/status`,
+      url: `/admin/orders/${id}/status`,
       data: { status },
+    });
+    return result.order;
+  },
+
+  collectPayment: async (
+    id: string,
+    input: { note?: string; reference?: string } = {},
+  ) => {
+    const result = await apiRequest<{ order: Order }>({
+      method: "PATCH",
+      url: `/admin/orders/${id}/collect-payment`,
+      data: clean(input),
     });
     return result.order;
   },
@@ -663,6 +794,15 @@ export const couponsApi = {
       method: "PATCH",
       url: `/coupons/${id}`,
       data: clean(input as unknown as Record<string, unknown>),
+    });
+    return result.coupon;
+  },
+
+  updateStatus: async (id: string, isActive: boolean) => {
+    const result = await apiRequest<{ coupon: Coupon }>({
+      method: "PATCH",
+      url: `/coupons/${id}/status`,
+      data: { isActive },
     });
     return result.coupon;
   },
@@ -1116,5 +1256,117 @@ export const auditApi = {
       method: "GET",
       url: "/audit",
       params: clean(params as Record<string, unknown>),
+    }),
+};
+
+/* -------------------------------------------------------------------------- */
+/* Uploads & Banners                                                          */
+/* -------------------------------------------------------------------------- */
+
+export const uploadsApi = {
+  uploadImage: async (file: File, folder: "avatar" | "product" | "banner" = "avatar") => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
+
+    const result = await apiRequest<{ image: { url: string; publicId: string; bytes: number; mimeType: string }; folder: string }>({
+      method: "POST",
+      url: "/uploads/image",
+      data: formData,
+    });
+    return result.image;
+  },
+};
+
+export const bannersApi = {
+  listPublic: async (placement?: "HERO" | "PROMO") => {
+    const result = await apiRequest<{ banners: Banner[] }>({
+      method: "GET",
+      url: "/banners",
+      params: placement ? { placement } : undefined,
+    });
+    return result.banners;
+  },
+
+  listAdmin: async (placement?: "HERO" | "PROMO") => {
+    const result = await apiRequest<{ banners: Banner[] }>({
+      method: "GET",
+      url: "/banners/admin",
+      params: placement ? { placement } : undefined,
+    });
+    return result.banners;
+  },
+
+  get: async (id: string) => {
+    const result = await apiRequest<{ banner: Banner }>({
+      method: "GET",
+      url: `/banners/admin/${id}`,
+    });
+    return result.banner;
+  },
+
+  create: async (input: BannerInput, imageFile?: File | null) => {
+    const formData = new FormData();
+    appendOptional(formData, "title", input.title);
+    appendNullable(formData, "subtitle", input.subtitle);
+    appendNullable(formData, "linkUrl", input.linkUrl);
+    appendNullable(formData, "publicId", input.publicId);
+    appendOptional(formData, "placement", input.placement);
+    appendOptional(formData, "isActive", input.isActive);
+    appendOptional(formData, "sortOrder", input.sortOrder);
+    if (imageFile) {
+      appendFile(formData, "image", imageFile);
+    } else {
+      appendOptional(formData, "imageUrl", input.imageUrl);
+    }
+
+    const result = await apiRequest<{ banner: Banner }>({
+      method: "POST",
+      url: "/banners/admin",
+      data: formData,
+    });
+    return result.banner;
+  },
+
+  update: async (
+    id: string,
+    input: Partial<BannerInput>,
+    imageFile?: File | null,
+  ) => {
+    const formData = new FormData();
+    appendOptional(formData, "title", input.title);
+    appendNullable(formData, "subtitle", input.subtitle);
+    appendNullable(formData, "linkUrl", input.linkUrl);
+    appendNullable(formData, "publicId", input.publicId);
+    appendOptional(formData, "placement", input.placement);
+    appendOptional(formData, "isActive", input.isActive);
+    appendOptional(formData, "sortOrder", input.sortOrder);
+    if (imageFile) {
+      appendFile(formData, "image", imageFile);
+    } else {
+      appendOptional(formData, "imageUrl", input.imageUrl);
+    }
+
+    const result = await apiRequest<{ banner: Banner }>({
+      method: "PATCH",
+      url: `/banners/admin/${id}`,
+      data: formData,
+    });
+    return result.banner;
+  },
+
+  updateStatus: async (id: string, isActive: boolean) => {
+    const result = await apiRequest<{ banner: Banner }>({
+      method: "PATCH",
+      url: `/banners/admin/${id}/status`,
+      data: { isActive },
+    });
+    return result.banner;
+  },
+
+  remove: (id: string) =>
+    apiRequest<{ banner: Banner }>({
+      method: "DELETE",
+      url: `/banners/admin/${id}`,
     }),
 };

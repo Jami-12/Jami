@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Role } from "@/types";
 
@@ -17,7 +18,9 @@ export function RoleGuard({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const hydrated = useAuthStore((state) => state.hydrated);
+  const mounted = useHydrated();
+  const storeHydrated = useAuthStore((state) => state.hydrated);
+  const hydrated = mounted && storeHydrated;
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
 

@@ -24,7 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { analyticsApi } from "@/lib/api/services";
 import { formatCompact, formatCurrency, formatDate, formatNumber, humanizeEnum } from "@/lib/utils";
 
-const PALETTE = ["#38bdf8", "#2c4561", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444"];
+const PALETTE = ["#AC8A4F", "#244B50", "#C6A46A", "#3E6266", "#dfc48e", "#8C6C3A"];
 
 const axisProps = {
   stroke: "var(--muted-foreground)",
@@ -129,8 +129,8 @@ export function AnalyticsView() {
             <AreaChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="revenue-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="#C6A46A" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#C6A46A" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -143,7 +143,7 @@ export function AnalyticsView() {
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#38bdf8"
+                stroke="#AC8A4F"
                 strokeWidth={2}
                 fill="url(#revenue-fill)"
               />
@@ -167,7 +167,7 @@ export function AnalyticsView() {
                     name === "revenue" ? "Revenue" : "Orders",
                   ]}
                 />
-                <Bar dataKey="revenue" fill="#2c4561" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="revenue" fill="#244B50" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -216,7 +216,7 @@ export function AnalyticsView() {
                 <XAxis type="number" {...axisProps} allowDecimals={false} />
                 <YAxis type="category" dataKey="label" {...axisProps} width={82} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" fill="#38bdf8" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="count" fill="#AC8A4F" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

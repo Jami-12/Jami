@@ -105,7 +105,7 @@ export function SearchDialog() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Try “headphones”, “oak” or “lighting”"
+            placeholder="Try “linen shirt”, “knit” or “overshirt”"
             aria-label="Search products"
             className="h-12 w-full rounded-xl border border-input bg-background pl-10 pr-4 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-ring/25"
           />

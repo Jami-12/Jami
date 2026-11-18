@@ -69,7 +69,7 @@ export function Dialog({
         type="button"
         aria-label="Close dialog"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[#050b14]/60 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-[#252B2B]/60 backdrop-blur-sm"
       />
       <div
         ref={panelRef}
@@ -84,7 +84,7 @@ export function Dialog({
       >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
           <div>
-            <h2 id={titleId} className="text-base font-semibold tracking-tight">
+            <h2 id={titleId} className="font-display text-lg font-semibold tracking-tight">
               {title}
             </h2>
             {description ? (

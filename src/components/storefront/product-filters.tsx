@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { PRODUCT_SORT_OPTIONS } from "@/lib/constants";
+import { COLOR_SWATCHES } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
 
@@ -33,8 +34,10 @@ export function ProductFilters({
     const min = params.get("minPrice") ?? "";
     const max = params.get("maxPrice") ?? "";
     return {
+      q: params.get("q") ?? "",
       category: params.get("category") ?? "",
       brand: params.get("brand") ?? "",
+      color: params.get("color") ?? "",
       minPrice: min,
       maxPrice: max,
       rating: params.get("rating") ?? "",
@@ -44,8 +47,13 @@ export function ProductFilters({
     };
   }, [searchParams]);
 
+  const [search, setSearch] = React.useState(current.q);
   const [minPrice, setMinPrice] = React.useState(current.minPrice);
   const [maxPrice, setMaxPrice] = React.useState(current.maxPrice);
+
+  React.useEffect(() => {
+    setSearch(current.q);
+  }, [current.q]);
 
   React.useEffect(() => {
     setMinPrice(current.minPrice);
@@ -68,8 +76,10 @@ export function ProductFilters({
   };
 
   const activeCount = [
+    current.q,
     current.category,
     current.brand,
+    current.color,
     current.minPrice,
     current.maxPrice,
     current.rating,
@@ -79,6 +89,78 @@ export function ProductFilters({
 
   const filterBody = (
     <div className="space-y-6">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setParam("q", search.trim() || null);
+        }}
+      >
+        <Label
+          htmlFor="filter-search"
+          className="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground"
+        >
+          Search
+        </Label>
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            id="filter-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Linen shirt, knit…"
+            className="h-9 pl-8 pr-8"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setParam("q", null);
+              }}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            >
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+      </form>
+
+      <fieldset>
+        <legend className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+          Colour
+        </legend>
+        <div className="grid grid-cols-6 gap-2">
+          {COLOR_SWATCHES.map((colour) => {
+            const active = current.color === colour.name;
+            return (
+              <button
+                key={colour.name}
+                type="button"
+                onClick={() => setParam("color", active ? null : colour.name)}
+                aria-label={colour.name}
+                aria-pressed={active}
+                title={colour.name}
+                className={cn(
+                  "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition",
+                  active
+                    ? "border-primary-700 dark:border-accent-300"
+                    : "border-transparent hover:border-border",
+                )}
+              >
+                <span
+                  className="h-5 w-5 rounded-full border border-black/10 shadow-sm"
+                  style={{ backgroundColor: colour.hex }}
+                />
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
       <fieldset>
         <legend className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
           Category

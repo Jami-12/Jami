@@ -23,7 +23,7 @@ export default function GlobalError({
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary-500 dark:text-accent-300">
           Something interrupted
         </p>
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
           We couldn&apos;t finish that request.
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">

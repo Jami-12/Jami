@@ -74,7 +74,7 @@ export function Pagination({
     cn(
       "flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-xs font-semibold transition",
       active
-        ? "bg-[var(--color-primary-700)] text-white dark:bg-[var(--color-accent-300)] dark:text-[#082f49]"
+        ? "bg-[var(--color-primary-800)] text-[var(--color-primary-50)] dark:bg-[var(--color-accent-300)] dark:text-[var(--color-primary-950)]"
         : "border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
     );
 

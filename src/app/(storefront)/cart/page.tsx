@@ -15,7 +15,7 @@ export default function CartPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
           Checkout · Step 1
         </p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Your bag</h1>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Your bag</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Review quantities and delivery estimates. Coupons and payment are
           handled on the next step.

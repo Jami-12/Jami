@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { TaxonomyAdmin } from "@/components/admin/taxonomy-admin";
+import { CategoriesAdmin } from "@/components/admin/categories";
 
 export const metadata: Metadata = { title: "Categories" };
 
 export default function AdminCategoriesPage() {
-  return <TaxonomyAdmin mode="categories" />;
+  return <CategoriesAdmin />;
 }

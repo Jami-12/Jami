@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 
 import { Brand } from "@/components/layout/brand";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SmartImage } from "@/components/ui/smart-image";
 
 export function AuthShell({
   eyebrow,
@@ -19,46 +20,48 @@ export function AuthShell({
 }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
-      <aside className="relative hidden overflow-hidden bg-primary-950 text-primary-50 lg:flex lg:flex-col lg:justify-between lg:p-10">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-70"
-          style={{
-            background:
-              "radial-gradient(60% 50% at 20% 10%, rgba(125,211,252,0.22), transparent 70%), radial-gradient(50% 45% at 90% 85%, rgba(31,162,224,0.24), transparent 70%)",
-          }}
+      <aside className="relative hidden overflow-hidden bg-primary-950 text-primary-50 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <SmartImage
+          src="/showcase/editorial-rust.webp"
+          alt="A considered wardrobe edit photographed in warm light"
+          fill
+          priority
+          sizes="50vw"
+          className="object-cover"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
+          className="absolute inset-0 bg-gradient-to-b from-primary-950/80 via-primary-950/45 to-primary-950/90"
         />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[radial-gradient(70%_55%_at_15%_8%,rgba(198,164,106,0.28),transparent_70%)]"
+        />
+
         <div className="relative">
           <Brand href="/" />
         </div>
+
         <div className="relative max-w-md">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-accent-200 backdrop-blur">
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-accent-200 backdrop-blur">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             The considered edit
           </p>
-          <blockquote className="mt-5 text-3xl font-extrabold leading-tight tracking-tight">
-            Objects chosen for how they feel, sound and age — not how loudly they
+          <blockquote className="mt-6 font-display text-3xl leading-[1.15] tracking-tight text-primary-50 xl:text-4xl">
+            Pieces chosen for how they feel, move and age — not how loudly they
             announce themselves.
           </blockquote>
-          <p className="mt-4 text-sm leading-relaxed text-primary-200">
-            Your account keeps orders, saved objects, delivery addresses and
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-primary-200/90">
+            Your account keeps orders, saved pieces, delivery addresses and
             payment history in one calm place.
           </p>
         </div>
-        <div className="relative flex items-center gap-4 text-[11px] text-primary-300">
+
+        <div className="relative flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] uppercase tracking-[0.16em] text-primary-300">
           <span>Carbon-neutral delivery</span>
-          <span aria-hidden="true">·</span>
+          <span aria-hidden="true" className="text-accent-400">·</span>
           <span>30-day returns</span>
-          <span aria-hidden="true">·</span>
+          <span aria-hidden="true" className="text-accent-400">·</span>
           <span>Secure payments</span>
         </div>
       </aside>
@@ -80,14 +83,18 @@ export function AuthShell({
           <ThemeToggle />
         </div>
 
-        <div className="flex flex-1 items-center justify-center px-4 pb-12 pt-4 sm:px-8">
-          <div className="w-full max-w-md">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+        <div className="flex flex-1 items-center justify-center px-4 pb-14 pt-2 sm:px-8">
+          <div className="w-full max-w-md animate-fade-up">
+            <p className="eyebrow text-[var(--color-primary-600)] dark:text-[var(--color-accent-300)]">
               {eyebrow}
             </p>
-            <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{title}</h1>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-            <div className="mt-7">{children}</div>
+            <h1 className="mt-3 font-display text-3xl leading-tight tracking-tight sm:text-[2.35rem]">
+              {title}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {description}
+            </p>
+            <div className="mt-8">{children}</div>
             {footer ? <div className="mt-6">{footer}</div> : null}
           </div>
         </div>

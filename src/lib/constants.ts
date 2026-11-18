@@ -11,9 +11,9 @@ import type {
 
 export const SITE = {
   name: process.env.NEXT_PUBLIC_STORE_NAME ?? "Aether",
-  tagline: "Objects for a considered life",
+  tagline: "Modern wardrobe, considered",
   description:
-    "Aether is a design-led commerce house for audio, lighting, workspace and everyday objects — presented in real time 3D and built to last.",
+    "Aether is an editorial fashion house for considered wardrobes — elevated essentials, quiet tailoring and pieces made to be worn for years, not seasons.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@example.com",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+880 1000 000000",
@@ -68,35 +68,37 @@ export const BASE_CURRENCY = (process.env.NEXT_PUBLIC_BASE_CURRENCY ?? "BDT").to
 export const USD_TO_BDT = Number(process.env.NEXT_PUBLIC_USD_TO_BDT ?? 120);
 
 export const MAIN_NAV = [
-  { label: "Shop all", href: "/products" },
-  { label: "3D showroom", href: "/#showroom" },
-  { label: "Journal", href: "/#journal" },
-  { label: "Our story", href: "/#story" },
+  { label: "Home", href: "/" },
+  { label: "Shop", href: "/products" },
+  { label: "Collections", href: "/#collections" },
+  { label: "Categories", href: "/#categories" },
+  { label: "About", href: "/#story" },
+  { label: "Contact", href: "/#contact" },
 ] as const;
 
 export const FOOTER_NAV = [
   {
     title: "Shop",
     links: [
-      { label: "All objects", href: "/products" },
-      { label: "New arrivals", href: "/products?sortBy=createdAt&sortOrder=desc" },
-      { label: "Bestsellers", href: "/products?sortBy=soldCount&sortOrder=desc" },
+      { label: "The collection", href: "/products" },
+      { label: "New arrivals", href: "/products?sort=newest" },
+      { label: "Bestsellers", href: "/products?sort=popular" },
       { label: "Wishlist", href: "/wishlist" },
-      { label: "Cart", href: "/cart" },
+      { label: "Your bag", href: "/cart" },
     ],
   },
   {
-    title: "Company",
+    title: "The house",
     links: [
       { label: "Our story", href: "/#story" },
-      { label: "Journal", href: "/#journal" },
-      { label: "3D showroom", href: "/#showroom" },
+      { label: "Editorial", href: "/#journal" },
+      { label: "Collections", href: "/#collections" },
       { label: "Craft & materials", href: "/#craft" },
       { label: "Contact", href: "/#contact" },
     ],
   },
   {
-    title: "Support",
+    title: "Client care",
     links: [
       { label: "Your account", href: "/account" },
       { label: "Order tracking", href: "/account/orders" },
@@ -291,9 +293,11 @@ export const ADMIN_NAV = [
   { label: "Overview", href: "/admin", icon: "layout", superOnly: false },
   { label: "Products", href: "/admin/products", icon: "package", superOnly: false },
   { label: "Orders", href: "/admin/orders", icon: "receipt", superOnly: false },
+  { label: "Customers", href: "/admin/customers", icon: "user", superOnly: false },
   { label: "Inventory", href: "/admin/inventory", icon: "boxes", superOnly: false },
   { label: "Categories", href: "/admin/categories", icon: "tag", superOnly: false },
   { label: "Brands", href: "/admin/brands", icon: "badge", superOnly: false },
+  { label: "Banners", href: "/admin/banners", icon: "layout", superOnly: false },
   { label: "Coupons", href: "/admin/coupons", icon: "ticket", superOnly: false },
   { label: "Reviews", href: "/admin/reviews", icon: "star", superOnly: false },
   { label: "Expenses", href: "/admin/expenses", icon: "wallet", superOnly: false },

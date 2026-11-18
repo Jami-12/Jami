@@ -3,7 +3,7 @@
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ImageIcon, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { ImageIcon, Loader2, Mail, Phone, ShieldCheck, UploadCloud, UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { FormField, Input } from "@/components/ui/input";
 import { PageSection } from "@/components/dashboard/page-section";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usersApi } from "@/lib/api/services";
+import { uploadsApi, usersApi } from "@/lib/api/services";
 import { getErrorMessage, humanizeEnum } from "@/lib/utils";
 import { profileSchema, type ProfileValues } from "@/lib/validations";
 import { useAuthStore } from "@/stores/auth-store";
@@ -21,6 +21,9 @@ import { useAuthStore } from "@/stores/auth-store";
 export function ProfileForm() {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = React.useState(false);
 
   const profile = useQuery({
     queryKey: ["users", "me"],
@@ -33,6 +36,7 @@ export function ProfileForm() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -55,6 +59,48 @@ export function ProfileForm() {
 
   const image = watch("image");
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose a valid image file (JPEG, PNG, WebP)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file is too large (maximum 5MB)");
+      return;
+    }
+
+    // Instantly create and render the local preview URL
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setUploadingImage(true);
+
+    try {
+      const upload = await uploadsApi.uploadImage(file, "avatar");
+      setValue("image", upload.url, { shouldDirty: true });
+      toast.success("Profile photo uploaded to Cloudinary");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to upload photo"));
+      setPreviewUrl(null);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const clearImage = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setValue("image", "", { shouldDirty: true });
+  };
+
   const mutation = useMutation({
     mutationFn: (values: ProfileValues) =>
       usersApi.updateMe({
@@ -69,6 +115,8 @@ export function ProfileForm() {
     onError: (error) => toast.error(getErrorMessage(error, "Could not update your profile")),
   });
 
+  const displayImage = previewUrl || image || user?.image;
+
   return (
     <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
       <PageSection
@@ -80,11 +128,59 @@ export function ProfileForm() {
           className="space-y-4"
           noValidate
         >
-          <div className="flex items-center gap-4">
-            <Avatar name={watch("name") || user?.name || "Account"} size="lg" />
-            <div>
-              <p className="text-sm font-bold">{user?.name}</p>
+          <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-sm">
+            <div className="relative">
+              <Avatar
+                name={watch("name") || user?.name || "Account"}
+                src={displayImage}
+                size="lg"
+              />
+              {uploadingImage && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <p className="text-sm font-bold text-foreground">{user?.name}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="profile-avatar-upload"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingImage || mutation.isPending}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-1.5"
+                >
+                  {uploadingImage ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <UploadCloud className="h-3.5 w-3.5" />
+                  )}
+                  Upload photo
+                </Button>
+                {displayImage && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={uploadingImage || mutation.isPending}
+                    onClick={clearImage}
+                    className="text-xs text-muted-foreground hover:text-red-500"
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -111,13 +207,13 @@ export function ProfileForm() {
           <FormField
             label="Profile image URL"
             htmlFor="profile-image"
-            hint="Paste a public image URL. Leave blank to use your initials."
+            hint="Cloudinary or public photo URL (automatically set when uploading above)."
             error={errors.image?.message}
           >
             <Input
               id="profile-image"
               type="url"
-              placeholder="https://…"
+              placeholder="https://res.cloudinary.com/…"
               invalid={Boolean(errors.image)}
               {...register("image")}
             />

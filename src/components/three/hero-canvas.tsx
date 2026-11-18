@@ -32,7 +32,7 @@ function WebGlFallback() {
   return (
     <div className="flex h-full w-full items-center justify-center p-8">
       <div className="relative flex h-64 w-64 items-center justify-center">
-        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(125,211,252,0.4),transparent_60%)]" />
+        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(198,164,106,0.4),transparent_60%)]" />
         <div className="absolute inset-4 rounded-full border border-accent-400/40" />
         <div className="absolute inset-10 rounded-full border border-primary-400/40" />
         <div className="absolute inset-16 rounded-full border border-accent-300/50" />

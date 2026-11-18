@@ -5,7 +5,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata: Metadata = {
   title: "Create an account",
-  description: "Create an Aether account for faster checkout, order tracking and saved objects.",
+  description: "Create an Aether account for faster checkout, order tracking and saved pieces.",
   alternates: { canonical: "/register" },
 };
 

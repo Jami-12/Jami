@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 
 import { ProductDetail } from "@/components/storefront/product-detail";
 import { ProductGrid } from "@/components/storefront/product-grid";
+import { RecentlyViewed } from "@/components/storefront/recently-viewed";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SITE } from "@/lib/constants";
 import { catalog } from "@/services/catalog";
@@ -149,8 +150,8 @@ export default async function ProductPage({
         <section aria-labelledby="related-heading" className="mt-16 border-t border-border pt-10">
           <SectionHeading
             eyebrow="Pairs well with"
-            title="More from this room"
-            description="Objects that share a material language or a way of living."
+            title="More from this collection"
+            description="Pieces that share a material language or a way of dressing."
             action={
               <Link
                 href={`/products?category=${product.category.slug}`}
@@ -162,11 +163,13 @@ export default async function ProductPage({
             }
           />
           <h2 id="related-heading" className="sr-only">
-            Related objects
+            Related pieces
           </h2>
           <ProductGrid products={related} className="mt-6" />
         </section>
       ) : null}
+
+      <RecentlyViewed excludeId={product.id} />
     </div>
   );
 }

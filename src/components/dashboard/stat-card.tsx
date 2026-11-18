@@ -30,10 +30,10 @@ export function StatCard({
     <div className={cn("rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             {label}
           </p>
-          <p className="mt-1.5 truncate text-2xl font-extrabold tracking-tight tabular-nums">
+          <p className="mt-2 truncate font-display text-[1.65rem] font-semibold leading-none tracking-tight tabular-nums">
             {value}
           </p>
           {hint ? <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p> : null}

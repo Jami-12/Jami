@@ -2,9 +2,11 @@
 
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
 
+import { SoundProvider } from "./sound-provider";
 import { ThemeProvider } from "./theme-provider";
+
+import { Toaster } from "@/components/ui/sonner";
 
 import { authApi } from "@/lib/api/services";
 import { useAuthStore } from "@/stores/auth-store";
@@ -58,18 +60,18 @@ function SessionSync() {
   return null;
 }
 
+function ThemedToaster() {
+  return <Toaster />;
+}
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <SessionSync />
+        <SoundProvider />
         {children}
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          toastOptions={{ duration: 4200 }}
-        />
+        <ThemedToaster />
       </ThemeProvider>
     </QueryClientProvider>
   );

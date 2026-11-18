@@ -19,7 +19,7 @@ export function VendorPanel() {
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
               For the studio
             </p>
-            <h2 id="studio-heading" className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
+            <h2 id="studio-heading" className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
               A calm console for the people behind the objects.
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">

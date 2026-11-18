@@ -1,0 +1,10 @@
+export { HeroBanner } from "./hero-banner";
+export { CategoryGrid } from "./category-grid";
+// export { FeaturedProducts } from "./featured-products";
+export { NewArrivals } from "./new-arrivals";
+// export { ProductWall } from "./product-wall";
+export { BrandShowcase } from "./brand-showcase";
+export { PromoBanners } from "./promo-banners";
+// export { BrandEditorial } from "./editorial";
+// export { Testimonials } from "./testimonials";
+export { NewsletterSection } from "./newsletter-section";

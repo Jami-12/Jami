@@ -6,6 +6,7 @@ import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+import { useTheme } from "@/components/providers/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { paymentsApi } from "@/lib/api/services";
@@ -23,35 +24,67 @@ function CardForm({
   const elements = useElements();
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const submittingRef = React.useRef(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!stripe || !elements) return;
+    if (submittingRef.current) return;
 
+    submittingRef.current = true;
     setSubmitting(true);
     setError(null);
 
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/dashboard/orders/${orderId}`,
-      },
-      redirect: "if_required",
-    });
+    let result;
+    try {
+      result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/dashboard/orders/${orderId}`,
+        },
+        redirect: "if_required",
+      });
+    } catch (confirmError) {
+      setError(
+        getErrorMessage(
+          confirmError,
+          "The card payment could not be submitted. Check your connection and try again.",
+        ),
+      );
+      submittingRef.current = false;
+      setSubmitting(false);
+      return;
+    }
+
+    if (!result) {
+      setError("Stripe did not return a payment result. Please try again.");
+      submittingRef.current = false;
+      setSubmitting(false);
+      return;
+    }
 
     if (result.error) {
       setError(result.error.message ?? "Your card could not be confirmed.");
+      submittingRef.current = false;
       setSubmitting(false);
       return;
     }
 
     try {
       const payment = await paymentsApi.reconcileCard(orderId);
-      toast.success(
-        payment.status === "PAID"
-          ? "Payment confirmed. Your order is being prepared."
-          : "Payment is processing with the card provider.",
-      );
+
+      if (payment.status === "PAID") {
+        toast.success("Payment confirmed. Your order is being prepared.");
+      } else if (payment.status === "FAILED" || payment.status === "CANCELLED") {
+        toast.error(
+          payment.status === "CANCELLED"
+            ? "The card payment was cancelled."
+            : "The card payment failed.",
+        );
+      } else {
+        toast.info("Payment is processing with the card provider.");
+      }
+
       onResolved(payment.status);
     } catch (reconcileError) {
       toast.error(
@@ -62,6 +95,7 @@ function CardForm({
       );
       onResolved("PROCESSING");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -105,6 +139,7 @@ export function StripePaymentDialog({
   description?: string;
   onResolved: (status: PaymentStatus) => void;
 }) {
+  const { theme } = useTheme();
   const stripePromise = React.useMemo<Promise<Stripe | null>>(
     () => loadStripe(publishableKey),
     [publishableKey],
@@ -116,7 +151,13 @@ export function StripePaymentDialog({
         stripe={stripePromise}
         options={{
           clientSecret,
-          appearance: { theme: "stripe", variables: { borderRadius: "12px" } },
+          appearance: {
+            theme: theme === "dark" ? "night" : "stripe",
+            variables: {
+              borderRadius: "12px",
+              colorPrimary: theme === "dark" ? "#dfc48e" : "#172B3A",
+            },
+          },
         }}
       >
         <CardForm orderId={orderId} onResolved={onResolved} />

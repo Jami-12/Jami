@@ -217,28 +217,6 @@ export function AdminOverview() {
           </PageSection>
         </div>
       </div>
-
-      <PageSection title="Manage the store" description="Jump straight to a workspace.">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { href: "/admin/products", label: "Catalogue", icon: Package },
-            { href: "/admin/orders", label: "Fulfilment", icon: Receipt },
-            { href: "/admin/inventory", label: "Stock", icon: Boxes },
-            { href: "/admin/expenses", label: "Expenses", icon: Wallet },
-          ].map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-sm font-semibold transition hover:border-primary-300 hover:bg-muted/40"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-primary-600 dark:text-accent-300">
-                <action.icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              {action.label}
-            </Link>
-          ))}
-        </div>
-      </PageSection>
     </div>
   );
 }

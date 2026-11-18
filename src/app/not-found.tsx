@@ -10,9 +10,9 @@ export default function NotFound() {
     >
       <div className="text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary-500 dark:text-accent-300">
-          404 · Object not found
+          404 · Piece not found
         </p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
           This one drifted out of orbit.
         </h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">

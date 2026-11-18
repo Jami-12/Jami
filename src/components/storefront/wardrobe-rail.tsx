@@ -117,12 +117,12 @@ function Hanger({ className }: { className?: string }) {
     <svg viewBox="0 0 180 76" fill="none" aria-hidden="true" className={className}>
       <path
         d="M90 33V22.5C90 15.6 95.6 10 102.5 10S115 15.6 115 22.5 109.4 35 102.5 35c-3.6 0-6.8-1.5-9.1-4"
-        stroke="#8e7458"
+        stroke="#6F8A8C"
         strokeWidth="3.4"
         strokeLinecap="round"
       />
-      <path d="M90 32 18 61h144L90 32Z" fill="#c8b49a" stroke="#9c8266" strokeWidth="2" />
-      <path d="M90 32 44 55h92L90 32Z" fill="#ebdfcd" />
+      <path d="M90 32 18 61h144L90 32Z" fill="#C8D6D3" stroke="#8C6C3A" strokeWidth="2" />
+      <path d="M90 32 44 55h92L90 32Z" fill="#EDE9DC" />
     </svg>
   );
 }
@@ -144,7 +144,7 @@ function GarmentVisual({
     <div
       className={cn(
         "relative h-full w-full overflow-hidden",
-        shape === "card" && "rounded-[1.75rem] border border-[#d9cebe] bg-[#fffdf8]",
+        shape === "card" && "rounded-[1.75rem] border border-[#DCE1DA] bg-[#FFFFFF]",
         className,
       )}
       style={clipStyle(shape)}
@@ -159,7 +159,7 @@ function GarmentVisual({
       />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.34),transparent_32%,rgba(58,40,20,0.13)_78%,rgba(58,40,20,0.24))] mix-blend-multiply"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.34),transparent_32%,rgba(23,43,58,0.13)_78%,rgba(23,43,58,0.24))] mix-blend-multiply"
       />
       {shape !== "card" ? (
         <>
@@ -177,7 +177,7 @@ function GarmentVisual({
   );
 
   return (
-    <div className="relative h-full w-full drop-shadow-[0_30px_30px_rgba(54,42,28,0.28)]">
+    <div className="relative h-full w-full drop-shadow-[0_30px_30px_rgba(23,43,58,0.28)]">
       {frame}
     </div>
   );
@@ -309,7 +309,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
 
   return (
     <section
-      className="relative mt-4 overflow-hidden rounded-[2rem] border border-[#e3d9ca] bg-[#f6f1e7] text-[#241d16] shadow-[0_30px_80px_-48px_rgba(38,31,22,0.55)] dark:border-white/10 dark:bg-[#0d1722] dark:text-[#f4ede2]"
+      className="relative mt-4 overflow-hidden rounded-[2rem] border border-[#E1E3DB] bg-[#F8F6F0] text-[#1E2E38] shadow-[0_30px_80px_-48px_rgba(23,43,58,0.55)] dark:border-white/10 dark:bg-[#0B1720] dark:text-[#F8F6F0]"
       aria-roledescription="carousel"
       aria-label="Interactive clothing rail"
     >
@@ -331,26 +331,26 @@ export function WardrobeRail({ products }: { products: Product[] }) {
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_60%_at_50%_-10%,rgba(255,255,255,0.95),transparent_65%)] dark:bg-[radial-gradient(75%_60%_at_50%_-10%,rgba(125,211,252,0.12),transparent_65%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_60%_at_50%_-10%,rgba(255,255,255,0.95),transparent_65%)] dark:bg-[radial-gradient(75%_60%_at_50%_-10%,rgba(198,164,106,0.12),transparent_65%)]"
       />
 
       <div className="relative flex flex-col gap-4 px-5 pb-5 pt-5 sm:px-7 sm:pb-7 sm:pt-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-[#8c7255] dark:text-accent-200">
+            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-[#244B50] dark:text-accent-200">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
               The rail edit
             </p>
             <h2 className="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">
               Hanging pieces, ready to explore.
             </h2>
-            <p className="mt-1 text-xs text-[#6f6051] dark:text-[#a8b8c8]">
+            <p className="mt-1 text-xs text-[#5F6A67] dark:text-[#C8D6D3]">
               Drag the rail, hover a garment, then open a piece for the full preview.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full border border-[#d9cdbc] bg-white/65 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7b6650] sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-[#b8c7d6]">
+            <span className="hidden items-center gap-1.5 rounded-full border border-[#DCE1DA] bg-white/65 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7C857F] sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-[#C8D6D3]">
               <MoveHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
               Drag to browse
             </span>
@@ -361,7 +361,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
               onClick={() => scrollBy(-1)}
               disabled={atStart}
               aria-label="Scroll the rail left"
-              className="border-[#d9cdbc] bg-white/70 text-[#4d3f31] hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-[#e8dfd3] dark:hover:bg-white/10"
+              className="border-[#DCE1DA] bg-white/70 text-[#2F3B3B] hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-[#E6E7DF] dark:hover:bg-white/10"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -372,7 +372,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
               onClick={() => scrollBy(1)}
               disabled={atEnd}
               aria-label="Scroll the rail right"
-              className="border-[#d9cdbc] bg-white/70 text-[#4d3f31] hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-[#e8dfd3] dark:hover:bg-white/10"
+              className="border-[#DCE1DA] bg-white/70 text-[#2F3B3B] hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-[#E6E7DF] dark:hover:bg-white/10"
             >
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -385,10 +385,10 @@ export function WardrobeRail({ products }: { products: Product[] }) {
         >
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-[3.2rem] z-10 h-[7px] rounded-full bg-[linear-gradient(180deg,#d8cbbc_0%,#a38f78_45%,#6f5c48_100%)] shadow-[0_5px_12px_rgba(39,31,23,0.28)]"
+            className="pointer-events-none absolute inset-x-0 top-[3.2rem] z-10 h-[7px] rounded-full bg-[linear-gradient(180deg,#DCE1DA_0%,#9E9A8B_45%,#5F6A67_100%)] shadow-[0_5px_12px_rgba(23,43,58,0.28)]"
           >
-            <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-[#8d7861] bg-[linear-gradient(135deg,#e7d9c8,#ae987e)]" />
-            <span className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-[#8d7861] bg-[linear-gradient(135deg,#e7d9c8,#ae987e)]" />
+            <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-[#6F8A8C] bg-[linear-gradient(135deg,#EDE6D5,#C6A46A)]" />
+            <span className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-[#6F8A8C] bg-[linear-gradient(135deg,#EDE6D5,#C6A46A)]" />
           </div>
 
           <motion.div
@@ -461,22 +461,22 @@ export function WardrobeRail({ products }: { products: Product[] }) {
 
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 z-30 w-10 bg-gradient-to-r from-[#f6f1e7] to-transparent dark:from-[#0d1722]"
+            className="pointer-events-none absolute inset-y-0 left-0 z-30 w-10 bg-gradient-to-r from-[#F8F6F0] to-transparent dark:from-[#0B1720]"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 z-30 w-10 bg-gradient-to-l from-[#f6f1e7] to-transparent dark:from-[#0d1722]"
+            className="pointer-events-none absolute inset-y-0 right-0 z-30 w-10 bg-gradient-to-l from-[#F8F6F0] to-transparent dark:from-[#0B1720]"
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#ded2c1] dark:bg-white/10">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#E1E3DB] dark:bg-white/10">
             <motion.span
-              className="block h-full origin-left rounded-full bg-[#8c7255] dark:bg-accent-300"
+              className="block h-full origin-left rounded-full bg-[#244B50] dark:bg-accent-300"
               style={{ scaleX: progress }}
             />
           </div>
-          <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a7763] dark:text-[#9fb0c2]">
+          <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6F8A8C] dark:text-[#9FB3B1]">
             {products.length} piece{products.length === 1 ? "" : "s"} on the rail
           </p>
         </div>
@@ -547,7 +547,7 @@ function WardrobeItem({
       onPointerLeave={resetTilt}
       onPointerCancel={resetTilt}
       aria-label={`Preview ${productName(product)}`}
-      className="group block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-[#8c7255] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f1e7] dark:focus-visible:ring-accent-300 dark:focus-visible:ring-offset-[#0d1722]"
+      className="group block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-[#244B50] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F8F6F0] dark:focus-visible:ring-accent-300 dark:focus-visible:ring-offset-[#0B1720]"
     >
       <motion.div
         style={{
@@ -558,7 +558,7 @@ function WardrobeItem({
         }}
         className="relative"
       >
-        <Hanger className="pointer-events-none absolute left-1/2 top-0 z-20 h-[76px] w-[180px] -translate-x-1/2 drop-shadow-[0_8px_10px_rgba(54,40,25,0.16)]" />
+        <Hanger className="pointer-events-none absolute left-1/2 top-0 z-20 h-[76px] w-[180px] -translate-x-1/2 drop-shadow-[0_8px_10px_rgba(23,43,58,0.16)]" />
 
         <div className="relative mx-auto h-[340px] w-[88%] pt-[62px] sm:h-[390px]">
           <GarmentVisual
@@ -582,9 +582,9 @@ function WardrobeItem({
         </div>
 
         <div className="relative z-20 -mt-5 px-3">
-          <div className="rotate-[-1.2deg] rounded-lg border border-[#e1d5c4] bg-[#fffdf7] px-3 py-2.5 shadow-[0_12px_28px_-18px_rgba(44,31,17,0.6)] transition duration-300 group-hover:rotate-0 group-hover:-translate-y-1 dark:border-white/10 dark:bg-[#132131]">
+          <div className="rotate-[-1.2deg] rounded-lg border border-[#E1E3DB] bg-[#FFFFFF] px-3 py-2.5 shadow-[0_12px_28px_-18px_rgba(23,43,58,0.6)] transition duration-300 group-hover:rotate-0 group-hover:-translate-y-1 dark:border-white/10 dark:bg-[var(--card)]">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[9px] font-bold uppercase tracking-[0.18em] text-[#92795d] dark:text-[#93a6ba]">
+              <span className="truncate text-[9px] font-bold uppercase tracking-[0.18em] text-[#6F8A8C] dark:text-[#9FB3B1]">
                 {product.category?.name ?? "The collection"}
               </span>
               {outOfStock ? (
@@ -606,9 +606,9 @@ function WardrobeItem({
                 compareAt={discounted ? product.originalPrice : null}
                 size="sm"
                 inline
-                className="text-[#46382a] dark:text-[#f4ede2]"
+                className="text-[#2F3B3B] dark:text-[#F8F6F0]"
               />
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8d765d] transition group-hover:text-[#4d3f31] dark:text-[#96a8bb] dark:group-hover:text-[#e8dfd3]">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#6F8A8C] transition group-hover:text-[#2F3B3B] dark:text-[#9FB3B1] dark:group-hover:text-[#E6E7DF]">
                 Preview
                 <ArrowRight className="h-3 w-3" aria-hidden="true" />
               </span>
@@ -670,10 +670,10 @@ function WardrobePreviewBody({ product }: { product: Product }) {
   return (
     <div className="grid gap-6 sm:grid-cols-[1.02fr_1fr] sm:gap-7">
       <div>
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-[#e3d9ca] bg-[#f6f1e7] p-5 dark:border-white/10 dark:bg-[#0d1722]">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-[#E1E3DB] bg-[#F8F6F0] p-5 dark:border-white/10 dark:bg-[#0B1720]">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_0%,rgba(255,255,255,0.95),transparent_68%)] dark:bg-[radial-gradient(70%_55%_at_50%_0%,rgba(125,211,252,0.1),transparent_68%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_0%,rgba(255,255,255,0.95),transparent_68%)] dark:bg-[radial-gradient(70%_55%_at_50%_0%,rgba(198,164,106,0.1),transparent_68%)]"
           />
           <Hanger className="absolute left-1/2 top-2 z-20 h-[76px] w-[180px] -translate-x-1/2" />
           <div className="relative mx-auto h-full w-[84%] pt-[58px]">
@@ -696,9 +696,9 @@ function WardrobePreviewBody({ product }: { product: Product }) {
                 aria-label={`Show image ${index + 1}`}
                 aria-current={activeImage === index}
                 className={cn(
-                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white transition dark:bg-[#132131]",
+                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white transition dark:bg-[#16242E]",
                   activeImage === index
-                    ? "border-[#8c7255] dark:border-accent-300"
+                    ? "border-[#244B50] dark:border-accent-300"
                     : "border-transparent opacity-65 hover:opacity-100",
                 )}
               >
@@ -758,7 +758,7 @@ function WardrobePreviewBody({ product }: { product: Product }) {
                     className={cn(
                       "relative h-8 w-8 overflow-hidden rounded-full border-2 transition",
                       activeImage === index
-                        ? "border-[#8c7255] dark:border-accent-300"
+                        ? "border-[#244B50] dark:border-accent-300"
                         : "border-transparent opacity-70 hover:opacity-100",
                     )}
                   >
@@ -771,7 +771,7 @@ function WardrobePreviewBody({ product }: { product: Product }) {
               </div>
             ) : (
               <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold">
-                <span className="h-3 w-3 rounded-full bg-[#b8a58d]" aria-hidden="true" />
+                <span className="h-3 w-3 rounded-full bg-[#B9B3A2]" aria-hidden="true" />
                 As shown
               </div>
             )}
@@ -785,7 +785,7 @@ function WardrobePreviewBody({ product }: { product: Product }) {
               <span className="text-[10px] text-muted-foreground">Set by the studio</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              <span className="inline-flex min-w-11 items-center justify-center rounded-lg border border-primary-700 bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white dark:border-accent-300 dark:bg-accent-300 dark:text-[#082f49]">
+              <span className="inline-flex min-w-11 items-center justify-center rounded-lg border border-primary-800 bg-primary-800 px-3 py-1.5 text-[11px] font-bold text-white dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950">
                 One size
               </span>
             </div>

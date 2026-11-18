@@ -2,11 +2,17 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  glass = false,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { glass?: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-soft)]",
+        glass
+          ? "rounded-2xl border border-[var(--glass-border)] bg-[var(--glass)] text-[var(--card-foreground)] backdrop-blur-xl shadow-[var(--shadow-soft)] transition duration-200 hover:border-accent-300/40 hover:shadow-lift"
+          : "rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-soft)] transition duration-200",
         className,
       )}
       {...props}

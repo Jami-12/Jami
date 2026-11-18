@@ -9,10 +9,12 @@ const SIZES = {
 
 export function Avatar({
   name,
+  src,
   size = "md",
   className,
 }: {
   name: string;
+  src?: string | null;
   size?: keyof typeof SIZES;
   className?: string;
 }) {
@@ -20,12 +22,24 @@ export function Avatar({
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 to-accent-500 font-bold text-white ring-2 ring-card",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-600 to-accent-500 font-bold text-white ring-2 ring-card",
         SIZES[size],
         className,
       )}
     >
-      {getInitials(name)}
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={name}
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            (e.currentTarget as HTMLElement).style.display = "none";
+          }}
+        />
+      ) : (
+        getInitials(name)
+      )}
     </span>
   );
 }

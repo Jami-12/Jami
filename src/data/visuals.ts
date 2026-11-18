@@ -53,19 +53,19 @@ export const CATEGORY_VISUALS: Record<string, { image: string; blurb: string }> 
 export const TESTIMONIALS = [
   {
     quote:
-      "The 3D preview is not a gimmick — being able to turn the speaker around before buying made the decision effortless.",
+      "The alternate photo on every card is such a small thing, but it is the reason I finally bought the overshirt. I knew exactly how it hung.",
     name: "Nadia Rahman",
     role: "Product designer, Dhaka",
   },
   {
     quote:
-      "Every detail feels considered, from the packaging to the way the lamp dims. Aether has become my default for gifts.",
+      "The knit arrived softer than it looked online, and the colour was true. Aether has become my default for pieces I keep for years.",
     name: "Imran Chowdhury",
     role: "Architect, Chattogram",
   },
   {
     quote:
-      "Delivery was fast, the finish is beautiful, and the order tracking actually works. Rare combination.",
+      "Ordered on Thursday, wearing it on Sunday. The packaging was beautiful and the fit notes were honest. Rare combination.",
     name: "Sara Ahmed",
     role: "Founder, Studio North",
   },
@@ -100,18 +100,18 @@ export const JOURNAL_POSTS = [
 
 export const TRUST_POINTS = [
   {
-    title: "Real-time 3D preview",
-    description: "Rotate, zoom and inspect every object before it ships.",
+    title: "Two views per piece",
+    description: "See it on the hanger and close up before it ships.",
     icon: "rotate",
   },
   {
     title: "Tracked delivery",
-    description: "Every order is tracked from our studio to your door.",
+    description: "Every order is tracked from our atelier to your door.",
     icon: "truck",
   },
   {
-    title: "7-day returns",
-    description: "Changed your mind? Return unused objects within seven days.",
+    title: "30-day returns",
+    description: "Changed your mind? Return unworn pieces within 30 days.",
     icon: "refresh",
   },
   {

@@ -37,7 +37,7 @@ export function Tabs({
           className={cn(
             "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition",
             value === item.value
-              ? "bg-[var(--color-primary-700)] text-white shadow-sm dark:bg-[var(--color-accent-300)] dark:text-[#082f49]"
+              ? "bg-[var(--color-primary-800)] text-[var(--color-primary-50)] shadow-sm dark:bg-[var(--color-accent-300)] dark:text-[var(--color-primary-950)]"
               : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
           )}
         >
@@ -47,7 +47,7 @@ export function Tabs({
               className={cn(
                 "rounded-full px-1.5 py-0.5 text-[10px]",
                 value === item.value
-                  ? "bg-white/20 text-white dark:bg-[#082f49]/15 dark:text-[#082f49]"
+                  ? "bg-white/20 text-white dark:bg-[var(--color-primary-950)]/15 dark:text-[var(--color-primary-950)]"
                   : "bg-[var(--muted)] text-[var(--muted-foreground)]",
               )}
             >

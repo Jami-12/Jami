@@ -20,7 +20,9 @@ export function PageSection({
       {title || actions ? (
         <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div>
-            {title ? <h2 className="text-sm font-bold tracking-tight">{title}</h2> : null}
+            {title ? (
+              <h2 className="font-display text-base font-semibold tracking-tight">{title}</h2>
+            ) : null}
             {description ? (
               <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
             ) : null}

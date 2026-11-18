@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/constants";
 import type {
+  Banner,
   Brand,
   Category,
   Paginated,
@@ -95,6 +96,13 @@ export const catalog = {
     publicRequest<ProductReviews>(
       `/products/${productId}/reviews${queryString(params)}`,
     ),
+
+  banners: async (placement?: "HERO" | "PROMO"): Promise<Banner[]> => {
+    const result = await publicRequest<{ banners: Banner[] }>(
+      `/banners${placement ? `?placement=${placement}` : ""}`,
+    );
+    return result.banners;
+  },
 };
 
 /** Featured products with a safe fallback so the home page never crashes. */
@@ -150,6 +158,23 @@ export async function getNewArrivals(limit = 4): Promise<Product[]> {
 export async function getCategories(): Promise<Category[]> {
   try {
     return await catalog.categories();
+  } catch {
+    return [];
+  }
+}
+
+export async function getBrands(): Promise<Brand[]> {
+  try {
+    return await catalog.brands();
+  } catch {
+    return [];
+  }
+}
+
+/** Active storefront banners. Returns an empty list if the API is unreachable. */
+export async function getActiveBanners(): Promise<Banner[]> {
+  try {
+    return await catalog.banners();
   } catch {
     return [];
   }

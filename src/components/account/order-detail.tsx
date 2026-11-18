@@ -10,6 +10,7 @@ import {
   CreditCard,
   Download,
   MapPin,
+  Printer,
   RotateCcw,
   Truck,
   XCircle,
@@ -28,6 +29,16 @@ import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-bad
 import { StripePaymentDialog } from "@/components/payments/stripe-payment-dialog";
 import { ordersApi, paymentsApi } from "@/lib/api/services";
 import { PAYMENT_METHOD_META } from "@/lib/constants";
+import {
+  PAYMENT_STATUS_POLL_TIMEOUT_MS,
+  PAYMENT_STATUS_REFRESH_INTERVAL_MS,
+  ensureInitiatePaymentResult,
+  getPaymentStartErrorMessage,
+  getSafePaymentRedirectUrl,
+  isOnlinePaymentMethod,
+  isPaymentInProgress,
+  isRedirectPaymentMethod,
+} from "@/lib/payments";
 import { cn, formatDate, getErrorMessage, humanizeEnum } from "@/lib/utils";
 import type { Order, PaymentStatus } from "@/types";
 
@@ -100,7 +111,16 @@ function PaymentBanner({ status }: { status: PaymentStatus }) {
   );
 }
 
-function ReceiptDialog({
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export function ReceiptDialog({
   orderId,
   open,
   onClose,
@@ -115,6 +135,97 @@ function ReceiptDialog({
     enabled: open,
   });
 
+  const downloadReceipt = () => {
+    const data = receipt.data;
+    if (!data) return;
+
+    const money = (value: number) =>
+      new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(value);
+    const rows = data.items
+      .map(
+        (item) => `
+          <tr>
+            <td>${escapeHtml(item.productName)}</td>
+            <td class="num">${item.quantity}</td>
+            <td class="num">${money(item.unitPrice)}</td>
+            <td class="num">${money(item.totalPrice)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Receipt ${escapeHtml(data.receiptNumber)}</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; background: #f8f6f0; color: #252b2b; font-family: Georgia, "Times New Roman", serif; }
+  .sheet { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid #dce1da; padding: 40px; }
+  .head { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #172b3a; padding-bottom: 20px; }
+  .brand { font-size: 24px; letter-spacing: .08em; text-transform: uppercase; color: #172b3a; margin: 0 0 6px; }
+  .muted { color: #5f6c69; font-size: 12px; line-height: 1.6; margin: 0; }
+  .meta { text-align: right; font-size: 12px; color: #5f6c69; }
+  .meta strong { display: block; color: #172b3a; font-size: 14px; margin-bottom: 4px; }
+  h2 { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #6f7c79; margin: 28px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6f7c79; border-bottom: 1px solid #dce1da; padding: 8px 6px; }
+  td { border-bottom: 1px solid #eef0ea; padding: 9px 6px; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .totals { margin-left: auto; width: 280px; margin-top: 18px; font-size: 13px; }
+  .totals div { display: flex; justify-content: space-between; padding: 5px 0; }
+  .totals .total { border-top: 2px solid #172b3a; margin-top: 6px; padding-top: 10px; font-weight: 700; color: #172b3a; }
+  .foot { margin-top: 32px; border-top: 1px solid #dce1da; padding-top: 16px; font-size: 11px; color: #6f7c79; text-align: center; }
+  @media print { body { background: #fff; padding: 0; } .sheet { border: 0; padding: 24px; } }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <div class="head">
+      <div>
+        <p class="brand">${escapeHtml(data.store.name)}</p>
+        <p class="muted">${escapeHtml(data.store.address)}</p>
+        <p class="muted">${escapeHtml(data.store.phone)} · ${escapeHtml(data.store.email)}</p>
+      </div>
+      <div class="meta">
+        <strong>${escapeHtml(data.receiptNumber)}</strong>
+        <p class="muted">Order ${escapeHtml(data.orderNumber)}</p>
+        <p class="muted">${escapeHtml(formatDate(data.issuedAt, "long"))}</p>
+      </div>
+    </div>
+    <h2>Billed to</h2>
+    <p class="muted">
+      <strong style="color:#252b2b">${escapeHtml(data.customer.name)}</strong><br />
+      ${escapeHtml(data.customer.email)}${data.customer.phone ? `<br />${escapeHtml(data.customer.phone)}` : ""}
+    </p>
+    <h2>Items</h2>
+    <table>
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="totals">
+      <div><span>Subtotal</span><span>${money(data.totals.subtotal)}</span></div>
+      <div><span>Discount</span><span>−${money(data.totals.discountAmount)}</span></div>
+      <div><span>Shipping</span><span>${money(data.totals.shippingCost)}</span></div>
+      <div class="total"><span>Total</span><span>${money(data.totals.totalAmount)} ${escapeHtml(data.totals.currency)}</span></div>
+    </div>
+    <p class="foot">Thank you for shopping with ${escapeHtml(data.store.name)}. This document was generated on ${escapeHtml(formatDate(new Date().toISOString(), "long"))}.</p>
+  </main>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `receipt-${data.receiptNumber}.html`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <Dialog
       open={open}
@@ -127,8 +238,17 @@ function ReceiptDialog({
           <Button variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>
-          <Button size="sm" onClick={() => window.print()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadReceipt}
+            disabled={!receipt.data}
+          >
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            Download
+          </Button>
+          <Button size="sm" onClick={() => window.print()} disabled={!receipt.data}>
+            <Printer className="h-3.5 w-3.5" aria-hidden="true" />
             Print
           </Button>
         </>
@@ -142,7 +262,7 @@ function ReceiptDialog({
         <div className="space-y-4 text-sm">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
             <div>
-              <p className="text-base font-extrabold">{receipt.data.store.name}</p>
+              <p className="font-display text-lg font-semibold">{receipt.data.store.name}</p>
               <p className="text-xs text-muted-foreground">{receipt.data.store.address}</p>
               <p className="text-xs text-muted-foreground">
                 {receipt.data.store.phone} · {receipt.data.store.email}
@@ -219,11 +339,32 @@ export function OrderDetailView({
   const [receiptOpen, setReceiptOpen] = React.useState(false);
   const [cardSession, setCardSession] = React.useState<{ clientSecret: string; publishableKey: string } | null>(null);
   const [paying, setPaying] = React.useState(false);
+  const payingRef = React.useRef(false);
+  const paymentPollStartedAt = React.useRef<number | null>(null);
 
   const orderQuery = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => ordersApi.get(orderId),
     enabled: Boolean(orderId),
+    // A gateway callback is not proof of payment. While the provider is still
+    // confirming an online payment, keep asking the backend for its
+    // authoritative status instead of making the customer refresh manually.
+    refetchInterval: (query) => {
+      const current = query.state.data;
+      if (!current) return false;
+      if (!isOnlinePaymentMethod(current.paymentMethod)) return false;
+      if (!isPaymentInProgress(current.paymentStatus)) return false;
+
+      const startedAt = paymentPollStartedAt.current;
+      if (
+        startedAt !== null &&
+        Date.now() - startedAt >= PAYMENT_STATUS_POLL_TIMEOUT_MS
+      ) {
+        return false;
+      }
+
+      return PAYMENT_STATUS_REFRESH_INTERVAL_MS;
+    },
   });
 
   const providersQuery = useQuery({
@@ -233,6 +374,8 @@ export function OrderDetailView({
   });
 
   const order = orderQuery.data;
+  // Provider callbacks append this query parameter. It is only a hint to
+  // refresh; every status shown below comes from the backend.
   const callbackStatus = normalizePaymentStatus(paymentStatusParam);
 
   React.useEffect(() => {
@@ -241,6 +384,19 @@ export function OrderDetailView({
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
     }
   }, [callbackStatus, orderId, queryClient]);
+
+  React.useEffect(() => {
+    const shouldPoll =
+      order !== undefined &&
+      isOnlinePaymentMethod(order.paymentMethod) &&
+      isPaymentInProgress(order.paymentStatus);
+
+    if (shouldPoll) {
+      paymentPollStartedAt.current ??= Date.now();
+    } else {
+      paymentPollStartedAt.current = null;
+    }
+  }, [order]);
 
   const cancelMutation = useMutation({
     mutationFn: () => ordersApi.cancel(orderId),
@@ -254,17 +410,38 @@ export function OrderDetailView({
   });
 
   const retryPayment = async (current: Order) => {
-    if (current.paymentStatus === "PAID") return;
+    if (current.paymentStatus === "PAID" || current.paymentStatus === "REFUNDED") return;
+    if (!isOnlinePaymentMethod(current.paymentMethod)) return;
+    if (payingRef.current) return;
+
+    payingRef.current = true;
     setPaying(true);
+
     try {
-      const initiation = await paymentsApi.initiate({ orderId: current.id });
+      const initiation = ensureInitiatePaymentResult(
+        await paymentsApi.initiate({ orderId: current.id }),
+        current.paymentMethod,
+      );
+
+      if (initiation.paymentStatus === "PAID") {
+        toast.success("This payment is already confirmed.");
+        void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+        void queryClient.invalidateQueries({ queryKey: ["orders"] });
+        return;
+      }
 
       if (current.paymentMethod === "CARD") {
-        if (initiation.clientSecret && providersQuery.data?.cardPublishableKey) {
+        const publishableKey = providersQuery.data?.cardPublishableKey;
+
+        if (initiation.clientSecret && publishableKey) {
           setCardSession({
             clientSecret: initiation.clientSecret,
-            publishableKey: providersQuery.data.cardPublishableKey,
+            publishableKey,
           });
+        } else if (initiation.clientSecret) {
+          toast.error(
+            "Card payments are configured on the server but no publishable key is available to the browser.",
+          );
         } else {
           toast.info(initiation.message || "Card payment is already processing.");
           void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
@@ -272,15 +449,32 @@ export function OrderDetailView({
         return;
       }
 
-      if (initiation.redirectUrl) {
-        window.location.assign(initiation.redirectUrl);
-        return;
-      }
+      if (isRedirectPaymentMethod(current.paymentMethod)) {
+        const redirectUrl = getSafePaymentRedirectUrl(
+          initiation.redirectUrl,
+          current.paymentMethod,
+        );
 
-      toast.info(initiation.message || "No payment link was returned by the provider.");
+        if (redirectUrl) {
+          window.location.assign(redirectUrl);
+          return;
+        }
+
+        const hadRedirectUrl =
+          typeof initiation.redirectUrl === "string" &&
+          initiation.redirectUrl.trim().length > 0;
+
+        toast.error(
+          hadRedirectUrl
+            ? "The payment provider returned an insecure checkout link. Please try again."
+            : initiation.message || "No payment link was returned by the provider.",
+        );
+        void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      }
     } catch (error) {
-      toast.error(getErrorMessage(error, "Could not start the payment"));
+      toast.error(getPaymentStartErrorMessage(error, current.paymentMethod));
     } finally {
+      payingRef.current = false;
       setPaying(false);
     }
   };
@@ -314,15 +508,15 @@ export function OrderDetailView({
   const canRetryPayment =
     order.paymentStatus !== "PAID" &&
     order.paymentStatus !== "REFUNDED" &&
-    order.paymentMethod !== "CASH_ON_DELIVERY" &&
+    isOnlinePaymentMethod(order.paymentMethod) &&
     order.status !== "CANCELLED" &&
     order.status !== "RETURNED";
 
-  const visibleStatus = callbackStatus ?? order.paymentStatus;
-
   return (
     <div className="space-y-5">
-      {callbackStatus ? <PaymentBanner status={callbackStatus} /> : null}
+      {isOnlinePaymentMethod(order.paymentMethod) ? (
+        <PaymentBanner status={order.paymentStatus} />
+      ) : null}
 
       <Card className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -338,7 +532,7 @@ export function OrderDetailView({
               <span className="text-muted-foreground" aria-hidden="true">·</span>
               <span className="text-xs text-muted-foreground">{formatDate(order.createdAt, "long")}</span>
             </div>
-            <h2 className="mt-1 text-2xl font-extrabold tracking-tight">{order.orderNumber}</h2>
+            <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">{order.orderNumber}</h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <OrderStatusBadge status={order.status} />
               <PaymentStatusBadge status={order.paymentStatus} />
@@ -371,7 +565,7 @@ export function OrderDetailView({
         <div className="space-y-5">
           <Card className="overflow-hidden">
             <div className="border-b border-border px-5 py-4">
-              <h3 className="text-sm font-bold">Items in this order</h3>
+              <h3 className="font-display text-base font-semibold">Items in this order</h3>
               <p className="text-xs text-muted-foreground">
                 {order.items.reduce((sum, item) => sum + item.quantity, 0)} unit(s) ·{" "}
                 {order.items.length} line{order.items.length === 1 ? "" : "s"}
@@ -428,7 +622,7 @@ export function OrderDetailView({
 
           {order.notes ? (
             <Card className="p-5">
-              <h3 className="text-sm font-bold">Delivery notes</h3>
+              <h3 className="font-display text-base font-semibold">Delivery notes</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{order.notes}</p>
             </Card>
           ) : null}
@@ -436,7 +630,7 @@ export function OrderDetailView({
 
         <div className="space-y-5">
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 text-sm font-bold">
+            <h3 className="flex items-center gap-2 font-display text-base font-semibold">
               <MapPin className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               Delivery address
             </h3>
@@ -458,7 +652,7 @@ export function OrderDetailView({
           </Card>
 
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 text-sm font-bold">
+            <h3 className="flex items-center gap-2 font-display text-base font-semibold">
               <CreditCard className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               Payment
             </h3>
@@ -468,8 +662,35 @@ export function OrderDetailView({
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-2">
               <span className="text-sm text-muted-foreground">Status</span>
-              <PaymentStatusBadge status={visibleStatus} />
+              <PaymentStatusBadge status={order.paymentStatus} />
             </div>
+            {order.paymentMethod === "CASH_ON_DELIVERY" &&
+            order.paymentStatus !== "PAID" &&
+            order.paymentStatus !== "REFUNDED" &&
+            order.status !== "CANCELLED" &&
+            order.status !== "RETURNED" ? (
+              <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] leading-relaxed text-amber-800 dark:text-amber-200">
+                Cash payment due. Please have{" "}
+                {new Intl.NumberFormat("en-US").format(order.totalAmount)} ready
+                when your order is delivered. The order is already confirmed.
+              </p>
+            ) : null}
+            {order.payment?.collectedAt ? (
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <span className="text-sm text-muted-foreground">Collected</span>
+                <span className="text-xs font-semibold">
+                  {formatDate(order.payment.collectedAt, "long")}
+                  {order.payment.collectedByName
+                    ? ` · ${order.payment.collectedByName}`
+                    : ""}
+                </span>
+              </div>
+            ) : null}
+            {order.payment?.collectionNote ? (
+              <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                {order.payment.collectionNote}
+              </p>
+            ) : null}
             {order.payment?.transactionId ? (
               <div className="mt-1.5 flex items-center justify-between gap-2">
                 <span className="text-sm text-muted-foreground">Transaction</span>
@@ -491,7 +712,7 @@ export function OrderDetailView({
           </Card>
 
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 text-sm font-bold">
+            <h3 className="flex items-center gap-2 font-display text-base font-semibold">
               <Truck className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               Fulfilment
             </h3>

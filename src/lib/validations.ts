@@ -143,6 +143,7 @@ export const productQuerySchema = z.object({
   q: z.string().trim().max(200).optional(),
   category: z.string().trim().max(200).optional(),
   brand: z.string().trim().max(200).optional(),
+  color: z.string().trim().max(40).optional(),
   minPrice: optionalNumber,
   maxPrice: optionalNumber,
   rating: z.preprocess(
@@ -174,7 +175,7 @@ export const productFormSchema = z
     categoryId: z.string().uuid("Choose a category"),
     brandId: z.string().uuid().optional().or(z.literal("")),
     brandName: z.string().trim().max(120).optional().or(z.literal("")),
-    modelUrl: z.string().trim().max(2000).optional().or(z.literal("")),
+    modelUrl: z.string().trim().max(2000).nullable().optional().or(z.literal("")),
     thumbnail: z.string().trim().max(2000).optional().or(z.literal("")),
     slug: z.string().trim().max(220).optional().or(z.literal("")),
   })
@@ -192,7 +193,6 @@ export const categorySchema = z.object({
   name: z.string().trim().min(2, "Name is required").max(120),
   slug: z.string().trim().max(160).optional().or(z.literal("")),
   description: z.string().trim().max(5000).optional().or(z.literal("")),
-  image: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
 export type CategoryValues = z.infer<typeof categorySchema>;
@@ -200,7 +200,6 @@ export type CategoryValues = z.infer<typeof categorySchema>;
 export const brandSchema = z.object({
   name: z.string().trim().min(2, "Name is required").max(120),
   slug: z.string().trim().max(160).optional().or(z.literal("")),
-  logo: z.string().trim().max(2000).optional().or(z.literal("")),
   description: z.string().trim().max(5000).optional().or(z.literal("")),
 });
 

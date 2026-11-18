@@ -12,7 +12,7 @@ export function JournalSection() {
             <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
             The journal
           </p>
-          <h2 id="journal-heading" className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
+          <h2 id="journal-heading" className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
             Notes on making and living well.
           </h2>
         </div>

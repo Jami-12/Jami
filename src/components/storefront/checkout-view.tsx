@@ -50,6 +50,12 @@ import {
   PAYMENT_METHOD_META,
   SHIPPING_FLAT_RATE,
 } from "@/lib/constants";
+import {
+  ensureInitiatePaymentResult,
+  getPaymentStartErrorMessage,
+  getSafePaymentRedirectUrl,
+  isRedirectPaymentMethod,
+} from "@/lib/payments";
 import { cn, formatCurrency, getErrorMessage } from "@/lib/utils";
 import { addressSchema, type AddressValues } from "@/lib/validations";
 import { useAuthStore } from "@/stores/auth-store";
@@ -58,7 +64,6 @@ import type {
   CouponValidation,
   PaymentMethod,
   PaymentProviderStatus,
-  PaymentStatus,
 } from "@/types";
 
 function computeCouponDiscount(coupon: CouponValidation["coupon"] | null, subtotal: number): number {
@@ -91,7 +96,7 @@ function CheckoutGate() {
         <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <ShieldCheck className="h-5 w-5" aria-hidden="true" />
         </span>
-        <h2 className="mt-4 text-xl font-extrabold">Sign in to check out</h2>
+        <h2 className="mt-4 font-display text-xl font-semibold">Sign in to check out</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Checkout is linked to your customer account so we can track delivery,
           payments and returns.
@@ -236,8 +241,8 @@ export function CheckoutView() {
   const [coupon, setCoupon] = React.useState<CouponValidation | null>(null);
   const [notes, setNotes] = React.useState("");
   const [placing, setPlacing] = React.useState(false);
+  const placingRef = React.useRef(false);
   const [cardSession, setCardSession] = React.useState<{ orderId: string; clientSecret: string } | null>(null);
-  const [lastOrderId, setLastOrderId] = React.useState<string | null>(null);
 
   const isCustomer = user?.role === "CUSTOMER";
 
@@ -295,13 +300,20 @@ export function CheckoutView() {
   });
 
   const goToOrder = React.useCallback(
-    (orderId: string, status: PaymentStatus | "PENDING") => {
-      router.push(`/dashboard/orders/${orderId}?paymentStatus=${status}`);
+    (orderId: string) => {
+      // The account route is the normal order view. The dashboard callback
+      // route is reserved for gateway redirects.
+      router.push(`/account/orders/${orderId}`);
     },
     [router],
   );
 
   const placeOrder = async () => {
+    // React state updates are asynchronous, so a very fast double click can
+    // fire this handler twice before the button becomes disabled. The ref
+    // stops the second submission immediately.
+    if (placingRef.current) return;
+
     if (!selectedAddress) {
       toast.error("Choose a delivery address before placing the order.");
       return;
@@ -312,70 +324,111 @@ export function CheckoutView() {
     }
 
     const selectedOption = PAYMENT_OPTIONS.find((option) => option.value === paymentMethod);
-    if (providers && selectedOption && !providers[selectedOption.providerKey]) {
-      toast.error("That payment method is not available right now. Choose another.");
+    if (!selectedOption) {
+      toast.error("Choose a payment method before placing the order.");
       return;
     }
 
+    if (paymentMethod !== "CASH_ON_DELIVERY") {
+      if (!providers) {
+        toast.error("Payment methods are still loading. Please try again in a moment.");
+        return;
+      }
+      if (!providers[selectedOption.providerKey]) {
+        toast.error("That payment method is not available right now. Choose another.");
+        return;
+      }
+      if (paymentMethod === "CARD" && !providers.cardPublishableKey) {
+        toast.error("Card payments are not available right now. Choose another method.");
+        return;
+      }
+    }
+
+    placingRef.current = true;
     setPlacing(true);
 
-    let order;
     try {
-      order = await ordersApi.checkout({
-        addressId: selectedAddress,
-        paymentMethod,
-        couponCode: coupon?.coupon.code,
-        notes: notes.trim() || undefined,
-      });
-    } catch (error) {
-      toast.error(getErrorMessage(error, "Could not place this order"));
-      setPlacing(false);
-      return;
-    }
+      let order;
+      try {
+        order = await ordersApi.checkout({
+          addressId: selectedAddress,
+          paymentMethod,
+          couponCode: coupon?.coupon.code,
+          notes: notes.trim() || undefined,
+        });
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Could not place this order"));
+        return;
+      }
 
-    resetCart();
-    setLastOrderId(order.id);
-    void queryClient.invalidateQueries({ queryKey: ["orders"] });
-    void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      resetCart();
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
 
-    if (paymentMethod === "CASH_ON_DELIVERY") {
-      toast.success("Order placed. Pay the courier when it arrives.");
-      goToOrder(order.id, "PENDING");
-      return;
-    }
+      // Cash on delivery is complete at order creation. It must never start
+      // an online payment session or show a pending-payment prompt.
+      if (paymentMethod === "CASH_ON_DELIVERY") {
+        toast.success("Order placed. Pay the courier when it arrives.");
+        goToOrder(order.id);
+        return;
+      }
 
-    try {
-      const initiation = await paymentsApi.initiate({ orderId: order.id });
+      let initiation;
+      try {
+        initiation = ensureInitiatePaymentResult(
+          await paymentsApi.initiate({ orderId: order.id }),
+          paymentMethod,
+        );
+      } catch (error) {
+        toast.error(
+          getPaymentStartErrorMessage(
+            error,
+            paymentMethod,
+            "Your order was saved, but the payment could not be started. Retry from the order page.",
+          ),
+        );
+        goToOrder(order.id);
+        return;
+      }
+
+      if (initiation.paymentStatus === "PAID") {
+        toast.success("Payment confirmed. Your order is being prepared.");
+        goToOrder(order.id);
+        return;
+      }
 
       if (paymentMethod === "CARD") {
         if (initiation.clientSecret) {
           setCardSession({ orderId: order.id, clientSecret: initiation.clientSecret });
         } else {
           toast.info(initiation.message || "Your card payment is already processing.");
-          goToOrder(order.id, initiation.paymentStatus);
+          goToOrder(order.id);
         }
         return;
       }
 
-      if (initiation.redirectUrl) {
-        window.location.assign(initiation.redirectUrl);
-        return;
-      }
+      if (isRedirectPaymentMethod(paymentMethod)) {
+        const redirectUrl = getSafePaymentRedirectUrl(initiation.redirectUrl, paymentMethod);
 
-      toast.error(
-        initiation.message ||
-          "The payment provider did not return a checkout link. Retry from your order page.",
-      );
-      goToOrder(order.id, initiation.paymentStatus);
-    } catch (error) {
-      toast.error(
-        getErrorMessage(
-          error,
-          "Your order was placed, but the payment could not be started. Retry from your order page.",
-        ),
-      );
-      goToOrder(order.id, "PENDING");
+        if (redirectUrl) {
+          window.location.assign(redirectUrl);
+          return;
+        }
+
+        const hadRedirectUrl =
+          typeof initiation.redirectUrl === "string" &&
+          initiation.redirectUrl.trim().length > 0;
+
+        toast.error(
+          hadRedirectUrl
+            ? "The payment provider returned an insecure checkout link. Your order was saved — retry from the order page."
+            : initiation.message ||
+                "The payment provider did not return a checkout link. Your order was saved — retry from the order page.",
+        );
+        goToOrder(order.id);
+      }
     } finally {
+      placingRef.current = false;
       setPlacing(false);
     }
   };
@@ -410,7 +463,7 @@ export function CheckoutView() {
       <EmptyState
         icon={Truck}
         title="Your bag is empty"
-        description="Add at least one object before continuing to checkout."
+        description="Add at least one piece before continuing to checkout."
         action={
           <Button asChild>
             <Link href="/products">Explore the collection</Link>
@@ -480,7 +533,7 @@ export function CheckoutView() {
                       className={cn(
                         "mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
                         active
-                          ? "border-primary-600 bg-primary-600 text-white dark:border-accent-300 dark:bg-accent-300 dark:text-[#082f49]"
+                          ? "border-primary-600 bg-primary-600 text-white dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950"
                           : "border-border",
                       )}
                       aria-hidden="true"
@@ -732,15 +785,17 @@ export function CheckoutView() {
         <StripePaymentDialog
           open={Boolean(cardSession)}
           onClose={() => {
+            const orderId = cardSession.orderId;
             setCardSession(null);
-            if (lastOrderId) goToOrder(lastOrderId, "PENDING");
+            goToOrder(orderId);
           }}
           orderId={cardSession.orderId}
           clientSecret={cardSession.clientSecret}
           publishableKey={providers.cardPublishableKey}
-          onResolved={(status) => {
+          onResolved={() => {
+            const orderId = cardSession.orderId;
             setCardSession(null);
-            goToOrder(cardSession.orderId, status);
+            goToOrder(orderId);
           }}
         />
       ) : null}

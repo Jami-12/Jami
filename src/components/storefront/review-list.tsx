@@ -107,7 +107,7 @@ export function ReviewList({
         <Star className="mx-auto h-5 w-5 text-muted-foreground" aria-hidden="true" />
         <p className="mt-2 text-sm font-semibold">No reviews yet</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          If you own this object, share how it lives in your space.
+          If you own this piece, share how it fits and wears.
         </p>
       </div>
     );

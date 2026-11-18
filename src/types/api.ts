@@ -170,6 +170,29 @@ export interface UpdateUserStatusInput {
   isActive?: boolean;
 }
 
+/** Read-only admin customer directory. Never exposes roles or access controls. */
+export interface CustomerListParams {
+  page?: number;
+  limit?: number;
+  status?: UserStatus;
+  search?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface CustomerSummary {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  status: UserStatus;
+  isActive: boolean;
+  orderCount: number;
+  paidOrderCount: number;
+  totalSpent: number;
+  lastOrderAt: string | null;
+  createdAt: string;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Catalog                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -181,6 +204,7 @@ export interface Category {
   description: string | null;
   image: string | null;
   productCount: number;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -199,6 +223,7 @@ export interface Brand {
   logo: string | null;
   description: string | null;
   productCount: number;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -545,6 +570,10 @@ export interface PaymentSummary {
   transactionId: string | null;
   providerReference: string | null;
   paidAt: string | null;
+  collectedById: string | null;
+  collectedByName: string | null;
+  collectedAt: string | null;
+  collectionNote: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1162,4 +1191,45 @@ export interface AuditLogListParams {
   userId?: string;
   search?: string;
   sortOrder?: "asc" | "desc";
+}
+
+/* -------------------------------------------------------------------------- */
+/* Banners & Uploads                                                          */
+/* -------------------------------------------------------------------------- */
+
+export type UploadFolder = "avatar" | "product" | "banner";
+
+export interface UploadedImageResult {
+  url: string;
+  imageUrl?: string;
+  publicId?: string;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number;
+  mimeType?: string;
+}
+
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  imageUrl: string;
+  publicId: string | null;
+  linkUrl: string | null;
+  placement: "HERO" | "PROMO";
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BannerInput {
+  title: string;
+  subtitle?: string | null;
+  imageUrl: string;
+  publicId?: string | null;
+  linkUrl?: string | null;
+  placement?: "HERO" | "PROMO";
+  isActive?: boolean;
+  sortOrder?: number;
 }

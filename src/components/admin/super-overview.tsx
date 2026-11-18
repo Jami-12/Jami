@@ -3,15 +3,11 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowDownRight,
   ArrowRight,
-  ArrowUpRight,
   Banknote,
   Boxes,
-  Receipt,
   TrendingDown,
   TrendingUp,
-  Users,
   Wallet,
 } from "lucide-react";
 
@@ -115,35 +111,6 @@ export function SuperOverview() {
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Customers"
-          value={dashboard?.management.users.customers ?? "—"}
-          hint={`${dashboard?.management.users.newThisMonth ?? 0} new this month`}
-          icon={Users}
-        />
-        <StatCard
-          label="Products"
-          value={dashboard?.management.products.total ?? "—"}
-          hint={`${dashboard?.management.products.active ?? 0} active`}
-          icon={Receipt}
-        />
-        <StatCard
-          label="Unpaid bills"
-          value={<Price amount={dashboard?.bills.unpaidTotal ?? 0} size="lg" />}
-          hint={`${dashboard?.bills.overdueCount ?? 0} overdue`}
-          icon={ArrowDownRight}
-          tone={dashboard?.bills.overdueCount ? "danger" : "warning"}
-        />
-        <StatCard
-          label="Monthly payroll"
-          value={<Price amount={dashboard?.employees.monthlyPayroll ?? 0} size="lg" />}
-          hint={`${dashboard?.employees.active ?? 0} active employees`}
-          icon={Banknote}
-          tone="accent"
-        />
-      </div>
-
       <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
         <PageSection
           title="Recent transactions"
@@ -221,30 +188,48 @@ export function SuperOverview() {
               ) : null}
             </ul>
           </PageSection>
+          <PageSection title="Operations" description="Customers, catalogue and overheads.">
+            <dl className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Customers</dt>
+                <dd className="font-bold">
+                  {dashboard?.management.users.customers ?? "—"}
+                  <span className="ml-1.5 text-[11px] font-medium text-muted-foreground">
+                    +{dashboard?.management.users.newThisMonth ?? 0} new
+                  </span>
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Products</dt>
+                <dd className="font-bold">
+                  {dashboard?.management.products.total ?? "—"}
+                  <span className="ml-1.5 text-[11px] font-medium text-muted-foreground">
+                    {dashboard?.management.products.active ?? 0} active
+                  </span>
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Unpaid bills</dt>
+                <dd className="font-bold">
+                  <Price amount={dashboard?.bills.unpaidTotal ?? 0} size="sm" />
+                  <span className="ml-1.5 text-[11px] font-medium text-muted-foreground">
+                    {dashboard?.bills.overdueCount ?? 0} overdue
+                  </span>
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Monthly payroll</dt>
+                <dd className="font-bold">
+                  <Price amount={dashboard?.employees.monthlyPayroll ?? 0} size="sm" />
+                  <span className="ml-1.5 text-[11px] font-medium text-muted-foreground">
+                    {dashboard?.employees.active ?? 0} active
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          </PageSection>
         </div>
       </div>
-
-      <PageSection title="Management" description="Where to go next.">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { href: "/super-admin/analytics", label: "Analytics", icon: TrendingUp },
-            { href: "/super-admin/users", label: "Users & roles", icon: Users },
-            { href: "/super-admin/salaries", label: "Payroll", icon: Banknote },
-            { href: "/super-admin/audit", label: "Audit trail", icon: ArrowUpRight },
-          ].map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-sm font-semibold transition hover:border-primary-300 hover:bg-muted/40"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-primary-600 dark:text-accent-300">
-                <action.icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              {action.label}
-            </Link>
-          ))}
-        </div>
-      </PageSection>
     </div>
   );
 }

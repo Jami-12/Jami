@@ -117,7 +117,7 @@ export function AccountOverview() {
           tone="accent"
         />
         <StatCard
-          label="Saved objects"
+          label="Saved pieces"
           value={wishlistCount}
           hint="Wishlist items"
           icon={Heart}
@@ -221,28 +221,6 @@ export function AccountOverview() {
           </PageSection>
         </div>
       </div>
-
-      <PageSection title="Quick actions" description="Common account tasks.">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { href: "/products", label: "Browse the collection", icon: Package },
-            { href: "/wishlist", label: "Review your wishlist", icon: Heart },
-            { href: "/account/addresses", label: "Manage addresses", icon: MapPin },
-            { href: "/account/security", label: "Password & security", icon: ShieldCheck },
-          ].map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-sm font-semibold transition hover:border-primary-300 hover:bg-muted/40"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-primary-600 dark:text-accent-300">
-                <action.icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              {action.label}
-            </Link>
-          ))}
-        </div>
-      </PageSection>
     </div>
   );
 }

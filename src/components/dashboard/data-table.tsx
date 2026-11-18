@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 export interface DataColumn<T> {
@@ -26,63 +34,48 @@ export function DataTable<T>({
   className?: string;
 }) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            {columns.map((column) => (
-              <th
-                key={column.header}
-                scope="col"
-                className={cn(
-                  "whitespace-nowrap px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground",
-                  column.headerClassName,
-                )}
-              >
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            Array.from({ length: 5 }).map((_, index) => (
-              <tr key={index} className="border-b border-border/60">
-                {columns.map((column) => (
-                  <td key={column.header} className="px-3 py-3">
-                    <Skeleton className="h-4 w-full max-w-32" />
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : rows.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-3 py-10 text-center text-sm text-muted-foreground"
-              >
-                {empty}
-              </td>
-            </tr>
-          ) : (
-            rows.map((row) => (
-              <tr
-                key={getKey(row)}
-                className="border-b border-border/60 transition last:border-0 hover:bg-muted/40"
-              >
-                {columns.map((column) => (
-                  <td
-                    key={column.header}
-                    className={cn("px-3 py-3 align-middle", column.className)}
-                  >
-                    {column.cell(row)}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Table className={cn("min-w-[40rem]", className)}>
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          {columns.map((column) => (
+            <TableHead key={column.header} className={column.headerClassName}>
+              {column.header}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {loading ? (
+          Array.from({ length: 5 }).map((_, index) => (
+            <TableRow key={index}>
+              {columns.map((column) => (
+                <TableCell key={column.header}>
+                  <Skeleton className="h-4 w-full max-w-32" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        ) : rows.length === 0 ? (
+          <TableRow className="hover:bg-transparent">
+            <TableCell
+              colSpan={columns.length}
+              className="py-10 text-center text-sm text-muted-foreground"
+            >
+              {empty}
+            </TableCell>
+          </TableRow>
+        ) : (
+          rows.map((row) => (
+            <TableRow key={getKey(row)}>
+              {columns.map((column) => (
+                <TableCell key={column.header} className={column.className}>
+                  {column.cell(row)}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }
