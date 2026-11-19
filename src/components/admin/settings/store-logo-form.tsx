@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/card";
 import { FormField, Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { settingsApi } from "@/lib/api/services";
+import { relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 
 interface StoreFormValues {
@@ -87,7 +89,7 @@ export function StoreLogoForm() {
       // the global Brand), the shared query cache, and the server tree.
       setSettings(updated);
       queryClient.setQueryData(["settings"], updated);
-      void queryClient.invalidateQueries({ queryKey: ["settings"] });
+      invalidateKeys(queryClient, relatedKeys("settings"));
       setLogoFile(null);
       setLogoCleared(false);
       reset({ siteName: updated.siteName });

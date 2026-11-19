@@ -68,8 +68,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { notificationsApi } from "@/lib/api/services";
 import { NOTIFICATION_META, ROLE_META } from "@/lib/constants";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { cn, formatRelative, getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -364,30 +366,68 @@ function NotificationsPopover({
   const [open, setOpen] = React.useState(false);
   const queryClient = useQueryClient();
 
+  const popoverKey = queryKeys.notifications.popover();
+  const unreadKey = queryKeys.notifications.unreadCount();
+
   const list = useQuery({
-    queryKey: ["notifications", "popover"],
+    queryKey: popoverKey,
     queryFn: () => notificationsApi.list({ limit: 5 }),
     enabled: open,
     refetchInterval: open ? 45_000 : false,
   });
 
   const invalidate = React.useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    invalidateKeys(queryClient, relatedKeys("notifications"));
   }, [queryClient]);
+
+  /** Keeps the popover list and the shell badge in sync before the refetch. */
+  const applyRead = (ids?: string[]) => {
+    queryClient.setQueryData<{ unreadCount: number; items: Array<{ id: string; isRead: boolean }> }>(
+      popoverKey,
+      (current) =>
+        current
+          ? {
+              ...current,
+              unreadCount: ids
+                ? Math.max(0, current.unreadCount - ids.length)
+                : 0,
+              items: current.items.map((item) =>
+                !ids || ids.includes(item.id) ? { ...item, isRead: true } : item,
+              ),
+            }
+          : current,
+    );
+    queryClient.setQueryData<{ unreadCount: number }>(unreadKey, (current) =>
+      current
+        ? {
+            ...current,
+            unreadCount: ids ? Math.max(0, current.unreadCount - ids.length) : 0,
+          }
+        : current,
+    );
+  };
 
   const markOne = useMutation({
     mutationFn: notificationsApi.markRead,
+    onMutate: (id: string) => applyRead([id]),
     onSuccess: invalidate,
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => {
+      invalidate();
+      toast.error(getErrorMessage(error));
+    },
   });
 
   const markAll = useMutation({
     mutationFn: notificationsApi.markAllRead,
+    onMutate: () => applyRead(),
     onSuccess: () => {
       invalidate();
       toast.success("All notifications marked as read");
     },
-    onError: (error) => toast.error(getErrorMessage(error)),
+    onError: (error) => {
+      invalidate();
+      toast.error(getErrorMessage(error));
+    },
   });
 
   const unreadCount = list.data?.unreadCount ?? badgeCount;
@@ -527,7 +567,7 @@ export function DashboardShell({
   }, [pathname]);
 
   const notifications = useQuery({
-    queryKey: ["notifications", "unread-count"],
+    queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => notificationsApi.list({ limit: 1 }),
     enabled: Boolean(user),
     staleTime: 30_000,

@@ -23,9 +23,11 @@ import { FormField, Input, Select, Textarea } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { clampPage, invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { expensesApi } from "@/lib/api/services";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABEL } from "@/lib/constants";
 import { formResolver } from "@/lib/form-resolver";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formatDate, getErrorMessage, humanizeEnum } from "@/lib/utils";
 import { expenseSchema, type ExpenseValues } from "@/lib/validations";
 import type { Expense } from "@/types";
@@ -62,13 +64,13 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
   React.useEffect(() => setPage(1), [filter, debounced, sortOrder, limit]);
 
   const summary = useQuery({
-    queryKey: ["expenses", "summary"],
+    queryKey: queryKeys.expenses.summary(),
     queryFn: expensesApi.summary,
     staleTime: 60_000,
   });
 
   const query = useQuery({
-    queryKey: ["expenses", { page, limit, filter, search: debounced, sortOrder }],
+    queryKey: queryKeys.expenses.list({ page, limit, filter, search: debounced, sortOrder }),
     queryFn: () =>
       expensesApi.list({
         page,
@@ -110,10 +112,7 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
     setOpen(true);
   };
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["expenses"] });
-    void queryClient.invalidateQueries({ queryKey: ["accounting"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("expenses"));
 
   const save = useMutation({
     mutationFn: (values: ExpenseValues) => {
@@ -158,6 +157,11 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
     onSuccess: () => {
       toast.success("Expense cancelled");
       setCancelling(null);
+      const meta = query.data?.meta;
+      if (meta) {
+        const safe = clampPage(page, Math.max(0, meta.total - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
       invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not cancel the expense")),

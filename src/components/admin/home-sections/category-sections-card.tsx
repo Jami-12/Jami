@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { settingsApi } from "@/lib/api/services";
+import { relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import type {
   Category,
@@ -109,7 +111,7 @@ export function CategorySectionsCard({
     },
     onSuccess: (updated, update) => {
       setSettings(updated);
-      void queryClient.invalidateQueries({ queryKey: ["settings"] });
+      invalidateKeys(queryClient, relatedKeys("settings"));
       router.refresh();
 
       if (update.kind === "master") {

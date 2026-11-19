@@ -8,7 +8,9 @@ import { useSiteSettings } from "@/components/providers/site-settings-provider";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { settingsApi } from "@/lib/api/services";
+import { relatedKeys } from "@/lib/query-keys";
 import { HOME_SECTION_META, type HomeSectionKey } from "@/lib/site-settings";
 import { getErrorMessage } from "@/lib/utils";
 import type { SiteSettings, UpdateSettingsInput } from "@/types";
@@ -48,7 +50,7 @@ export function SectionToggleCard({
     },
     onSuccess: (updated, { key, value }) => {
       setSettings(updated);
-      void queryClient.invalidateQueries({ queryKey: ["settings"] });
+      invalidateKeys(queryClient, relatedKeys("settings"));
       router.refresh();
       toast.success(`${HOME_SECTION_META[key].label} ${value ? "enabled" : "disabled"}`);
     },

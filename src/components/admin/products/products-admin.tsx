@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
-import { toast } from "sonner";
 
 import { ProductImagesDialog } from "./product-images-dialog";
 import { productColumns } from "./product-columns";
@@ -17,9 +16,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Input, Select } from "@/components/ui/input";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import {
+  clampPage,
+  useOptimisticMutation,
+} from "@/hooks/use-optimistic-mutation";
 import { categoriesApi, productsApi } from "@/lib/api/services";
 import { PRODUCT_STATUSES } from "@/lib/constants";
-import { getErrorMessage, humanizeEnum } from "@/lib/utils";
+import { relatedKeys } from "@/lib/query-keys";
+import { humanizeEnum } from "@/lib/utils";
 import type { Paginated, Product } from "@/types";
 import { productName } from "@/types";
 
@@ -72,89 +76,76 @@ export function ProductsAdmin() {
     enabled: categoryId === "ALL" || Boolean(categorySlug),
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-    void queryClient.invalidateQueries({ queryKey: ["products"] });
+  const invalidateKeys = React.useMemo(() => relatedKeys("products"), []);
+
+  const patchItems = (
+    current: unknown,
+    update: (items: Product[]) => Product[],
+  ): unknown => {
+    if (!current || typeof current !== "object" || !("items" in current)) return current;
+    const data = current as Paginated<Product>;
+    return { ...data, items: update(data.items) };
   };
 
-  const remove = useMutation({
+  const remove = useOptimisticMutation({
     mutationFn: (id: string) => productsApi.remove(id),
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, id) =>
+      patchItems(current, (items) => items.filter((item) => item.id !== id)),
+    invalidateKeys,
+    successMessage: "Product deleted",
+    errorMessage: "Could not delete the product",
     onSuccess: () => {
-      toast.success("Product deleted");
       setDeleting(null);
-      invalidate();
+      const cached = queryClient.getQueryData<Paginated<Product>>(listKey);
+      if (cached) {
+        const safe = clampPage(page, Math.max(0, cached.meta.total - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
     },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not delete the product")),
   });
 
-  const toggleFeatured = useMutation({
+  const toggleFeatured = useOptimisticMutation({
     mutationFn: (product: Product) =>
       productsApi.update(product.id, { isFeatured: !product.isFeatured }),
-    onMutate: async (product) => {
-      setFeaturedPendingId(product.id);
-      await queryClient.cancelQueries({ queryKey: ["admin", "products"] });
-      const previous = queryClient.getQueryData<Paginated<Product>>(listKey);
-      queryClient.setQueryData<Paginated<Product>>(listKey, (current) =>
-        current
-          ? {
-              ...current,
-              items: current.items.map((item) =>
-                item.id === product.id ? { ...item, isFeatured: !item.isFeatured } : item,
-              ),
-            }
-          : current,
-      );
-      return { previous };
-    },
-    onSuccess: () => toast.success("Featured flag updated"),
-    onError: (error, _product, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(listKey, context.previous);
-      }
-      toast.error(getErrorMessage(error, "Could not update the product"));
-    },
-    onSettled: () => {
-      setFeaturedPendingId(null);
-      invalidate();
-    },
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, product) =>
+      patchItems(current, (items) =>
+        items.map((item) =>
+          item.id === product.id ? { ...item, isFeatured: !item.isFeatured } : item,
+        ),
+      ),
+    invalidateKeys,
+    successMessage: "Featured flag updated",
+    errorMessage: "Could not update the product",
+    onMutate: (product) => setFeaturedPendingId(product.id),
+    onSettled: () => setFeaturedPendingId(null),
   });
 
-  const toggleStatus = useMutation({
+  const toggleStatus = useOptimisticMutation({
     mutationFn: (product: Product) =>
       productsApi.updateStatus(
         product.id,
         product.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
       ),
-    onMutate: async (product) => {
-      setStatusPendingId(product.id);
-      await queryClient.cancelQueries({ queryKey: ["admin", "products"] });
-      const previous = queryClient.getQueryData<Paginated<Product>>(listKey);
-      const nextStatus = product.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      queryClient.setQueryData<Paginated<Product>>(listKey, (current) =>
-        current
-          ? {
-              ...current,
-              items: current.items.map((item) =>
-                item.id === product.id ? { ...item, status: nextStatus } : item,
-              ),
-            }
-          : current,
-      );
-      return { previous };
-    },
-    onSuccess: (_product, input) => {
-      toast.success(input.status === "ACTIVE" ? "Product enabled" : "Product disabled");
-    },
-    onError: (error, _product, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(listKey, context.previous);
-      }
-      toast.error(getErrorMessage(error, "Could not update the status"));
-    },
-    onSettled: () => {
-      setStatusPendingId(null);
-      invalidate();
-    },
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, product) =>
+      patchItems(current, (items) =>
+        items.map((item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+              }
+            : item,
+        ),
+      ),
+    invalidateKeys,
+    successMessage: (_, product) =>
+      product.status === "ACTIVE" ? "Product enabled" : "Product disabled",
+    errorMessage: "Could not update the status",
+    onMutate: (product) => setStatusPendingId(product.id),
+    onSettled: () => setStatusPendingId(null),
   });
 
   const rows = query.data?.items ?? [];

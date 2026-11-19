@@ -23,7 +23,9 @@ import { FormField, Input, Select, Textarea } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { clampPage, invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { employeesApi, salariesApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { MONTHS } from "@/lib/constants";
 import { formResolver } from "@/lib/form-resolver";
 import { formatDate, formatMonth, getErrorMessage, humanizeEnum } from "@/lib/utils";
@@ -70,22 +72,28 @@ export function SalariesView() {
   );
 
   const summary = useQuery({
-    queryKey: ["salaries", "summary", year],
+    queryKey: queryKeys.salaries.summary(year),
     queryFn: () => salariesApi.summary(year),
     staleTime: 60_000,
   });
 
   const employees = useQuery({
-    queryKey: ["employees", "options"],
+    queryKey: queryKeys.employees.options(),
     queryFn: () => employeesApi.list({ limit: 100, sortOrder: "asc" }),
     staleTime: 5 * 60_000,
   });
 
   const query = useQuery({
-    queryKey: [
-      "salaries",
-      { page, limit, year, month, status, employeeId, search: debounced, sortOrder },
-    ],
+    queryKey: queryKeys.salaries.list({
+      page,
+      limit,
+      year,
+      month,
+      status,
+      employeeId,
+      search: debounced,
+      sortOrder,
+    }),
     queryFn: () =>
       salariesApi.list({
         page,
@@ -114,11 +122,7 @@ export function SalariesView() {
     setOpen(true);
   };
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["salaries"] });
-    void queryClient.invalidateQueries({ queryKey: ["expenses"] });
-    void queryClient.invalidateQueries({ queryKey: ["accounting"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("salaries"));
 
   const save = useMutation({
     mutationFn: (values: SalaryValues) =>
@@ -156,6 +160,11 @@ export function SalariesView() {
     onSuccess: () => {
       toast.success("Salary payment cancelled");
       setCancelling(null);
+      const meta = query.data?.meta;
+      if (meta) {
+        const safe = clampPage(page, Math.max(0, meta.total - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
       invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not cancel the salary payment")),

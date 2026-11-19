@@ -7,7 +7,9 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { FieldError, Label, Textarea } from "@/components/ui/input";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { reviewsApi } from "@/lib/api/services";
+import { relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import { reviewSchema } from "@/lib/validations";
 
@@ -25,7 +27,7 @@ export function ReviewForm({ productId }: { productId: string }) {
       toast.success("Review submitted — it will appear after moderation.");
       setRating(0);
       setComment("");
-      void queryClient.invalidateQueries({ queryKey: ["product-reviews", productId] });
+      invalidateKeys(queryClient, relatedKeys("reviews"));
     },
     onError: (mutationError) =>
       toast.error(getErrorMessage(mutationError, "Could not submit your review")),

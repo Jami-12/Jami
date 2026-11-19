@@ -28,8 +28,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
 import { StripePaymentDialog } from "@/components/payments/stripe-payment-dialog";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { ordersApi, paymentsApi } from "@/lib/api/services";
 import { PAYMENT_METHOD_META } from "@/lib/constants";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import {
   PAYMENT_STATUS_POLL_TIMEOUT_MS,
   PAYMENT_STATUS_REFRESH_INTERVAL_MS,
@@ -61,25 +63,25 @@ function normalizePaymentStatus(value: string | null | undefined): PaymentStatus
 function PaymentBanner({ status }: { status: PaymentStatus }) {
   const content: Record<PaymentStatus, { tone: string; icon: typeof CheckCircle2; title: string; copy: string }> = {
     PAID: {
-      tone: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200",
+      tone: "border-success/25 bg-success-soft text-success",
       icon: CheckCircle2,
       title: "Payment received",
       copy: "Thank you — your payment is confirmed and the order is being prepared.",
     },
     PENDING: {
-      tone: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200",
+      tone: "border-warning/25 bg-warning-soft text-warning",
       icon: AlertCircle,
       title: "Payment pending",
       copy: "This order is waiting for payment. You can retry from this page if you used an online method.",
     },
     PROCESSING: {
-      tone: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-200",
+      tone: "border-info/25 bg-info-soft text-info",
       icon: RotateCcw,
       title: "Payment processing",
       copy: "The provider is still confirming this payment. We will update the order automatically.",
     },
     FAILED: {
-      tone: "border-red-200 bg-red-50 text-red-800 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200",
+      tone: "border-danger/25 bg-danger-soft text-danger",
       icon: XCircle,
       title: "Payment failed",
       copy: "The provider did not complete this payment. Retry below or choose a different order.",
@@ -131,7 +133,7 @@ export function ReceiptDialog({
   onClose: () => void;
 }) {
   const receipt = useQuery({
-    queryKey: ["order-receipt", orderId],
+    queryKey: queryKeys.orders.receipt(orderId),
     queryFn: () => ordersApi.receipt(orderId),
     enabled: open,
   });
@@ -154,31 +156,44 @@ export function ReceiptDialog({
       )
       .join("");
 
+    // Carry the active theme's semantic tokens into the standalone print document.
+    const printStyles = getComputedStyle(document.documentElement);
+    const printTokens = [
+      "background",
+      "foreground",
+      "card",
+      "border",
+      "muted-foreground",
+      "primary",
+    ]
+      .map((token) => `--${token}: ${printStyles.getPropertyValue(`--${token}`).trim()};`)
+      .join("\n  ");
+
     const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <title>Receipt ${escapeHtml(data.receiptNumber)}</title>
 <style>
-  :root { color-scheme: light; }
+  :root { color-scheme: light; ${printTokens} }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 40px; background: #f8f6f0; color: #252b2b; font-family: Georgia, "Times New Roman", serif; }
-  .sheet { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid #dce1da; padding: 40px; }
-  .head { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #172b3a; padding-bottom: 20px; }
-  .brand { font-size: 24px; letter-spacing: .08em; text-transform: uppercase; color: #172b3a; margin: 0 0 6px; }
-  .muted { color: #5f6c69; font-size: 12px; line-height: 1.6; margin: 0; }
-  .meta { text-align: right; font-size: 12px; color: #5f6c69; }
-  .meta strong { display: block; color: #172b3a; font-size: 14px; margin-bottom: 4px; }
-  h2 { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #6f7c79; margin: 28px 0 8px; }
+  body { margin: 0; padding: 40px; background: var(--background); color: var(--foreground); font-family: Georgia, "Times New Roman", serif; }
+  .sheet { max-width: 760px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); padding: 40px; }
+  .head { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid var(--primary); padding-bottom: 20px; }
+  .brand { font-size: 24px; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); margin: 0 0 6px; }
+  .muted { color: var(--muted-foreground); font-size: 12px; line-height: 1.6; margin: 0; }
+  .meta { text-align: right; font-size: 12px; color: var(--muted-foreground); }
+  .meta strong { display: block; color: var(--foreground); font-size: 14px; margin-bottom: 4px; }
+  h2 { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted-foreground); margin: 28px 0 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6f7c79; border-bottom: 1px solid #dce1da; padding: 8px 6px; }
-  td { border-bottom: 1px solid #eef0ea; padding: 9px 6px; }
+  th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-foreground); border-bottom: 1px solid var(--border); padding: 8px 6px; }
+  td { border-bottom: 1px solid var(--border); padding: 9px 6px; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .totals { margin-left: auto; width: 280px; margin-top: 18px; font-size: 13px; }
   .totals div { display: flex; justify-content: space-between; padding: 5px 0; }
-  .totals .total { border-top: 2px solid #172b3a; margin-top: 6px; padding-top: 10px; font-weight: 700; color: #172b3a; }
-  .foot { margin-top: 32px; border-top: 1px solid #dce1da; padding-top: 16px; font-size: 11px; color: #6f7c79; text-align: center; }
-  @media print { body { background: #fff; padding: 0; } .sheet { border: 0; padding: 24px; } }
+  .totals .total { border-top: 2px solid var(--primary); margin-top: 6px; padding-top: 10px; font-weight: 700; color: var(--primary); }
+  .foot { margin-top: 32px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 11px; color: var(--muted-foreground); text-align: center; }
+  @media print { body { background: var(--card); padding: 0; } .sheet { border: 0; padding: 24px; } }
 </style>
 </head>
 <body>
@@ -197,7 +212,7 @@ export function ReceiptDialog({
     </div>
     <h2>Billed to</h2>
     <p class="muted">
-      <strong style="color:#252b2b">${escapeHtml(data.customer.name)}</strong><br />
+      <strong style="color:var(--foreground)">${escapeHtml(data.customer.name)}</strong><br />
       ${escapeHtml(data.customer.email)}${data.customer.phone ? `<br />${escapeHtml(data.customer.phone)}` : ""}
     </p>
     <h2>Items</h2>
@@ -336,6 +351,10 @@ export function OrderDetailView({
   paymentStatusParam?: string | null;
 }) {
   const queryClient = useQueryClient();
+  const refreshOrder = React.useCallback(
+    () => invalidateKeys(queryClient, relatedKeys("orders")),
+    [queryClient],
+  );
   const [cancelOpen, setCancelOpen] = React.useState(false);
   const [receiptOpen, setReceiptOpen] = React.useState(false);
   const [cardSession, setCardSession] = React.useState<{ clientSecret: string; publishableKey: string } | null>(null);
@@ -344,7 +363,7 @@ export function OrderDetailView({
   const paymentPollStartedAt = React.useRef<number | null>(null);
 
   const orderQuery = useQuery({
-    queryKey: ["order", orderId],
+    queryKey: queryKeys.orders.detail(orderId),
     queryFn: () => ordersApi.get(orderId),
     enabled: Boolean(orderId),
     refetchInterval: (query) => {
@@ -366,7 +385,7 @@ export function OrderDetailView({
   });
 
   const providersQuery = useQuery({
-    queryKey: ["payment-providers"],
+    queryKey: queryKeys.paymentProviders.all(),
     queryFn: paymentsApi.providers,
     staleTime: 60_000,
   });
@@ -375,11 +394,8 @@ export function OrderDetailView({
   const callbackStatus = normalizePaymentStatus(paymentStatusParam);
 
   React.useEffect(() => {
-    if (callbackStatus) {
-      void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-      void queryClient.invalidateQueries({ queryKey: ["orders"] });
-    }
-  }, [callbackStatus, orderId, queryClient]);
+    if (callbackStatus) refreshOrder();
+  }, [callbackStatus, refreshOrder]);
 
   React.useEffect(() => {
     const shouldPoll =
@@ -398,9 +414,7 @@ export function OrderDetailView({
     mutationFn: () => ordersApi.cancel(orderId),
     onSuccess: () => {
       toast.success("Order cancelled");
-      void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-      void queryClient.invalidateQueries({ queryKey: ["orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      refreshOrder();
       setCancelOpen(false);
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not cancel this order")),
@@ -422,9 +436,7 @@ export function OrderDetailView({
 
       if (initiation.paymentStatus === "PAID") {
         toast.success("This payment is already confirmed.");
-        void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-        void queryClient.invalidateQueries({ queryKey: ["orders"] });
-        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        refreshOrder();
         return;
       }
 
@@ -442,7 +454,7 @@ export function OrderDetailView({
           );
         } else {
           toast.info(initiation.message || "Card payment is already processing.");
-          void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+          refreshOrder();
         }
         return;
       }
@@ -467,7 +479,7 @@ export function OrderDetailView({
             ? "The payment provider returned an insecure checkout link. Please try again."
             : initiation.message || "No payment link was returned by the provider.",
         );
-        void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+        refreshOrder();
       }
     } catch (error) {
       toast.error(getPaymentStartErrorMessage(error, current.paymentMethod));
@@ -603,7 +615,7 @@ export function OrderDetailView({
                 <dd><Price amount={order.subtotal} size="sm" /></dd>
               </div>
               {order.discountAmount > 0 ? (
-                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                <div className="flex justify-between text-success">
                   <dt>Discount{order.coupon ? ` · ${order.coupon.code}` : ""}</dt>
                   <dd className="font-semibold tabular-nums">−{new Intl.NumberFormat("en-US").format(order.discountAmount)}</dd>
                 </div>
@@ -631,7 +643,7 @@ export function OrderDetailView({
         <div className="space-y-5">
           <Card className="p-5">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <MapPin className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+              <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
               Delivery address
             </CardTitle>
             {order.address ? (
@@ -653,7 +665,7 @@ export function OrderDetailView({
 
           <Card className="p-5">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <CreditCard className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+              <CreditCard className="h-4 w-4 text-primary" aria-hidden="true" />
               Payment
             </CardTitle>
             <dl className="mt-3 space-y-2 text-sm">
@@ -703,7 +715,7 @@ export function OrderDetailView({
             order.paymentStatus !== "REFUNDED" &&
             order.status !== "CANCELLED" &&
             order.status !== "RETURNED" ? (
-              <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] leading-relaxed text-amber-800 dark:text-amber-200">
+              <p className="mt-3 rounded-lg border border-warning/25 bg-warning-soft p-2.5 text-[11px] leading-relaxed text-warning">
                 Cash payment due. Please have{" "}
                 {new Intl.NumberFormat("en-US").format(order.totalAmount)} ready
                 when your order is delivered. The order is already confirmed.
@@ -713,7 +725,7 @@ export function OrderDetailView({
 
           <Card className="p-5">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <Truck className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+              <Truck className="h-4 w-4 text-primary" aria-hidden="true" />
               Fulfilment
             </CardTitle>
             <ol className="mt-4 space-y-3">
@@ -728,7 +740,7 @@ export function OrderDetailView({
                       className={cn(
                         "inline-flex h-5 w-5 items-center justify-center rounded-full border",
                         complete
-                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          ? "border-success bg-success text-primary-foreground"
                           : "border-border text-muted-foreground",
                       )}
                       aria-hidden="true"
@@ -771,9 +783,7 @@ export function OrderDetailView({
           publishableKey={cardSession.publishableKey}
           onResolved={() => {
             setCardSession(null);
-            void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-            void queryClient.invalidateQueries({ queryKey: ["orders"] });
-            void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            refreshOrder();
           }}
         />
       ) : null}

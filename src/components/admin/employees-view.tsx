@@ -23,7 +23,9 @@ import { FormField, Input, Select } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { employeesApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formResolver } from "@/lib/form-resolver";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { employeeSchema, type EmployeeValues } from "@/lib/validations";
@@ -59,13 +61,13 @@ export function EmployeesView() {
   );
 
   const summary = useQuery({
-    queryKey: ["employees", "summary"],
+    queryKey: queryKeys.employees.summary(),
     queryFn: employeesApi.summary,
     staleTime: 60_000,
   });
 
   const query = useQuery({
-    queryKey: ["employees", { page, limit, status, department, search: debounced, sortOrder }],
+    queryKey: queryKeys.employees.list({ page, limit, status, department, search: debounced, sortOrder }),
     queryFn: () =>
       employeesApi.list({
         page,
@@ -108,11 +110,7 @@ export function EmployeesView() {
     setOpen(true);
   };
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["employees"] });
-    void queryClient.invalidateQueries({ queryKey: ["salaries"] });
-    void queryClient.invalidateQueries({ queryKey: ["accounting"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("employees"));
 
   const save = useMutation({
     mutationFn: (values: EmployeeValues) => {

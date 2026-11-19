@@ -14,7 +14,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField, Input, Select } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { bannersApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import type { BannerInput } from "@/types";
 
@@ -46,7 +48,7 @@ export function BannerForm({ bannerId }: { bannerId?: string }) {
   const [imageError, setImageError] = React.useState<string | undefined>();
 
   const banner = useQuery({
-    queryKey: ["admin", "banner", bannerId],
+    queryKey: queryKeys.banners.detail(bannerId ?? ""),
     queryFn: () => bannersApi.get(bannerId!),
     enabled: Boolean(bannerId),
   });
@@ -92,8 +94,7 @@ export function BannerForm({ bannerId }: { bannerId?: string }) {
     },
     onSuccess: () => {
       toast.success(isEdit ? "Banner updated" : "Banner created");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "banners"] });
-      void queryClient.invalidateQueries({ queryKey: ["public", "banners"] });
+      invalidateKeys(queryClient, relatedKeys("banners"));
       router.push("/admin/banners");
       router.refresh();
     },

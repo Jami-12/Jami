@@ -39,6 +39,7 @@ import { Price } from "@/components/ui/price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import {
   addressesApi,
   couponsApi,
@@ -50,6 +51,7 @@ import {
   PAYMENT_METHOD_META,
   SHIPPING_FLAT_RATE,
 } from "@/lib/constants";
+import { relatedKeys } from "@/lib/query-keys";
 import {
   ensureInitiatePaymentResult,
   getPaymentStartErrorMessage,
@@ -156,7 +158,7 @@ function AddressFormDialog({
         isDefault: values.isDefault,
       }),
     onSuccess: (address) => {
-      void queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      invalidateKeys(queryClient, relatedKeys("addresses"));
       toast.success("Delivery address saved");
       reset();
       onCreated(address.id);
@@ -362,8 +364,7 @@ export function CheckoutView() {
       }
 
       resetCart();
-      void queryClient.invalidateQueries({ queryKey: ["orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateKeys(queryClient, relatedKeys("orders"));
 
       // Cash on delivery is complete at order creation. It must never start
       // an online payment session or show a pending-payment prompt.

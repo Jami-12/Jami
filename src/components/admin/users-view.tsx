@@ -23,7 +23,9 @@ import { FormField, Input, Select } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { clampPage, invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { usersApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formResolver } from "@/lib/form-resolver";
 import { formatDate, getErrorMessage, getInitials, humanizeEnum } from "@/lib/utils";
 import {
@@ -94,10 +96,15 @@ export function UsersView() {
   );
 
   const query = useQuery({
-    queryKey: [
-      "users",
-      { page, limit, role: roleFilter, status: statusFilter, search: debounced, includeDeleted, sortOrder },
-    ],
+    queryKey: queryKeys.users.list({
+      page,
+      limit,
+      role: roleFilter,
+      status: statusFilter,
+      search: debounced,
+      includeDeleted,
+      sortOrder,
+    }),
     queryFn: () =>
       usersApi.list({
         page,
@@ -120,9 +127,7 @@ export function UsersView() {
     defaultValues: EMPTY_ADMIN,
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["users"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("users"));
 
   const openEdit = (user: UserResponse) => {
     setEditing(user);
@@ -189,6 +194,11 @@ export function UsersView() {
     onSuccess: () => {
       toast.success("User deleted");
       setDeleting(null);
+      const meta = query.data?.meta;
+      if (meta) {
+        const safe = clampPage(page, Math.max(0, meta.total - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
       invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not delete the user")),

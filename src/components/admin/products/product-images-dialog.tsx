@@ -16,7 +16,9 @@ import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { productImagesApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { cn, getErrorMessage } from "@/lib/utils";
 import type { ProductImage } from "@/types";
 
@@ -51,7 +53,7 @@ export function ProductImagesDialog({
   );
 
   const query = useQuery({
-    queryKey: ["product-images", productId],
+    queryKey: queryKeys.products.images(productId),
     queryFn: () => productImagesApi.list(productId),
     enabled: open,
   });
@@ -63,11 +65,7 @@ export function ProductImagesDialog({
     (image) => !image.isPrimary && image.id !== secondary?.id,
   );
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["product-images", productId] });
-    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-    void queryClient.invalidateQueries({ queryKey: ["products"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("products"));
 
   const upload = useMutation({
     mutationFn: async ({ slot, files }: UploadTarget) => {
@@ -285,7 +283,7 @@ export function ProductImagesDialog({
               className={cn(
                 "mt-3 rounded-xl border-2 border-dashed p-4 transition",
                 dragging
-                  ? "border-primary-400 bg-accent-100/40 dark:bg-accent-300/5"
+                  ? "border-primary bg-primary/5"
                   : "border-border",
               )}
             >
@@ -377,7 +375,7 @@ export function ProductImagesDialog({
                         variant="ghost"
                         size="icon"
                         aria-label="Remove image"
-                        className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                        className="h-8 w-8 text-muted-foreground hover:text-danger"
                         onClick={() => setDeleting(image)}
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -434,7 +432,7 @@ function ImageSlot({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={image?.altText ?? label} className="h-full w-full object-cover" />
             {uploading ? (
-              <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
+              <span className="absolute inset-0 flex items-center justify-center bg-foreground/50 text-[11px] font-semibold uppercase tracking-[0.16em] text-background">
                 Uploading…
               </span>
             ) : null}
@@ -460,7 +458,7 @@ function ImageSlot({
         )}
 
         {src ? (
-          <span className="absolute left-2 top-2 rounded-full bg-[#252B2B]/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur">
+          <span className="absolute left-2 top-2 rounded-full bg-foreground/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-background backdrop-blur">
             {label}
           </span>
         ) : null}
@@ -492,7 +490,7 @@ function ImageSlot({
               variant="ghost"
               size="icon"
               aria-label={`Remove ${label.toLowerCase()}`}
-              className="h-8 w-8 text-muted-foreground hover:text-red-600"
+              className="h-8 w-8 text-muted-foreground hover:text-danger"
               onClick={onRemove}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />

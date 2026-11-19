@@ -13,7 +13,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField, Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { couponsApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formResolver } from "@/lib/form-resolver";
 import { getErrorMessage } from "@/lib/utils";
 import { couponSchema, type CouponValues } from "@/lib/validations";
@@ -41,7 +43,7 @@ export function CouponForm({ couponId }: { couponId?: string }) {
   const isEdit = Boolean(couponId);
 
   const coupon = useQuery({
-    queryKey: ["admin", "coupon", couponId],
+    queryKey: queryKeys.coupons.detail(couponId ?? ""),
     queryFn: () => couponsApi.get(couponId!),
     enabled: Boolean(couponId),
   });
@@ -96,7 +98,7 @@ export function CouponForm({ couponId }: { couponId?: string }) {
     },
     onSuccess: () => {
       toast.success(isEdit ? "Coupon updated" : "Coupon created");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "coupons"] });
+      invalidateKeys(queryClient, relatedKeys("coupons"));
       router.push("/admin/coupons");
       router.refresh();
     },

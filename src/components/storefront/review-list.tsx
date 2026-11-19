@@ -11,7 +11,9 @@ import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FieldError, Label, Textarea } from "@/components/ui/input";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Skeleton } from "@/components/ui/skeleton";
+import { clampPage, invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { reviewsApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Review } from "@/types";
@@ -35,14 +37,11 @@ export function ReviewList({
   const [deleting, setDeleting] = React.useState<Review | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["product-reviews", productId, page],
+    queryKey: queryKeys.products.reviews(productId, page),
     queryFn: () => reviewsApi.forProduct(productId, { page, limit: 5 }),
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["product-reviews", productId] });
-    void queryClient.invalidateQueries({ queryKey: ["products", productId] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("reviews"));
 
   const update = useMutation({
     mutationFn: () =>
@@ -63,6 +62,11 @@ export function ReviewList({
     onSuccess: () => {
       toast.success("Review deleted");
       setDeleting(null);
+      const meta = data?.meta;
+      if (meta) {
+        const safe = clampPage(page, Math.max(0, meta.total - 1), 5);
+        if (safe !== page) setPage(safe);
+      }
       invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not delete the review")),

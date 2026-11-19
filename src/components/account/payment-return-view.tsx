@@ -9,7 +9,9 @@ import { OrderDetailView } from "@/components/account/order-detail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { paymentsApi } from "@/lib/api/services";
+import { relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { PaymentStatus } from "@/types";
@@ -52,9 +54,7 @@ export function PaymentReturnView({
         const payment = await paymentsApi.reconcileCard(orderId);
         setVerifiedStatus(payment.status);
         setReconcileState("checked");
-        void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-        void queryClient.invalidateQueries({ queryKey: ["orders"] });
-        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        invalidateKeys(queryClient, relatedKeys("orders"));
       } catch (error) {
         setReconcileState("error");
         setReconcileError(

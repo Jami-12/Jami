@@ -10,7 +10,7 @@ import type { QueryKey } from "@tanstack/react-query";
  */
 export const queryKeys = {
   /** Root prefix. Useful for a deliberately broad `invalidateQueries`. */
-  all: ["aether"] as const,
+  all: ["store"] as const,
 
   settings: {
     all: ["settings"] as const,
@@ -79,6 +79,8 @@ export const queryKeys = {
 
   users: {
     all: () => ["users"] as const,
+    list: (params?: Record<string, unknown>) =>
+      params ? (["users", params] as const) : (["users", "list"] as const),
     me: () => ["users", "me"] as const,
     auditOptions: () => ["users", "audit-options"] as const,
     admin: {
@@ -238,6 +240,7 @@ const RELATED: Record<string, QueryKey[]> = {
     queryKeys.products.all(),
   ],
   users: [queryKeys.users.all(), queryKeys.audit.all()],
+  addresses: [queryKeys.addresses.all()],
   employees: [
     queryKeys.employees.all(),
     queryKeys.salaries.all(),

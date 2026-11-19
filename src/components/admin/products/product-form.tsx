@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { FormField, Input, Select, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import {
   brandsApi,
   categoriesApi,
@@ -29,6 +30,7 @@ import {
   productsApi,
 } from "@/lib/api/services";
 import { PRODUCT_STATUSES } from "@/lib/constants";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formResolver } from "@/lib/form-resolver";
 import { generateSku, slugify } from "@/lib/slug";
 import { getErrorMessage, humanizeEnum } from "@/lib/utils";
@@ -91,17 +93,17 @@ export function ProductForm({ productId }: { productId?: string }) {
   }, []);
 
   const categories = useQuery({
-    queryKey: ["categories"],
+    queryKey: queryKeys.categories.all(),
     queryFn: () => categoriesApi.list(),
     staleTime: 120_000,
   });
   const brands = useQuery({
-    queryKey: ["brands"],
+    queryKey: queryKeys.brands.all(),
     queryFn: () => brandsApi.list(),
     staleTime: 120_000,
   });
   const product = useQuery({
-    queryKey: ["admin", "product", productId],
+    queryKey: queryKeys.products.admin.detail(productId ?? ""),
     queryFn: () => productsApi.get(productId!),
     enabled: Boolean(productId),
   });
@@ -163,10 +165,7 @@ export function ProductForm({ productId }: { productId?: string }) {
     });
   }, [product.data, reset]);
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-    void queryClient.invalidateQueries({ queryKey: ["products"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("products"));
 
   const addFiles = React.useCallback(
     (files: File[]) => {

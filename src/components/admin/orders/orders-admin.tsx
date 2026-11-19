@@ -19,7 +19,9 @@ import { Input, Select } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { ordersApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import {
   ORDER_STATUSES,
   PAYMENT_METHOD_META,
@@ -44,11 +46,7 @@ export function OrdersAdmin() {
   );
 
   const query = useQuery({
-    queryKey: [
-      "admin",
-      "orders",
-      { page, limit, search: debounced, status, paymentStatus },
-    ],
+    queryKey: queryKeys.orders.admin.list({ page, limit, search: debounced, status, paymentStatus }),
     queryFn: () =>
       ordersApi.adminList({
         page,
@@ -60,7 +58,7 @@ export function OrdersAdmin() {
   });
 
   const detail = useQuery({
-    queryKey: ["admin", "order", viewingId],
+    queryKey: queryKeys.orders.admin.detail(viewingId ?? ""),
     queryFn: () => ordersApi.get(viewingId as string),
     enabled: Boolean(viewingId),
   });
@@ -70,10 +68,7 @@ export function OrdersAdmin() {
       ordersApi.updateStatus(id, next),
     onSuccess: () => {
       toast.success("Order status updated");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin", "order"] });
-      void queryClient.invalidateQueries({ queryKey: ["order"] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      invalidateKeys(queryClient, relatedKeys("orders"));
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not update the order")),
   });
@@ -96,11 +91,8 @@ export function OrdersAdmin() {
       setCollectOpen(false);
       setCollectionNote("");
       setCollectionReference("");
-      queryClient.setQueryData(["admin", "order", updated.id], updated);
-      void queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin", "order"] });
-      void queryClient.invalidateQueries({ queryKey: ["order"] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.setQueryData(queryKeys.orders.admin.detail(updated.id), updated);
+      invalidateKeys(queryClient, relatedKeys("orders"));
     },
     onError: (error) =>
       toast.error(getErrorMessage(error, "Could not record the cash payment")),

@@ -16,8 +16,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField, Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { brandsApi, categoriesApi } from "@/lib/api/services";
 import { formResolver } from "@/lib/form-resolver";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { slugify } from "@/lib/slug";
 import { getErrorMessage } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
@@ -67,7 +69,7 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
   const [saveError, setSaveError] = React.useState<string | null>(null);
 
   const item = useQuery<Category | Brand>({
-    queryKey: [mode, "detail", itemId],
+    queryKey: queryKeys.taxonomy.detail(mode, itemId ?? ""),
     queryFn: () => (mode === "categories" ? categoriesApi.get(itemId!) : brandsApi.get(itemId!)),
     enabled: Boolean(itemId),
   });
@@ -140,9 +142,11 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
       toast.success(
         `${singular[0]!.toUpperCase()}${singular.slice(1)} ${isEdit ? "updated" : "created"}`,
       );
-      void queryClient.invalidateQueries({ queryKey: [mode] });
-      void queryClient.invalidateQueries({ queryKey: ["categories"] });
-      void queryClient.invalidateQueries({ queryKey: ["brands"] });
+      invalidateKeys(queryClient, [
+        ...relatedKeys(mode),
+        queryKeys.taxonomy.storefront.categories(),
+        queryKeys.taxonomy.storefront.brands(),
+      ]);
       router.push(`/admin/${mode}`);
       router.refresh();
     },

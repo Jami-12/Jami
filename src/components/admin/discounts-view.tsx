@@ -22,8 +22,10 @@ import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { productDiscountsApi, productsApi } from "@/lib/api/services";
 import { formResolver } from "@/lib/form-resolver";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formatDate, getErrorMessage, humanizeEnum, isoDate } from "@/lib/utils";
 import { discountSchema, type DiscountValues } from "@/lib/validations";
 import type { Product, ProductDiscount, ProductDiscountDetail } from "@/types";
@@ -75,7 +77,7 @@ export function DiscountsView() {
   React.useEffect(() => setPage(1), [debounced, limit]);
 
   const query = useQuery({
-    queryKey: ["products", "discounts", { page, limit, search: debounced }],
+    queryKey: queryKeys.products.discounts({ page, limit, search: debounced }),
     queryFn: () =>
       productsApi.list({
         page,
@@ -87,7 +89,7 @@ export function DiscountsView() {
   });
 
   const options = useQuery({
-    queryKey: ["products", "discount-options"],
+    queryKey: queryKeys.products.discountOptions(),
     queryFn: () => productsApi.list({ limit: 100, sortBy: "title", sortOrder: "asc" }),
     staleTime: 5 * 60_000,
   });
@@ -98,7 +100,7 @@ export function DiscountsView() {
   // discount is fetched to surface scheduled, expired and paused campaigns too.
   const discountQueries = useQueries({
     queries: rows.map((product) => ({
-      queryKey: ["product-discount", product.id],
+      queryKey: queryKeys.products.discount(product.id),
       queryFn: () => productDiscountsApi.get(product.id),
       staleTime: 60_000,
     })),
@@ -162,11 +164,7 @@ export function DiscountsView() {
     setOpen(true);
   };
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["products"] });
-    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-    void queryClient.invalidateQueries({ queryKey: ["product-discount"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("discounts"));
 
   const save = useMutation({
     mutationFn: (values: DiscountValues) => {

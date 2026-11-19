@@ -189,17 +189,23 @@ export const useCartStore = create<CartState>()(
       },
 
       clear: async () => {
-        if (isCustomer()) {
-          set({ syncing: true });
-          try {
-            await cartApi.clear();
-          } catch (error) {
-            toast.error(getErrorMessage(error, "Could not clear your bag"));
-          } finally {
-            set({ syncing: false });
-          }
+        const previous = get().items;
+
+        if (!isCustomer()) {
+          set({ items: [] });
+          return;
         }
-        set({ items: [] });
+
+        // Clear immediately for responsive UI, then reconcile with the API.
+        // A failed write restores the previous bag instead of silently dropping it.
+        set({ items: [], syncing: true });
+        try {
+          await cartApi.clear();
+          set({ syncing: false });
+        } catch (error) {
+          set({ items: previous, syncing: false });
+          toast.error(getErrorMessage(error, "Could not clear your bag"));
+        }
       },
 
       syncFromServer: async () => {

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImageIcon, Loader2, Mail, Phone, ShieldCheck, UploadCloud, UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,7 +15,9 @@ import { FormField, Input } from "@/components/ui/input";
 import { PageSection } from "@/components/dashboard/page-section";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { uploadsApi, usersApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { ROLE_META } from "@/lib/constants";
 import { getErrorMessage, humanizeEnum } from "@/lib/utils";
 import { profileSchema, type ProfileValues } from "@/lib/validations";
@@ -24,12 +26,13 @@ import { useAuthStore } from "@/stores/auth-store";
 export function ProfileForm() {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const queryClient = useQueryClient();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = React.useState(false);
 
   const profile = useQuery({
-    queryKey: ["users", "me"],
+    queryKey: queryKeys.users.me(),
     queryFn: usersApi.me,
     staleTime: 60_000,
   });
@@ -113,6 +116,8 @@ export function ProfileForm() {
       }),
     onSuccess: (updated) => {
       setUser(updated);
+      queryClient.setQueryData(queryKeys.users.me(), updated);
+      invalidateKeys(queryClient, relatedKeys("users"));
       toast.success("Profile updated");
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not update your profile")),

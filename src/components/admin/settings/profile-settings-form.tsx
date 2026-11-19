@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/card";
 import { FormField, Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { uploadsApi, usersApi } from "@/lib/api/services";
 import { formResolver } from "@/lib/form-resolver";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import { profileSchema, type ProfileValues } from "@/lib/validations";
 import { useAuthStore } from "@/stores/auth-store";
@@ -31,7 +33,7 @@ export function ProfileSettingsForm() {
   const [existingImage, setExistingImage] = React.useState<string | null>(user?.image ?? null);
 
   const profile = useQuery({
-    queryKey: ["users", "me"],
+    queryKey: queryKeys.users.me(),
     queryFn: usersApi.me,
     staleTime: 60_000,
   });
@@ -71,7 +73,8 @@ export function ProfileSettingsForm() {
       });
 
       setUser(updated);
-      queryClient.setQueryData(["users", "me"], updated);
+      queryClient.setQueryData(queryKeys.users.me(), updated);
+      invalidateKeys(queryClient, relatedKeys("users"));
       setExistingImage(updated.image ?? null);
       setAvatarFile(null);
       reset({

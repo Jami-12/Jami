@@ -25,7 +25,9 @@ import { Price } from "@/components/ui/price";
 import { ProductStatusBadge } from "@/components/ui/status-badge";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { inventoryApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { INVENTORY_MOVEMENTS, INVENTORY_MOVEMENT_LABEL } from "@/lib/constants";
 import { formatDate, formatNumber, getErrorMessage, humanizeEnum } from "@/lib/utils";
 import type { InventoryItem, InventoryLog } from "@/types";
@@ -49,13 +51,13 @@ export function InventoryAdmin() {
   React.useEffect(() => setLogsPage(1), [logsFor, logsLimit]);
 
   const overview = useQuery({
-    queryKey: ["inventory", "overview"],
+    queryKey: queryKeys.inventory.overview(),
     queryFn: inventoryApi.overview,
     staleTime: 60_000,
   });
 
   const query = useQuery({
-    queryKey: ["inventory", { page, limit, search: debounced, lowStockOnly }],
+    queryKey: queryKeys.inventory.list({ page, limit, search: debounced, lowStockOnly }),
     queryFn: () =>
       inventoryApi.list({
         page,
@@ -68,7 +70,7 @@ export function InventoryAdmin() {
   });
 
   const logs = useQuery({
-    queryKey: ["inventory", "logs", logsFor?.id, { page: logsPage, limit: logsLimit }],
+    queryKey: queryKeys.inventory.logs(logsFor?.id, { page: logsPage, limit: logsLimit }),
     queryFn: () =>
       inventoryApi.logs({
         productId: logsFor?.id,
@@ -78,10 +80,7 @@ export function InventoryAdmin() {
     enabled: Boolean(logsFor),
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["inventory"] });
-    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("inventory"));
 
   const adjust = useMutation({
     mutationFn: () => {

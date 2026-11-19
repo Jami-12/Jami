@@ -15,7 +15,9 @@ import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormField, Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { addressesApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import { addressSchema, type AddressValues } from "@/lib/validations";
 import type { Address } from "@/types";
@@ -38,7 +40,7 @@ export function AddressBook() {
   const [deleting, setDeleting] = React.useState<Address | null>(null);
 
   const query = useQuery({
-    queryKey: ["addresses"],
+    queryKey: queryKeys.addresses.all(),
     queryFn: addressesApi.list,
     staleTime: 30_000,
   });
@@ -74,8 +76,7 @@ export function AddressBook() {
     setOpen(true);
   };
 
-  const invalidate = () =>
-    void queryClient.invalidateQueries({ queryKey: ["addresses"] });
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("addresses"));
 
   const save = useMutation({
     mutationFn: (values: AddressValues) => {

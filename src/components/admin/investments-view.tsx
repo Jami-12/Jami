@@ -21,7 +21,9 @@ import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select, Textarea } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { clampPage, invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { investmentsApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formResolver } from "@/lib/form-resolver";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { investmentSchema, type InvestmentValues } from "@/lib/validations";
@@ -53,13 +55,13 @@ export function InvestmentsView() {
   );
 
   const summary = useQuery({
-    queryKey: ["investments", "summary"],
+    queryKey: queryKeys.investments.summary(),
     queryFn: investmentsApi.summary,
     staleTime: 60_000,
   });
 
   const query = useQuery({
-    queryKey: ["investments", { page, limit, search: debounced, startDate, endDate, sortOrder }],
+    queryKey: queryKeys.investments.list({ page, limit, search: debounced, startDate, endDate, sortOrder }),
     queryFn: () =>
       investmentsApi.list({
         page,
@@ -98,10 +100,7 @@ export function InvestmentsView() {
     setOpen(true);
   };
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["investments"] });
-    void queryClient.invalidateQueries({ queryKey: ["accounting"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("investments"));
 
   const save = useMutation({
     mutationFn: (values: InvestmentValues) => {
@@ -129,6 +128,11 @@ export function InvestmentsView() {
     onSuccess: () => {
       toast.success("Investment removed");
       setDeleting(null);
+      const meta = query.data?.meta;
+      if (meta) {
+        const safe = clampPage(page, Math.max(0, meta.total - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
       invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not remove the investment")),

@@ -17,7 +17,9 @@ import { Input } from "@/components/ui/input";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { invalidateKeys, clampPage } from "@/hooks/use-optimistic-mutation";
 import { reviewsApi } from "@/lib/api/services";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import type { Review } from "@/types";
 
@@ -32,8 +34,10 @@ export function ReviewsAdmin() {
 
   React.useEffect(() => setPage(1), [filter, limit]);
 
+  const listKey = queryKeys.reviews.admin.list({ filter, page, limit });
+
   const query = useQuery({
-    queryKey: ["admin", "reviews", { filter, page, limit }],
+    queryKey: listKey,
     queryFn: () =>
       reviewsApi.list({
         page,
@@ -42,10 +46,7 @@ export function ReviewsAdmin() {
       }),
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin", "reviews"] });
-    void queryClient.invalidateQueries({ queryKey: ["reviews"] });
-  };
+  const invalidate = () => invalidateKeys(queryClient, relatedKeys("reviews"));
 
   const moderate = useMutation({
     mutationFn: ({ review, isApproved }: { review: Review; isApproved: boolean }) =>
@@ -62,6 +63,11 @@ export function ReviewsAdmin() {
     onSuccess: () => {
       toast.success("Review deleted");
       setDeleting(null);
+      const meta = query.data?.meta;
+      if (meta) {
+        const safe = clampPage(page, Math.max(0, meta.total - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
       invalidate();
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not delete the review")),
