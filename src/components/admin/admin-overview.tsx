@@ -13,13 +13,27 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { PageSection } from "@/components/dashboard/page-section";
-import { StatCard } from "@/components/dashboard/stat-card";
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Price } from "@/components/ui/price";
-import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { categoriesApi, inventoryApi, ordersApi, productsApi, reviewsApi } from "@/lib/api/services";
 import { formatDate, formatNumber } from "@/lib/utils";
 import type { Order } from "@/types";
@@ -28,7 +42,7 @@ const columns: DataColumn<Order>[] = [
   {
     header: "Order",
     cell: (order) => (
-      <div>
+      <div className="min-w-0">
         <p className="font-semibold">{order.orderNumber}</p>
         <p className="text-[11px] text-muted-foreground">
           {order.customer.name} · {formatDate(order.createdAt, "short")}
@@ -36,8 +50,14 @@ const columns: DataColumn<Order>[] = [
       </div>
     ),
   },
-  { header: "Status", cell: (order) => <OrderStatusBadge status={order.status} /> },
-  { header: "Payment", cell: (order) => <PaymentStatusBadge status={order.paymentStatus} /> },
+  {
+    header: "Status",
+    cell: (order) => <OrderStatusBadge status={order.status} />,
+  },
+  {
+    header: "Payment",
+    cell: (order) => <PaymentStatusBadge status={order.paymentStatus} />,
+  },
   {
     header: "Total",
     cell: (order) => <Price amount={order.totalAmount} size="sm" />,
@@ -45,6 +65,31 @@ const columns: DataColumn<Order>[] = [
     headerClassName: "text-right",
   },
 ];
+
+function OrderStatusBadge({ status }: { status: Order["status"] }) {
+  const tone =
+    status === "DELIVERED"
+      ? "success"
+      : status === "CANCELLED"
+        ? "danger"
+        : status === "PENDING" || status === "PROCESSING"
+          ? "warning"
+          : "info";
+  return (
+    <Badge tone={tone} dot>
+      {status.replaceAll("_", " ")}
+    </Badge>
+  );
+}
+
+function PaymentStatusBadge({ status }: { status: Order["paymentStatus"] }) {
+  const tone = status === "PAID" ? "success" : status === "FAILED" ? "danger" : "warning";
+  return (
+    <Badge tone={tone} dot>
+      {status}
+    </Badge>
+  );
+}
 
 export function AdminOverview() {
   const recentOrders = useQuery({
@@ -94,6 +139,28 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-5">
+      <Card className="overflow-hidden bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Command centre
+            </p>
+            <CardTitle className="font-display text-xl sm:text-2xl">
+              Store operations at a glance
+            </CardTitle>
+            <CardDescription>
+              Track orders, catalogue health and the items that need your attention today.
+            </CardDescription>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/orders">
+              Open orders
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Orders"
@@ -125,96 +192,120 @@ export function AdminOverview() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
-        <PageSection
-          title="Recent orders"
-          description="Latest activity across the store."
-          actions={
-            <Button asChild variant="outline" size="sm">
+        <Card>
+          <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="font-display text-base">Recent orders</CardTitle>
+              <CardDescription>Latest activity across the store.</CardDescription>
+            </div>
+            <Button asChild variant="ghost" size="sm">
               <Link href="/admin/orders">
                 All orders
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </Button>
-          }
-        >
-          <DataTable
-            columns={columns}
-            rows={orders}
-            getKey={(order) => order.id}
-            loading={recentOrders.isLoading}
-            empty="No orders have been placed yet."
-          />
-        </PageSection>
+          </CardHeader>
+          <CardContent className="px-0 pb-2 sm:px-0">
+            <DataTable
+              columns={columns}
+              rows={orders}
+              getKey={(order) => order.id}
+              loading={recentOrders.isLoading}
+              empty="No orders have been placed yet."
+            />
+          </CardContent>
+        </Card>
 
         <div className="space-y-5">
-          <PageSection
-            title="Inventory value"
-            description="At purchase cost and potential resale."
-          >
-            {inventory.isLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-              </div>
-            ) : (
-              <dl className="space-y-3 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="flex items-center gap-2 text-muted-foreground">
-                    <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
-                    Cost value
-                  </dt>
-                  <dd className="font-bold">
-                    <Price amount={inventory.data?.inventoryCostValue ?? 0} size="sm" />
-                  </dd>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-base">Inventory value</CardTitle>
+              <CardDescription>At purchase cost and potential resale.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {inventory.isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="flex items-center gap-2 text-muted-foreground">
-                    <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                    Resale value
-                  </dt>
-                  <dd className="font-bold">
-                    <Price amount={inventory.data?.potentialSellingValue ?? 0} size="sm" />
-                  </dd>
-                </div>
-              </dl>
-            )}
-          </PageSection>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Metric</TableHead>
+                      <TableHead className="text-right">Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-2">
+                          <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+                          Cost value
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        <Price amount={inventory.data?.inventoryCostValue ?? 0} size="sm" />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-2">
+                          <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+                          Resale value
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        <Price amount={inventory.data?.potentialSellingValue ?? 0} size="sm" />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
-          <PageSection
-            title="Low stock"
-            description="Replenish before these sell out."
-            actions={
+          <Card>
+            <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <CardTitle className="font-display text-base">Low stock</CardTitle>
+                <CardDescription>Replenish before these sell out.</CardDescription>
+              </div>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/admin/inventory">Inventory</Link>
               </Button>
-            }
-          >
-            {inventory.isLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : lowStock.length === 0 ? (
-              <p className="py-4 text-center text-xs text-muted-foreground">
-                All products are comfortably stocked.
-              </p>
-            ) : (
-              <ul className="space-y-2.5">
-                {lowStock.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold">{item.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.sku}</p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                      {item.stock}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </PageSection>
+            </CardHeader>
+            <CardContent>
+              {inventory.isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : lowStock.length === 0 ? (
+                <p className="py-6 text-center text-xs text-muted-foreground">
+                  All products are comfortably stocked.
+                </p>
+              ) : (
+                <ul className="space-y-2.5">
+                  {lowStock.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold">{item.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{item.sku}</p>
+                      </div>
+                      <Badge tone="warning" className="shrink-0">
+                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                        {item.stock} left
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

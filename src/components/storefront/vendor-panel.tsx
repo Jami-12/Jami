@@ -23,7 +23,7 @@ export function VendorPanel() {
               A calm console for the people behind the objects.
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Aether ships with a complete operations layer: catalog and image
+              This storefront ships with a complete operations layer: catalog and image
               management, orders, inventory, coupons, reviews and accounting.
               Every action is audited, and every number comes from the live
               database — not a spreadsheet.

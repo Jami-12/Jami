@@ -69,26 +69,34 @@ export function Pagination({
   };
 
   const controlClass =
-    "flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted-foreground)] transition hover:bg-[var(--muted)] disabled:opacity-40";
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] shadow-[var(--shadow-soft)] transition-colors hover:border-[var(--color-accent-400)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40";
+
   const pageClass = (active: boolean) =>
     cn(
-      "flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-xs font-semibold transition",
+      "flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-xs font-semibold tabular-nums transition-colors",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
       active
-        ? "bg-[var(--color-primary-800)] text-[var(--color-primary-50)] dark:bg-[var(--color-accent-300)] dark:text-[var(--color-primary-950)]"
-        : "border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+        ? "bg-[var(--color-primary-800)] text-[var(--color-primary-50)] shadow-[var(--shadow-soft)] dark:bg-[var(--color-accent-300)] dark:text-[var(--color-primary-950)]"
+        : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--color-accent-400)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
     );
 
   return (
-    <nav className={cn("flex items-center justify-center gap-1.5", className)} aria-label="Pagination">
+    <nav
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-1.5 sm:gap-2",
+        className,
+      )}
+      aria-label="Pagination"
+    >
       {href ? (
         <Link
           href={pageHref(page - 1)}
           aria-label="Previous page"
           aria-disabled={page <= 1}
           tabIndex={page <= 1 ? -1 : undefined}
-          className={cn(controlClass, page <= 1 && "pointer-events-none opacity-40")}
+          className={controlClass}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={16} aria-hidden="true" />
         </Link>
       ) : (
         <button
@@ -98,13 +106,17 @@ export function Pagination({
           aria-label="Previous page"
           className={controlClass}
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={16} aria-hidden="true" />
         </button>
       )}
 
       {pages.map((item, index) =>
         item === "ellipsis" ? (
-          <span key={`ellipsis-${index}`} className="px-1 text-xs text-[var(--muted-foreground)]">
+          <span
+            key={`ellipsis-${index}`}
+            className="px-1 text-xs text-[var(--muted-foreground)]"
+            aria-hidden="true"
+          >
             …
           </span>
         ) : href ? (
@@ -135,9 +147,9 @@ export function Pagination({
           aria-label="Next page"
           aria-disabled={page >= totalPages}
           tabIndex={page >= totalPages ? -1 : undefined}
-          className={cn(controlClass, page >= totalPages && "pointer-events-none opacity-40")}
+          className={controlClass}
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={16} aria-hidden="true" />
         </Link>
       ) : (
         <button
@@ -147,7 +159,7 @@ export function Pagination({
           aria-label="Next page"
           className={controlClass}
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={16} aria-hidden="true" />
         </button>
       )}
     </nav>

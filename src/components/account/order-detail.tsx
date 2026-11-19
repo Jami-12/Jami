@@ -19,10 +19,11 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Price } from "@/components/ui/price";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
@@ -346,9 +347,6 @@ export function OrderDetailView({
     queryKey: ["order", orderId],
     queryFn: () => ordersApi.get(orderId),
     enabled: Boolean(orderId),
-    // A gateway callback is not proof of payment. While the provider is still
-    // confirming an online payment, keep asking the backend for its
-    // authoritative status instead of making the customer refresh manually.
     refetchInterval: (query) => {
       const current = query.state.data;
       if (!current) return false;
@@ -374,8 +372,6 @@ export function OrderDetailView({
   });
 
   const order = orderQuery.data;
-  // Provider callbacks append this query parameter. It is only a hint to
-  // refresh; every status shown below comes from the backend.
   const callbackStatus = normalizePaymentStatus(paymentStatusParam);
 
   React.useEffect(() => {
@@ -404,6 +400,7 @@ export function OrderDetailView({
       toast.success("Order cancelled");
       void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
       setCancelOpen(false);
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not cancel this order")),
@@ -427,6 +424,7 @@ export function OrderDetailView({
         toast.success("This payment is already confirmed.");
         void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
         void queryClient.invalidateQueries({ queryKey: ["orders"] });
+        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
         return;
       }
 
@@ -482,9 +480,9 @@ export function OrderDetailView({
   if (orderQuery.isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-24 w-full rounded-2xl" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
-        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-28 w-full rounded-2xl" />
+        <Skeleton className="h-72 w-full rounded-2xl" />
+        <Skeleton className="h-44 w-full rounded-2xl" />
       </div>
     );
   }
@@ -511,6 +509,7 @@ export function OrderDetailView({
     isOnlinePaymentMethod(order.paymentMethod) &&
     order.status !== "CANCELLED" &&
     order.status !== "RETURNED";
+  const steps = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
 
   return (
     <div className="space-y-5">
@@ -518,8 +517,8 @@ export function OrderDetailView({
         <PaymentBanner status={order.paymentStatus} />
       ) : null}
 
-      <Card className="p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <Card className="overflow-hidden">
+        <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <Link
@@ -558,22 +557,22 @@ export function OrderDetailView({
               </Button>
             ) : null}
           </div>
-        </div>
+        </CardContent>
       </Card>
 
       <div className="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
         <div className="space-y-5">
           <Card className="overflow-hidden">
-            <div className="border-b border-border px-5 py-4">
-              <h3 className="font-display text-base font-semibold">Items in this order</h3>
+            <CardHeader className="border-b border-border p-5">
+              <CardTitle className="font-display text-base">Items in this order</CardTitle>
               <p className="text-xs text-muted-foreground">
                 {order.items.reduce((sum, item) => sum + item.quantity, 0)} unit(s) ·{" "}
                 {order.items.length} line{order.items.length === 1 ? "" : "s"}
               </p>
-            </div>
+            </CardHeader>
             <ul className="divide-y divide-border">
               {order.items.map((item) => (
-                <li key={item.id} className="flex gap-3 p-4">
+                <li key={item.id} className="flex gap-3 p-4 sm:items-center">
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                     <SmartImage
                       src={item.productImage}
@@ -613,7 +612,8 @@ export function OrderDetailView({
                 <dt className="text-muted-foreground">Shipping</dt>
                 <dd className="font-semibold">{order.shippingCost === 0 ? "Free" : new Intl.NumberFormat("en-US").format(order.shippingCost)}</dd>
               </div>
-              <div className="flex justify-between border-t border-border pt-2 text-base font-extrabold">
+              <Separator />
+              <div className="flex justify-between text-base font-extrabold">
                 <dt>Total</dt>
                 <dd><Price amount={order.totalAmount} size="md" /></dd>
               </div>
@@ -622,20 +622,20 @@ export function OrderDetailView({
 
           {order.notes ? (
             <Card className="p-5">
-              <h3 className="font-display text-base font-semibold">Delivery notes</h3>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{order.notes}</p>
+              <CardTitle className="font-display text-base">Delivery notes</CardTitle>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{order.notes}</p>
             </Card>
           ) : null}
         </div>
 
         <div className="space-y-5">
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 font-display text-base font-semibold">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
               <MapPin className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               Delivery address
-            </h3>
+            </CardTitle>
             {order.address ? (
-              <address className="mt-2 text-sm not-italic leading-relaxed text-muted-foreground">
+              <address className="mt-3 text-sm not-italic leading-relaxed text-muted-foreground">
                 <p className="font-semibold text-foreground">{order.address.fullName}</p>
                 <p>{order.address.addressLine}</p>
                 <p>
@@ -647,23 +647,57 @@ export function OrderDetailView({
                 <p className="mt-1 font-semibold text-foreground">{order.address.phone}</p>
               </address>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">No address on file.</p>
+              <p className="mt-3 text-sm text-muted-foreground">No address on file.</p>
             )}
           </Card>
 
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 font-display text-base font-semibold">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
               <CreditCard className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               Payment
-            </h3>
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <span className="text-sm text-muted-foreground">Method</span>
-              <span className="text-sm font-semibold">{PAYMENT_METHOD_META[order.paymentMethod].label}</span>
-            </div>
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <PaymentStatusBadge status={order.paymentStatus} />
-            </div>
+            </CardTitle>
+            <dl className="mt-3 space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-muted-foreground">Method</dt>
+                <dd className="font-semibold">{PAYMENT_METHOD_META[order.paymentMethod].label}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <dt className="text-muted-foreground">Status</dt>
+                <dd><PaymentStatusBadge status={order.paymentStatus} /></dd>
+              </div>
+              {order.payment?.collectedAt ? (
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-muted-foreground">Collected</dt>
+                  <dd className="text-xs font-semibold text-right">
+                    {formatDate(order.payment.collectedAt, "long")}
+                    {order.payment.collectedByName ? ` · ${order.payment.collectedByName}` : ""}
+                  </dd>
+                </div>
+              ) : null}
+              {order.payment?.transactionId ? (
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-muted-foreground">Transaction</dt>
+                  <dd className="max-w-40 truncate font-mono text-xs">{order.payment.transactionId}</dd>
+                </div>
+              ) : null}
+              {order.payment?.paidAt ? (
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-muted-foreground">Paid</dt>
+                  <dd className="text-xs font-semibold">{formatDate(order.payment.paidAt, "long")}</dd>
+                </div>
+              ) : null}
+              {order.receiptNumber ? (
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-muted-foreground">Receipt</dt>
+                  <dd className="text-xs font-semibold">{order.receiptNumber}</dd>
+                </div>
+              ) : null}
+            </dl>
+            {order.payment?.collectionNote ? (
+              <p className="mt-3 rounded-lg border border-border bg-muted/40 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+                {order.payment.collectionNote}
+              </p>
+            ) : null}
             {order.paymentMethod === "CASH_ON_DELIVERY" &&
             order.paymentStatus !== "PAID" &&
             order.paymentStatus !== "REFUNDED" &&
@@ -675,52 +709,19 @@ export function OrderDetailView({
                 when your order is delivered. The order is already confirmed.
               </p>
             ) : null}
-            {order.payment?.collectedAt ? (
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">Collected</span>
-                <span className="text-xs font-semibold">
-                  {formatDate(order.payment.collectedAt, "long")}
-                  {order.payment.collectedByName
-                    ? ` · ${order.payment.collectedByName}`
-                    : ""}
-                </span>
-              </div>
-            ) : null}
-            {order.payment?.collectionNote ? (
-              <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                {order.payment.collectionNote}
-              </p>
-            ) : null}
-            {order.payment?.transactionId ? (
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">Transaction</span>
-                <span className="max-w-40 truncate text-xs font-mono">{order.payment.transactionId}</span>
-              </div>
-            ) : null}
-            {order.payment?.paidAt ? (
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">Paid</span>
-                <span className="text-xs font-semibold">{formatDate(order.payment.paidAt, "long")}</span>
-              </div>
-            ) : null}
-            {order.receiptNumber ? (
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">Receipt</span>
-                <span className="text-xs font-semibold">{order.receiptNumber}</span>
-              </div>
-            ) : null}
           </Card>
 
           <Card className="p-5">
-            <h3 className="flex items-center gap-2 font-display text-base font-semibold">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
               <Truck className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
               Fulfilment
-            </h3>
-            <ol className="mt-3 space-y-3">
-              {(["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"] as const).map((step) => {
-                const order_index = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"].indexOf(order.status);
-                const step_index = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"].indexOf(step);
-                const complete = order_index >= step_index && !["CANCELLED", "RETURNED"].includes(order.status);
+            </CardTitle>
+            <ol className="mt-4 space-y-3">
+              {steps.map((step) => {
+                const orderIndex = steps.indexOf(order.status as (typeof steps)[number]);
+                const stepIndex = steps.indexOf(step);
+                const complete =
+                  orderIndex >= stepIndex && !["CANCELLED", "RETURNED"].includes(order.status);
                 return (
                   <li key={step} className="flex items-center gap-2.5 text-xs">
                     <span
@@ -772,6 +773,7 @@ export function OrderDetailView({
             setCardSession(null);
             void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
             void queryClient.invalidateQueries({ queryKey: ["orders"] });
+            void queryClient.invalidateQueries({ queryKey: ["notifications"] });
           }}
         />
       ) : null}

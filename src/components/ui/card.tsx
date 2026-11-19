@@ -10,9 +10,10 @@ export function Card({
   return (
     <div
       className={cn(
+        "rounded-2xl text-[var(--card-foreground)] shadow-[var(--shadow-soft)] transition-[border-color,box-shadow] duration-200",
         glass
-          ? "rounded-2xl border border-[var(--glass-border)] bg-[var(--glass)] text-[var(--card-foreground)] backdrop-blur-xl shadow-[var(--shadow-soft)] transition duration-200 hover:border-accent-300/40 hover:shadow-lift"
-          : "rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-soft)] transition duration-200",
+          ? "border border-[var(--glass-border)] bg-[var(--glass)] backdrop-blur-xl hover:border-[var(--color-accent-400)] hover:shadow-[var(--shadow-lift)]"
+          : "border border-[var(--border)] bg-[var(--card)]",
         className,
       )}
       {...props}
@@ -25,11 +26,24 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-base font-semibold tracking-tight", className)} {...props} />;
+  return (
+    <h3
+      className={cn(
+        "font-display text-base font-semibold tracking-tight text-[var(--foreground)]",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm text-[var(--muted-foreground)]", className)} {...props} />;
+  return (
+    <p
+      className={cn("text-sm leading-relaxed text-[var(--muted-foreground)]", className)}
+      {...props}
+    />
+  );
 }
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
@@ -37,7 +51,12 @@ export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivEleme
 }
 
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex items-center gap-3 p-5 pt-0 sm:p-6 sm:pt-0", className)} {...props} />;
+  return (
+    <div
+      className={cn("flex flex-wrap items-center gap-3 p-5 pt-0 sm:p-6 sm:pt-0", className)}
+      {...props}
+    />
+  );
 }
 
 export function SectionHeading({
@@ -46,27 +65,32 @@ export function SectionHeading({
   description,
   align = "left",
   action,
+  className,
 }: {
   eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
   align?: "left" | "center";
   action?: ReactNode;
+  className?: string;
 }) {
   return (
     <div
       className={cn(
         "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
         align === "center" && "sm:flex-col sm:items-center sm:text-center",
+        className,
       )}
     >
       <div className={cn("max-w-2xl", align === "center" && "mx-auto")}>
         {eyebrow ? (
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary-500)] dark:text-[var(--color-accent-300)]">
+          <p className="eyebrow mb-2 text-[var(--color-primary-500)] dark:text-[var(--color-accent-300)]">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">{title}</h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
+          {title}
+        </h2>
         {description ? (
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-base">
             {description}

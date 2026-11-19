@@ -65,7 +65,9 @@ import type {
   SalaryInput,
   SalaryPayment,
   SalarySummary,
+  SiteSettings,
   UpdateSelfProfileInput,
+  UpdateSettingsInput,
   UpdateUserInput,
   UpdateUserStatusInput,
   UserListParams,
@@ -236,11 +238,12 @@ export const categoriesApi = {
     const formData = new FormData();
     appendOptional(formData, "name", input.name);
     appendOptional(formData, "slug", input.slug);
-    appendNullable(formData, "description", input.description);
+    appendOptional(formData, "description", input.description);
+    appendOptional(formData, "isActive", input.isActive);
     if (imageFile) {
       appendFile(formData, "image", imageFile);
     } else {
-      appendNullable(formData, "image", input.image);
+      appendOptional(formData, "image", input.image);
     }
 
     const result = await apiRequest<{ category: Category }>({
@@ -260,6 +263,7 @@ export const categoriesApi = {
     appendOptional(formData, "name", input.name);
     appendOptional(formData, "slug", input.slug);
     appendNullable(formData, "description", input.description);
+    appendOptional(formData, "isActive", input.isActive);
     if (imageFile) {
       appendFile(formData, "image", imageFile);
     } else {
@@ -306,11 +310,12 @@ export const brandsApi = {
     const formData = new FormData();
     appendOptional(formData, "name", input.name);
     appendOptional(formData, "slug", input.slug);
-    appendNullable(formData, "description", input.description);
+    appendOptional(formData, "description", input.description);
+    appendOptional(formData, "isActive", input.isActive);
     if (logoFile) {
       appendFile(formData, "logo", logoFile);
     } else {
-      appendNullable(formData, "logo", input.logo);
+      appendOptional(formData, "logo", input.logo);
     }
 
     const result = await apiRequest<{ brand: Brand }>({
@@ -330,6 +335,7 @@ export const brandsApi = {
     appendOptional(formData, "name", input.name);
     appendOptional(formData, "slug", input.slug);
     appendNullable(formData, "description", input.description);
+    appendOptional(formData, "isActive", input.isActive);
     if (logoFile) {
       appendFile(formData, "logo", logoFile);
     } else {
@@ -1369,4 +1375,65 @@ export const bannersApi = {
       method: "DELETE",
       url: `/banners/admin/${id}`,
     }),
+};
+
+function settingsFormData(input: UpdateSettingsInput): FormData {
+  const formData = new FormData();
+
+  if (input.siteName !== undefined) {
+    if (input.siteName === null) formData.append("siteName", "");
+    else formData.append("siteName", input.siteName);
+  }
+  if (input.navbarLogoUrl !== undefined) {
+    formData.append("navbarLogoUrl", input.navbarLogoUrl ?? "null");
+  }
+  if (input.navbarLogoPublicId !== undefined) {
+    formData.append("navbarLogoPublicId", input.navbarLogoPublicId ?? "");
+  }
+  if (input.logo) appendFile(formData, "logo", input.logo);
+
+  const toggles: Array<[keyof UpdateSettingsInput, boolean | undefined]> = [
+    ["showHero", input.showHero],
+    ["showProductFinder", input.showProductFinder],
+    ["showMiddleCategories", input.showMiddleCategories],
+    ["showCategorySections", input.showCategorySections],
+    ["showNewArrivals", input.showNewArrivals],
+    ["showBrands", input.showBrands],
+    ["showPromoBanners", input.showPromoBanners],
+    ["showNewsletter", input.showNewsletter],
+  ];
+
+  for (const [key, value] of toggles) {
+    if (typeof value === "boolean") formData.append(key, String(value));
+  }
+
+  if (input.categorySections) {
+    formData.append("categorySections", JSON.stringify(input.categorySections));
+  }
+
+  return formData;
+}
+
+/**
+ * Storefront presentation settings. Reads are public because the storefront
+ * needs the logo and section visibility before a visitor signs in; writes are
+ * restricted to SUPER_ADMIN on the API.
+ */
+export const settingsApi = {
+  get: async () => {
+    const result = await apiRequest<{ settings: SiteSettings }>({
+      method: "GET",
+      url: "/settings",
+    });
+    return result.settings;
+  },
+
+  update: async (input: UpdateSettingsInput) => {
+    const result = await apiRequest<{ settings: SiteSettings }>({
+      method: "PATCH",
+      url: "/settings",
+      data: settingsFormData(input),
+    });
+    return result.settings;
+  },
 };

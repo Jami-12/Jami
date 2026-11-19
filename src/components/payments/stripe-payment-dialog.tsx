@@ -114,7 +114,7 @@ function CardForm({
         Pay securely
       </Button>
       <p className="text-center text-[11px] text-muted-foreground">
-        Card details are handled by Stripe. Aether never sees your full card number.
+        Card details are handled by Stripe. We never see your full card number.
       </p>
     </form>
   );

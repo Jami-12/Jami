@@ -1,11 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Aether">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Store icon">
   <defs>
-    <linearGradient id="a" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2C4561"/>
-      <stop offset="1" stop-color="#7DD3FC"/>
+    <linearGradient id="g" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D9488"/>
+      <stop offset="1" stop-color="#14B8A6"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#a)"/>
-  <path d="M20 46 32 16l12 30h-7l-2.2-6H29l-2.3 6H20Zm11-12h3l-1.5-4.4L31 34Z" fill="#F8FBFF"/>
-  <circle cx="47" cy="17" r="4" fill="#F8FBFF" opacity=".9"/>
+  <rect width="64" height="64" rx="16" fill="url(#g)"/>
+  <path d="M20 44V24.5C20 21.46 22.46 19 25.5 19h13c3.04 0 5.5 2.46 5.5 5.5V44" fill="none" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25 28c0 3.87 3.13 7 7 7s7-3.13 7-7" fill="none" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="45.5" cy="18.5" r="4.5" fill="#F59E0B"/>
 </svg>

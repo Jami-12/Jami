@@ -8,7 +8,7 @@ import { SITE } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Reset password",
-  description: "Complete a password reset for your Aether account.",
+  description: "Complete a password reset for your account.",
   robots: { index: false, follow: false },
 };
 

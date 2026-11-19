@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, Receipt, Search } from "lucide-react";
 
+import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import { PageSection } from "@/components/dashboard/page-section";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
+import { Separator } from "@/components/ui/separator";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
@@ -27,6 +29,8 @@ const STATUS_TABS = [
   { value: "DELIVERED", label: "Delivered" },
   { value: "CANCELLED", label: "Cancelled" },
 ] as const;
+
+const PAGE_SIZES = [10, 20, 50];
 
 const columns: DataColumn<Order>[] = [
   {
@@ -66,7 +70,7 @@ const columns: DataColumn<Order>[] = [
   {
     header: "",
     cell: (order) => (
-      <Button asChild variant="outline" size="sm">
+      <Button asChild variant="outline" size="sm" className="h-8">
         <Link href={`/account/orders/${order.id}`}>
           <Eye className="h-3.5 w-3.5" aria-hidden="true" />
           View
@@ -78,18 +82,66 @@ const columns: DataColumn<Order>[] = [
   },
 ];
 
+function OrderMobileCard({ order }: { order: Order }) {
+  const firstItem = order.items[0];
+  const units = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link
+            href={`/account/orders/${order.id}`}
+            className="font-display text-sm font-semibold hover:underline"
+          >
+            {order.orderNumber}
+          </Link>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {formatDate(order.createdAt)}
+          </p>
+        </div>
+        <Price amount={order.totalAmount} size="sm" />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <OrderStatusBadge status={order.status} />
+        <PaymentStatusBadge status={order.paymentStatus} />
+      </div>
+
+      <Separator />
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-semibold">
+            {firstItem?.productName ?? "No items"}
+            {order.items.length > 1 ? ` +${order.items.length - 1}` : ""}
+          </p>
+          <p className="text-[11px] text-muted-foreground">{units} unit(s)</p>
+        </div>
+        <Button asChild variant="outline" size="sm" className="h-8 shrink-0">
+          <Link href={`/account/orders/${order.id}`}>
+            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+            View
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function OrdersList() {
   const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
   const [status, setStatus] = React.useState<string>("ALL");
   const [search, setSearch] = React.useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useQuery({
-    queryKey: ["orders", "my", { page, status, search: debouncedSearch }],
+    queryKey: ["orders", "my", { page, pageSize, status, search: debouncedSearch }],
     queryFn: () =>
       ordersApi.myOrders({
         page,
-        limit: 10,
+        limit: pageSize,
         status: status === "ALL" ? undefined : (status as OrderStatus),
         search: debouncedSearch.trim() || undefined,
       }),
@@ -97,9 +149,11 @@ export function OrdersList() {
 
   React.useEffect(() => {
     setPage(1);
-  }, [status, debouncedSearch]);
+  }, [status, debouncedSearch, pageSize]);
 
   const orders = query.data?.items ?? [];
+  const meta = query.data?.meta;
+  const isFiltered = Boolean(debouncedSearch) || status !== "ALL";
 
   return (
     <div className="space-y-4">
@@ -111,7 +165,10 @@ export function OrdersList() {
           className="max-w-full"
         />
         <div className="relative w-full lg:w-72">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -122,33 +179,36 @@ export function OrdersList() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-soft">
+      <PageSection
+        title="Your orders"
+        description="Track payment and delivery progress in one place."
+        footer={
+          <ListPagination
+            page={meta?.page ?? page}
+            pageCount={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={pageSize}
+            pageSizeOptions={PAGE_SIZES}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        }
+      >
         <DataTable
           columns={columns}
           rows={orders}
           getKey={(order) => order.id}
           loading={query.isLoading}
+          mobileCard={(order) => <OrderMobileCard order={order} />}
           empty={
-            debouncedSearch || status !== "ALL"
+            isFiltered
               ? "No orders match these filters."
               : "You have not placed an order yet."
           }
         />
-        <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `${query.data.meta.total} order${query.data.meta.total === 1 ? "" : "s"}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </div>
+      </PageSection>
 
-      {!query.isLoading && orders.length === 0 && !debouncedSearch && status === "ALL" ? (
+      {!query.isLoading && orders.length === 0 && !isFiltered ? (
         <EmptyState
           icon={Receipt}
           title="No orders yet"

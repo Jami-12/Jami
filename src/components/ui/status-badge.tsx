@@ -8,22 +8,62 @@ import {
 } from "@/lib/constants";
 import type { OrderStatus, PaymentStatus, ProductStatus, Role } from "@/types";
 
-export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+export function OrderStatusBadge({
+  status,
+  className,
+}: {
+  status: OrderStatus;
+  className?: string;
+}) {
   const meta = ORDER_STATUS_META[status];
-  return <Badge tone={meta.tone} dot>{meta.label}</Badge>;
+  return (
+    <Badge tone={meta.tone} dot className={className}>
+      {meta.label}
+    </Badge>
+  );
 }
 
-export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+export function PaymentStatusBadge({
+  status,
+  className,
+}: {
+  status: PaymentStatus;
+  className?: string;
+}) {
   const meta = PAYMENT_STATUS_META[status];
-  return <Badge tone={meta.tone} dot>{meta.label}</Badge>;
+  return (
+    <Badge tone={meta.tone} dot className={className}>
+      {meta.label}
+    </Badge>
+  );
 }
 
-export function ProductStatusBadge({ status }: { status: ProductStatus }) {
+export function ProductStatusBadge({
+  status,
+  className,
+}: {
+  status: ProductStatus;
+  className?: string;
+}) {
   const meta = PRODUCT_STATUS_META[status];
-  return <Badge tone={meta.tone} dot>{meta.label}</Badge>;
+  return (
+    <Badge tone={meta.tone} dot className={className}>
+      {meta.label}
+    </Badge>
+  );
 }
 
-export function RoleBadge({ role }: { role: Role }) {
+export function RoleBadge({
+  role,
+  className,
+}: {
+  role: Role;
+  className?: string;
+}) {
   const meta = ROLE_META[role];
-  return <Badge tone={meta.tone}>{meta.label}</Badge>;
+  return (
+    <Badge tone={meta.tone} className={className}>
+      {meta.label}
+    </Badge>
+  );
 }

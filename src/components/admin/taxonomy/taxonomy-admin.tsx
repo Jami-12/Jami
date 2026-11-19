@@ -3,14 +3,24 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Switch } from "@/components/ui/switch";
@@ -29,9 +39,13 @@ function isCategory(item: Item): item is Category {
 export function TaxonomyAdmin({ mode }: { mode: Mode }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [deleting, setDeleting] = React.useState<Item | null>(null);
   const [statusPendingId, setStatusPendingId] = React.useState<string | null>(null);
   const debounced = useDebouncedValue(search, 300);
+
+  React.useEffect(() => setPage(1), [mode, debounced, limit]);
 
   const query = useQuery<Item[]>({
     queryKey: [mode, debounced],
@@ -97,11 +111,21 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
   });
 
   const rows = query.data ?? [];
+  const totalItems = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const safePage = Math.min(page, totalPages);
+  const pagedRows = rows.slice((safePage - 1) * limit, safePage * limit);
+
+  React.useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
+
   const label = mode === "categories" ? "category" : "brand";
+  const labelTitle = mode === "categories" ? "Categories" : "Brands";
 
   const columns: DataColumn<Item>[] = [
     {
-      header: mode === "categories" ? "Category" : "Brand",
+      header: labelTitle.slice(0, -1),
       cell: (item) => (
         <div className="flex items-center gap-3">
           <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -151,24 +175,30 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
     {
       header: "",
       cell: (item) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" asChild>
-            <Link
-              href={`/admin/${mode}/${item.id}/edit`}
-              aria-label={`Edit ${item.name}`}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${item.name}`}
-            className="text-muted-foreground hover:text-red-600"
-            onClick={() => setDeleting(item)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label={`Actions for ${item.name}`}>
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/${mode}/${item.id}/edit`}>
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  Edit {label}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                onClick={() => setDeleting(item)}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Delete {label}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
       className: "text-right",
@@ -177,38 +207,67 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={`Search ${mode}…`}
-            aria-label={`Search ${mode}`}
-            className="pl-9"
-          />
-        </div>
-        <Button asChild>
-          <Link href={`/admin/${mode}/new`}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New {label}
-          </Link>
-        </Button>
-      </div>
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Catalogue"
+        title={labelTitle}
+        description={
+          mode === "categories"
+            ? "Organise products into browsable groups and control their storefront visibility."
+            : "Manage makers and labels shown in filters and brand sections."
+        }
+        actions={
+          <Button asChild>
+            <Link href={`/admin/${mode}/new`}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New {label}
+            </Link>
+          </Button>
+        }
+      />
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(item) => item.id}
-          loading={query.isLoading}
-          empty={`No ${mode} yet.`}
-        />
-      </PageSection>
+      <Card>
+        <CardContent className="p-4">
+          <div className="relative w-full sm:max-w-xs">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={`Search ${mode}…`}
+              aria-label={`Search ${mode}`}
+              className="pl-9"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <AdminListCard
+        title={`All ${mode}`}
+        description={`Showing ${totalItems} ${mode}. Changes to visibility apply immediately.`}
+        count={totalItems}
+        countLabel={mode}
+        columns={columns}
+        rows={pagedRows}
+        getKey={(item) => item.id}
+        loading={query.isLoading}
+        empty={`No ${mode} match your search.`}
+        pagination={
+          <ListPagination
+            page={safePage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
+          />
+        }
+      />
 
       <ConfirmDialog
         open={Boolean(deleting)}

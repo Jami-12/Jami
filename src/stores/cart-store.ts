@@ -217,7 +217,7 @@ export const useCartStore = create<CartState>()(
       setHydrated: (value) => set({ hydrated: value }),
     }),
     {
-      name: "aether-cart",
+      name: "store-cart",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ items: state.items }),
       onRehydrateStorage: () => (state) => {

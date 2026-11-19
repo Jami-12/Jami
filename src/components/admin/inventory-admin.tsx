@@ -2,18 +2,28 @@
 
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Boxes, History, PackageSearch, Search, SlidersHorizontal } from "lucide-react";
+import {
+  AlertTriangle,
+  Boxes,
+  History,
+  PackageSearch,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select, Textarea } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Price } from "@/components/ui/price";
 import { ProductStatusBadge } from "@/components/ui/status-badge";
+import { Switch } from "@/components/ui/switch";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { inventoryApi } from "@/lib/api/services";
 import { INVENTORY_MOVEMENTS, INVENTORY_MOVEMENT_LABEL } from "@/lib/constants";
@@ -23,16 +33,20 @@ import type { InventoryItem, InventoryLog } from "@/types";
 export function InventoryAdmin() {
   const queryClient = useQueryClient();
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [search, setSearch] = React.useState("");
   const [lowStockOnly, setLowStockOnly] = React.useState(false);
   const debounced = useDebouncedValue(search, 300);
   const [adjusting, setAdjusting] = React.useState<InventoryItem | null>(null);
   const [logsFor, setLogsFor] = React.useState<InventoryItem | null>(null);
+  const [logsPage, setLogsPage] = React.useState(1);
+  const [logsLimit, setLogsLimit] = React.useState(10);
   const [movementType, setMovementType] = React.useState("STOCK_IN");
   const [quantity, setQuantity] = React.useState("1");
   const [reason, setReason] = React.useState("");
 
-  React.useEffect(() => setPage(1), [debounced, lowStockOnly]);
+  React.useEffect(() => setPage(1), [debounced, lowStockOnly, limit]);
+  React.useEffect(() => setLogsPage(1), [logsFor, logsLimit]);
 
   const overview = useQuery({
     queryKey: ["inventory", "overview"],
@@ -41,11 +55,11 @@ export function InventoryAdmin() {
   });
 
   const query = useQuery({
-    queryKey: ["inventory", { page, search: debounced, lowStockOnly }],
+    queryKey: ["inventory", { page, limit, search: debounced, lowStockOnly }],
     queryFn: () =>
       inventoryApi.list({
         page,
-        limit: 15,
+        limit,
         search: debounced.trim() || undefined,
         lowStockOnly: lowStockOnly || undefined,
         sortBy: "stock",
@@ -54,8 +68,13 @@ export function InventoryAdmin() {
   });
 
   const logs = useQuery({
-    queryKey: ["inventory", "logs", logsFor?.id],
-    queryFn: () => inventoryApi.logs({ productId: logsFor?.id, limit: 20 }),
+    queryKey: ["inventory", "logs", logsFor?.id, { page: logsPage, limit: logsLimit }],
+    queryFn: () =>
+      inventoryApi.logs({
+        productId: logsFor?.id,
+        page: logsPage,
+        limit: logsLimit,
+      }),
     enabled: Boolean(logsFor),
   });
 
@@ -84,6 +103,8 @@ export function InventoryAdmin() {
   });
 
   const rows = query.data?.items ?? [];
+  const meta = query.data?.meta;
+  const logsMeta = logs.data?.meta;
 
   const columns: DataColumn<InventoryItem>[] = [
     {
@@ -148,7 +169,13 @@ export function InventoryAdmin() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Operations"
+        title="Inventory"
+        description="Track stock levels, value and movement history. Adjust counts with an auditable reason."
+      />
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total units"
@@ -177,10 +204,13 @@ export function InventoryAdmin() {
         />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -189,37 +219,46 @@ export function InventoryAdmin() {
               className="pl-9"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-border"
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2">
+            <div>
+              <p className="text-xs font-semibold">Low stock only</p>
+              <p className="text-[11px] text-muted-foreground">
+                Show products at or below their minimum level.
+              </p>
+            </div>
+            <Switch
               checked={lowStockOnly}
-              onChange={(event) => setLowStockOnly(event.target.checked)}
+              onCheckedChange={setLowStockOnly}
+              aria-label="Show low stock products only"
             />
-            Low stock only
-          </label>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(item) => item.id}
-          loading={query.isLoading}
-          empty="No inventory rows match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data ? `${query.data.meta.total} product${query.data.meta.total === 1 ? "" : "s"}` : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
+      <AdminListCard
+        title="Stock by product"
+        description="Sorted by stock level so items that need attention appear first."
+        count={meta?.total}
+        countLabel="products"
+        columns={columns}
+        rows={rows}
+        getKey={(item) => item.id}
+        loading={query.isLoading}
+        empty="No inventory rows match these filters."
+        pagination={
+          <ListPagination
+            page={page}
+            totalPages={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={limit}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
           />
-        </div>
-      </PageSection>
+        }
+      />
 
       <Dialog
         open={Boolean(adjusting)}
@@ -310,22 +349,35 @@ export function InventoryAdmin() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-border">
-            {logs.data?.items.map((log: InventoryLog) => (
-              <li key={log.id} className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                <div>
-                  <p className="text-xs font-bold">{humanizeEnum(log.movementType)}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {log.reason || "No reason recorded"}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">{formatDate(log.createdAt, "long")}</p>
-                </div>
-                <span className="whitespace-nowrap text-xs font-semibold tabular-nums">
-                  {log.previousStock} → {log.newStock}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-3">
+            <ul className="divide-y divide-border rounded-xl border border-border">
+              {logs.data?.items.map((log: InventoryLog) => (
+                <li key={log.id} className="flex items-start justify-between gap-3 px-3 py-3">
+                  <div>
+                    <p className="text-xs font-bold">{humanizeEnum(log.movementType)}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {log.reason || "No reason recorded"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{formatDate(log.createdAt, "long")}</p>
+                  </div>
+                  <span className="whitespace-nowrap text-xs font-semibold tabular-nums">
+                    {log.previousStock} → {log.newStock}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <ListPagination
+              page={logsPage}
+              totalPages={logsMeta?.totalPages ?? 1}
+              totalItems={logsMeta?.total}
+              pageSize={logsLimit}
+              onPageChange={setLogsPage}
+              onPageSizeChange={(size) => {
+                setLogsLimit(size);
+                setLogsPage(1);
+              }}
+            />
+          </div>
         )}
       </Dialog>
     </div>

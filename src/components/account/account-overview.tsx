@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,16 +14,20 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
 import { PageSection } from "@/components/dashboard/page-section";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
 import { Price } from "@/components/ui/price";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs } from "@/components/ui/tabs";
 import { notificationsApi, ordersApi } from "@/lib/api/services";
+import { NOTIFICATION_META, ROLE_META } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
@@ -53,17 +58,15 @@ const orderColumns: DataColumn<Order>[] = [
   },
 ];
 
-const notificationTones: Record<string, string> = {
-  ORDER: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300",
-  PAYMENT: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  PRODUCT: "bg-accent-100 text-accent-800 dark:bg-accent-300/10 dark:text-accent-200",
-  SYSTEM: "bg-muted text-muted-foreground",
-  ACCOUNT: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-};
+const ACTIVITY_FILTERS = [
+  { value: "ALL", label: "All" },
+  { value: "UNREAD", label: "Unread" },
+] as const;
 
 export function AccountOverview() {
   const user = useAuthStore((state) => state.user);
   const wishlistCount = useWishlistStore((state) => state.ids.length);
+  const [activityFilter, setActivityFilter] = React.useState("ALL");
 
   const recentOrders = useQuery({
     queryKey: ["orders", "recent"],
@@ -91,10 +94,52 @@ export function AccountOverview() {
 
   const orders = recentOrders.data?.items ?? [];
   const alerts = notifications.data?.items ?? [];
+  const unread = notifications.data?.unreadCount ?? 0;
   const loading = recentOrders.isLoading || notifications.isLoading;
+  const visibleAlerts =
+    activityFilter === "UNREAD" ? alerts.filter((item) => !item.isRead) : alerts;
+  const roleMeta = user ? ROLE_META[user.role] : null;
 
   return (
     <div className="space-y-5">
+      <Card className="relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute -right-16 -top-20 h-60 w-60 rounded-full bg-accent-300/20 blur-3xl dark:bg-accent-300/10"
+          aria-hidden="true"
+        />
+        <CardContent className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <Avatar name={user?.name ?? "Account"} src={user?.image} size="lg" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate font-display text-xl font-semibold">
+                  {user?.name ?? "Your account"}
+                </p>
+                {roleMeta ? <Badge tone={roleMeta.tone}>{roleMeta.label}</Badge> : null}
+              </div>
+              <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Member since {formatDate(user?.createdAt)}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/account/profile">
+                <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
+                Edit profile
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/account/addresses">
+                <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                Addresses
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total orders"
@@ -147,64 +192,46 @@ export function AccountOverview() {
           />
         </PageSection>
 
-        <div className="space-y-5">
-          <Card className="p-5">
-            <div className="flex items-center gap-3">
-              <Avatar name={user?.name ?? "Account"} size="lg" />
-              <div className="min-w-0">
-                <p className="truncate text-base font-extrabold">{user?.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  Member since {formatDate(user?.createdAt)}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/account/profile">
-                  <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
-                  Edit profile
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/account/addresses">
-                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                  Addresses
-                </Link>
-              </Button>
-            </div>
-          </Card>
+        <PageSection
+          title="Notifications"
+          description={notifications.data ? `${unread} unread` : "Loading…"}
+          actions={
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/account/notifications">View all</Link>
+            </Button>
+          }
+        >
+          <Tabs
+            items={[
+              { ...ACTIVITY_FILTERS[0] },
+              { ...ACTIVITY_FILTERS[1], count: unread },
+            ]}
+            value={activityFilter}
+            onChange={setActivityFilter}
+            className="mb-4 w-full sm:w-auto"
+          />
+          <Separator className="mb-2" />
 
-          <PageSection
-            title="Notifications"
-            description={notifications.data ? `${notifications.data.unreadCount} unread` : undefined}
-            actions={
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/account/notifications">View all</Link>
-              </Button>
-            }
-          >
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-14 w-full" />
-                <Skeleton className="h-14 w-full" />
-              </div>
-            ) : alerts.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                <Bell className="mx-auto mb-2 h-5 w-5" aria-hidden="true" />
-                No notifications yet.
-              </div>
-            ) : (
-              <ul className="space-y-3">
-                {alerts.map((notification: Notification) => (
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-14 w-full rounded-xl" />
+              <Skeleton className="h-14 w-full rounded-xl" />
+            </div>
+          ) : visibleAlerts.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              <Bell className="mx-auto mb-2 h-5 w-5" aria-hidden="true" />
+              {activityFilter === "UNREAD" ? "Nothing unread right now." : "No notifications yet."}
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {visibleAlerts.map((notification: Notification) => {
+                const meta =
+                  NOTIFICATION_META[notification.type] ?? NOTIFICATION_META.SYSTEM;
+                return (
                   <li key={notification.id} className="flex gap-3">
-                    <span
-                      className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                        notificationTones[notification.type] ?? notificationTones.SYSTEM
-                      }`}
-                    >
+                    <Badge tone={meta.tone} className="mt-0.5 h-8 w-8 shrink-0 justify-center px-0">
                       <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-                    </span>
+                    </Badge>
                     <div className="min-w-0">
                       <p className="text-xs font-bold">{notification.title}</p>
                       <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
@@ -215,11 +242,11 @@ export function AccountOverview() {
                       </p>
                     </div>
                   </li>
-                ))}
-              </ul>
-            )}
-          </PageSection>
-        </div>
+                );
+              })}
+            </ul>
+          )}
+        </PageSection>
       </div>
     </div>
   );

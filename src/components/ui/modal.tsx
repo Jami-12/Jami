@@ -49,7 +49,7 @@ export function Modal({
           <motion.button
             type="button"
             aria-label="Close dialog"
-            className="absolute inset-0 bg-primary-950/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-[var(--color-primary-950)]/60 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -69,19 +69,19 @@ export function Modal({
             exit={{ opacity: 0, y: 18, scale: 0.985 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              "relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-border bg-card text-card-foreground shadow-lift sm:rounded-3xl",
+              "relative flex max-h-[min(92dvh,52rem)] w-full flex-col overflow-hidden rounded-t-3xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-lift)] ring-1 ring-black/5 dark:ring-white/5 sm:rounded-3xl",
               SIZES[size],
             )}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
-              <div>
-                <h2 id={titleId} className="text-lg font-bold tracking-tight">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <h2 id={titleId} className="font-display text-lg font-semibold tracking-tight">
                   {title}
                 </h2>
                 {description ? (
                   <p
                     id={descriptionId}
-                    className="mt-1 text-sm text-muted-foreground"
+                    className="mt-1 text-xs leading-relaxed text-[var(--muted-foreground)]"
                   >
                     {description}
                   </p>
@@ -91,16 +91,16 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close dialog"
-                className="-mr-1 -mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
               >
                 <X className="h-4.5 w-4.5" aria-hidden="true" />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+            <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
               {children}
             </div>
             {footer ? (
-              <div className="border-t border-border bg-muted/40 px-5 py-4 sm:px-6">
+              <div className="border-t border-[var(--border)] bg-[var(--muted)]/40 px-5 py-4 sm:px-6">
                 {footer}
               </div>
             ) : null}

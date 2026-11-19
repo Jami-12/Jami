@@ -25,7 +25,7 @@ export const useRecentlyViewedStore = create<RecentlyViewedState>()(
       clear: () => set({ ids: [] }),
     }),
     {
-      name: "aether-recently-viewed",
+      name: "store-recently-viewed",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ ids: state.ids }),
     },

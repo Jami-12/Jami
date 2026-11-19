@@ -49,7 +49,7 @@ export function WishlistView() {
       <EmptyState
         icon={Heart}
         title="Your wishlist is empty"
-        description="Save objects you are considering. They stay here across visits, and sync to your account when you sign in."
+        description="Save pieces you are considering. They stay here across visits, and sync to your account when you sign in."
         action={
           <Button asChild>
             <Link href="/products">Browse the collection</Link>
@@ -63,7 +63,7 @@ export function WishlistView() {
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {products.length} saved object{products.length === 1 ? "" : "s"}
+          {products.length} saved piece{products.length === 1 ? "" : "s"}
         </p>
         <Button
           variant="ghost"
@@ -85,7 +85,7 @@ export function WishlistView() {
       ) : products.length === 0 ? (
         <EmptyState
           icon={ShoppingBag}
-          title="Saved objects are no longer available"
+          title="Saved pieces are no longer available"
           description="Some items in your wishlist have been removed from the catalogue. Clear them and save something new."
           action={
             <Button asChild>
@@ -109,7 +109,7 @@ export function WishlistView() {
           setConfirmClear(false);
         }}
         title="Clear your wishlist?"
-        description="Every saved object will be removed from this list. Your bag is not affected."
+        description="Every saved piece will be removed from this list. Your bag is not affected."
         confirmLabel="Clear wishlist"
         destructive
       />

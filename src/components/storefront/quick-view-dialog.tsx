@@ -11,17 +11,16 @@ import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { SmartImage } from "@/components/ui/smart-image";
-import { productColors, productDetailLine, productSizes } from "@/lib/product-options";
+import {
+  productColors,
+  productDetailLine,
+  productSizes,
+} from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
 import type { Product } from "@/types";
-import {
-  discountPercentOf,
-  hasDiscount,
-  productImages,
-  productName,
-} from "@/types";
+import { discountPercentOf, hasDiscount, productImages, productName } from "@/types";
 
 export function QuickViewDialog({
   product,
@@ -64,17 +63,30 @@ export function QuickViewDialog({
   const outOfStock = product.stock <= 0 || product.status === "OUT_OF_STOCK";
   const discounted = hasDiscount(product);
   const percent = discountPercentOf(product);
-  const requiresSize = Boolean(sizes) && !size;
-  const requiresColor = colors.length > 0 && !color;
+  const needsSize = Boolean(sizes?.length) && !size;
+  const needsColor = colors.length > 0 && !color;
+  const selectionIncomplete = needsSize || needsColor;
 
   const handleAdd = async () => {
-    if (outOfStock || requiresSize || requiresColor) return;
+    if (outOfStock || selectionIncomplete) return;
     setAdding(true);
-    await addItem(product, quantity);
-    setAdding(false);
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 2200);
+    try {
+      await addItem(product, quantity);
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 2200);
+    } finally {
+      setAdding(false);
+    }
   };
+
+  const selectionHint = selectionIncomplete
+    ? [
+        needsColor ? "choose a colour" : null,
+        needsSize ? "choose a size" : null,
+      ]
+        .filter(Boolean)
+        .join(" and ")
+    : null;
 
   return (
     <Dialog
@@ -106,9 +118,9 @@ export function QuickViewDialog({
               />
             </Button>
             <Button
-              onClick={handleAdd}
+              onClick={() => void handleAdd()}
               loading={adding}
-              disabled={outOfStock || requiresSize || requiresColor}
+              disabled={outOfStock || selectionIncomplete}
               className="min-w-40"
             >
               {added ? (
@@ -152,11 +164,17 @@ export function QuickViewDialog({
                   className={cn(
                     "relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted transition",
                     activeImage === index
-                      ? "border-primary-500 dark:border-accent-300"
+                      ? "border-primary-600 dark:border-accent-300"
                       : "border-transparent opacity-65 hover:opacity-100",
                   )}
                 >
-                  <SmartImage src={image} alt="" fill sizes="64px" className="object-cover" />
+                  <SmartImage
+                    src={image}
+                    alt=""
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -200,57 +218,69 @@ export function QuickViewDialog({
 
           {colors.length > 0 ? (
             <fieldset className="mt-5">
-              <legend className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Colour
+              <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                <span>Colour</span>
+                <span className="font-medium normal-case tracking-normal text-foreground">
+                  {color ?? "Select a colour"}
+                </span>
               </legend>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {colors.map((option) => (
-                  <button
-                    key={option.name}
-                    type="button"
-                    onClick={() => setColor(option.name)}
-                    aria-label={option.name}
-                    aria-pressed={color === option.name}
-                    title={option.name}
-                    className={cn(
-                      "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition",
-                      color === option.name
-                        ? "border-primary-600 dark:border-accent-300"
-                        : "border-border hover:border-primary-300",
-                    )}
-                  >
-                    <span
-                      className="h-5 w-5 rounded-full border border-black/10"
-                      style={{ backgroundColor: option.hex }}
-                    />
-                  </button>
-                ))}
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                {colors.map((option) => {
+                  const active = color === option.name;
+                  return (
+                    <button
+                      key={option.name}
+                      type="button"
+                      onClick={() => setColor(option.name)}
+                      aria-label={option.name}
+                      aria-pressed={active}
+                      title={option.name}
+                      className={cn(
+                        "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition",
+                        active
+                          ? "border-primary-700 dark:border-accent-300"
+                          : "border-border hover:border-accent-400/60",
+                      )}
+                    >
+                      <span
+                        className="h-5 w-5 rounded-full border border-black/10"
+                        style={{ backgroundColor: option.hex }}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </fieldset>
           ) : null}
 
-          {sizes ? (
+          {sizes && sizes.length > 0 ? (
             <fieldset className="mt-4">
-              <legend className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Size
+              <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                <span>Size</span>
+                <span className="font-medium normal-case tracking-normal text-foreground">
+                  {size ?? "Select a size"}
+                </span>
               </legend>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {sizes.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setSize(option)}
-                    aria-pressed={size === option}
-                    className={cn(
-                      "inline-flex h-9 min-w-10 items-center justify-center rounded-lg border px-2.5 text-xs font-semibold transition",
-                      size === option
-                        ? "border-primary-700 bg-primary-700 text-white dark:border-accent-300 dark:bg-accent-300 dark:text-[#172B3A]"
-                        : "border-border text-muted-foreground hover:border-primary-300 hover:text-foreground",
-                    )}
-                  >
-                    {option}
-                  </button>
-                ))}
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {sizes.map((option) => {
+                  const active = size === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setSize(option)}
+                      aria-pressed={active}
+                      className={cn(
+                        "inline-flex h-9 min-w-10 items-center justify-center rounded-lg border px-2.5 text-xs font-semibold transition",
+                        active
+                          ? "border-primary-700 bg-primary-700 text-primary-50 dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950"
+                          : "border-border text-muted-foreground hover:border-accent-400/60 hover:text-foreground",
+                      )}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
               </div>
             </fieldset>
           ) : null}
@@ -268,6 +298,22 @@ export function QuickViewDialog({
               {product.stock > 0 ? `${product.stock} available` : "Restocking soon"}
             </span>
           </div>
+
+          {(colors.length > 0 || (sizes && sizes.length > 0)) ? (
+            <p
+              className={cn(
+                "mt-3 rounded-lg px-3 py-2 text-xs font-medium",
+                selectionIncomplete
+                  ? "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200"
+                  : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+              )}
+              aria-live="polite"
+            >
+              {selectionIncomplete
+                ? `Please ${selectionHint} before adding to bag.`
+                : "Selection complete."}
+            </p>
+          ) : null}
         </div>
       </div>
     </Dialog>

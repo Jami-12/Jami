@@ -4,8 +4,12 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Drawer } from "@/components/ui/drawer";
 import { Input, Label, Select } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { PRODUCT_SORT_OPTIONS } from "@/lib/constants";
 import { COLOR_SWATCHES } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
@@ -60,20 +64,26 @@ export function ProductFilters({
     setMaxPrice(current.maxPrice);
   }, [current.minPrice, current.maxPrice]);
 
-  const update = (mutate: (params: URLSearchParams) => void) => {
-    const params = new URLSearchParams(searchParams.toString());
-    mutate(params);
-    params.delete("page");
-    const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+  const update = React.useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      mutate(params);
+      params.delete("page");
+      const query = params.toString();
+      router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
-  const setParam = (key: string, value: string | null) => {
-    update((params) => {
-      if (!value) params.delete(key);
-      else params.set(key, value);
-    });
-  };
+  const setParam = React.useCallback(
+    (key: string, value: string | null) => {
+      update((params) => {
+        if (!value) params.delete(key);
+        else params.set(key, value);
+      });
+    },
+    [update],
+  );
 
   const activeCount = [
     current.q,
@@ -86,6 +96,8 @@ export function ProductFilters({
     current.inStock ? "true" : "",
     current.onSale ? "true" : "",
   ].filter(Boolean).length;
+
+  const clearAll = () => router.push(pathname, { scroll: false });
 
   const filterBody = (
     <div className="space-y-6">
@@ -112,7 +124,7 @@ export function ProductFilters({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Linen shirt, knit…"
-            className="h-9 pl-8 pr-8"
+            className="h-10 pl-9 pr-9"
           />
           {search ? (
             <button
@@ -134,7 +146,7 @@ export function ProductFilters({
         <legend className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
           Colour
         </legend>
-        <div className="grid grid-cols-6 gap-2">
+        <div className="flex flex-wrap gap-2">
           {COLOR_SWATCHES.map((colour) => {
             const active = current.color === colour.name;
             return (
@@ -146,14 +158,14 @@ export function ProductFilters({
                 aria-pressed={active}
                 title={colour.name}
                 className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition",
+                  "inline-flex h-9 w-9 items-center justify-center rounded-full border-2 transition",
                   active
                     ? "border-primary-700 dark:border-accent-300"
                     : "border-transparent hover:border-border",
                 )}
               >
                 <span
-                  className="h-5 w-5 rounded-full border border-black/10 shadow-sm"
+                  className="h-6 w-6 rounded-full border border-black/10 shadow-sm"
                   style={{ backgroundColor: colour.hex }}
                 />
               </button>
@@ -161,6 +173,9 @@ export function ProductFilters({
           })}
         </div>
       </fieldset>
+
+      <Separator />
+
       <fieldset>
         <legend className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
           Category
@@ -239,7 +254,7 @@ export function ProductFilters({
               value={minPrice}
               onChange={(event) => setMinPrice(event.target.value)}
               placeholder={String(priceRange.min)}
-              className="h-9"
+              className="h-10"
             />
           </div>
           <div className="min-w-0 flex-1">
@@ -254,10 +269,10 @@ export function ProductFilters({
               value={maxPrice}
               onChange={(event) => setMaxPrice(event.target.value)}
               placeholder={String(priceRange.max)}
-              className="h-9"
+              className="h-10"
             />
           </div>
-          <Button type="submit" size="sm" variant="subtle" className="h-9">
+          <Button type="submit" size="sm" variant="subtle" className="h-10">
             Apply
           </Button>
         </form>
@@ -275,7 +290,10 @@ export function ProductFilters({
               label={`${rating}★ & up`}
               checked={current.rating === String(rating)}
               onChange={() =>
-                setParam("rating", current.rating === String(rating) ? null : String(rating))
+                setParam(
+                  "rating",
+                  current.rating === String(rating) ? null : String(rating),
+                )
               }
             />
           ))}
@@ -304,7 +322,7 @@ export function ProductFilters({
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => router.push(pathname, { scroll: false })}
+          onClick={clearAll}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />
           Clear {activeCount} filter{activeCount === 1 ? "" : "s"}
@@ -314,19 +332,29 @@ export function ProductFilters({
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:items-start">
       <aside className="hidden lg:sticky lg:top-24 lg:block">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-          <div className="mb-5 flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
-            <h2 className="text-sm font-bold">Refine</h2>
+        <Card className="p-5 shadow-soft">
+          <div className="mb-5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal
+                className="h-4 w-4 text-primary-600 dark:text-accent-300"
+                aria-hidden="true"
+              />
+              <h2 className="text-sm font-bold">Refine</h2>
+            </div>
+            {activeCount > 0 ? (
+              <Badge tone="accent" className="text-[10px]">
+                {activeCount}
+              </Badge>
+            ) : null}
           </div>
           {filterBody}
-        </div>
+        </Card>
       </aside>
 
       <div className="min-w-0">
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <Button
             type="button"
             variant="outline"
@@ -338,7 +366,7 @@ export function ProductFilters({
             <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
             Filters
             {activeCount > 0 ? (
-              <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+              <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-800 px-1 text-[10px] font-bold text-primary-50 dark:bg-accent-300 dark:text-primary-950">
                 {activeCount}
               </span>
             ) : null}
@@ -348,8 +376,13 @@ export function ProductFilters({
             <span className="hidden sm:inline">Sort</span>
             <Select
               value={current.sort}
-              onChange={(event) => setParam("sort", event.target.value === "featured" ? null : event.target.value)}
-              className="h-9 w-44 text-xs"
+              onChange={(event) =>
+                setParam(
+                  "sort",
+                  event.target.value === "featured" ? null : event.target.value,
+                )
+              }
+              className="h-10 w-44 text-xs sm:w-48"
               aria-label="Sort products"
             >
               {PRODUCT_SORT_OPTIONS.map((option) => {
@@ -372,35 +405,39 @@ export function ProductFilters({
         {children}
       </div>
 
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-[70] lg:hidden">
-          <button
-            type="button"
-            aria-label="Close filters"
-            className="absolute inset-0 bg-primary-950/55 backdrop-blur-sm"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Product filters"
-            className={cn(
-              "absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl border border-border bg-card p-5 shadow-lift",
-            )}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-bold">Refine</h2>
-              <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} aria-label="Close filters">
-                <X className="h-4 w-4" aria-hidden="true" />
+      <Drawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        title="Refine"
+        description={
+          activeCount > 0
+            ? `${activeCount} filter${activeCount === 1 ? "" : "s"} active`
+            : "Filter the collection"
+        }
+        side="left"
+        footer={
+          <div className="flex items-center gap-2">
+            {activeCount > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  clearAll();
+                  setMobileOpen(false);
+                }}
+              >
+                Clear
               </Button>
-            </div>
-            {filterBody}
-            <Button className="mt-5 w-full" onClick={() => setMobileOpen(false)}>
+            ) : null}
+            <Button className="flex-1" onClick={() => setMobileOpen(false)}>
               Show results
             </Button>
           </div>
-        </div>
-      ) : null}
+        }
+      >
+        <div className="px-5 py-5">{filterBody}</div>
+      </Drawer>
     </div>
   );
 }
@@ -419,19 +456,26 @@ function FilterRadio({
   onChange: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 text-sm transition hover:bg-muted">
+    <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition hover:bg-muted">
       <input
         type="radio"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="h-3.5 w-3.5 accent-[var(--color-primary-700)]"
+        className="h-4 w-4 accent-[var(--color-primary-700)]"
       />
-      <span className={cn("flex-1", checked ? "font-semibold text-foreground" : "text-muted-foreground")}>
+      <span
+        className={cn(
+          "flex-1",
+          checked ? "font-semibold text-foreground" : "text-muted-foreground",
+        )}
+      >
         {label}
       </span>
       {typeof count === "number" ? (
-        <span className="text-[10px] tabular-nums text-muted-foreground">{count}</span>
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {count}
+        </span>
       ) : null}
     </label>
   );
@@ -447,13 +491,13 @@ function Toggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between rounded-lg px-1.5 py-1.5 text-sm hover:bg-muted">
+    <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-sm transition hover:bg-muted">
       <span className="text-muted-foreground">{label}</span>
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-3.5 w-3.5 accent-[var(--color-primary-700)]"
+        className="h-4 w-4 accent-[var(--color-primary-700)]"
       />
     </label>
   );

@@ -9,11 +9,13 @@ import { CashCollectionDialog } from "./cash-collection-dialog";
 import { OrderDetailDialog } from "./order-detail-dialog";
 
 import { ReceiptDialog } from "@/components/account/order-detail";
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { Input, Select } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Price } from "@/components/ui/price";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/ui/status-badge";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -29,20 +31,28 @@ import type { Order, OrderStatus, PaymentStatus } from "@/types";
 export function OrdersAdmin() {
   const queryClient = useQueryClient();
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("ALL");
   const [paymentStatus, setPaymentStatus] = React.useState("ALL");
   const [viewingId, setViewingId] = React.useState<string | null>(null);
   const debounced = useDebouncedValue(search, 300);
 
-  React.useEffect(() => setPage(1), [debounced, status, paymentStatus]);
+  React.useEffect(
+    () => setPage(1),
+    [debounced, status, paymentStatus, limit],
+  );
 
   const query = useQuery({
-    queryKey: ["admin", "orders", { page, search: debounced, status, paymentStatus }],
+    queryKey: [
+      "admin",
+      "orders",
+      { page, limit, search: debounced, status, paymentStatus },
+    ],
     queryFn: () =>
       ordersApi.adminList({
         page,
-        limit: 15,
+        limit,
         search: debounced.trim() || undefined,
         status: status === "ALL" ? undefined : (status as OrderStatus),
         paymentStatus: paymentStatus === "ALL" ? undefined : (paymentStatus as PaymentStatus),
@@ -63,6 +73,7 @@ export function OrdersAdmin() {
       void queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
       void queryClient.invalidateQueries({ queryKey: ["admin", "order"] });
       void queryClient.invalidateQueries({ queryKey: ["order"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not update the order")),
   });
@@ -89,12 +100,14 @@ export function OrdersAdmin() {
       void queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
       void queryClient.invalidateQueries({ queryKey: ["admin", "order"] });
       void queryClient.invalidateQueries({ queryKey: ["order"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) =>
       toast.error(getErrorMessage(error, "Could not record the cash payment")),
   });
 
   const rows = query.data?.items ?? [];
+  const meta = query.data?.meta;
 
   const columns: DataColumn<Order>[] = [
     {
@@ -133,7 +146,7 @@ export function OrdersAdmin() {
       headerClassName: "text-right",
     },
     {
-      header: "",
+      header: "Actions",
       cell: (order) => (
         <Button variant="outline" size="sm" onClick={() => setViewingId(order.id)}>
           <Eye className="h-3.5 w-3.5" aria-hidden="true" />
@@ -156,70 +169,79 @@ export function OrdersAdmin() {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search order number or customer…"
-            aria-label="Search orders"
-            className="pl-9"
-          />
-        </div>
-        <Select
-          value={status}
-          onChange={(event) => setStatus(event.target.value)}
-          aria-label="Filter by order status"
-          className="sm:max-w-44"
-        >
-          <option value="ALL">All statuses</option>
-          {ORDER_STATUSES.map((value) => (
-            <option key={value} value={value}>
-              {humanizeEnum(value)}
-            </option>
-          ))}
-        </Select>
-        <Select
-          value={paymentStatus}
-          onChange={(event) => setPaymentStatus(event.target.value)}
-          aria-label="Filter by payment status"
-          className="sm:max-w-44"
-        >
-          <option value="ALL">All payments</option>
-          {PAYMENT_STATUSES.map((value) => (
-            <option key={value} value={value}>
-              {humanizeEnum(value)}
-            </option>
-          ))}
-        </Select>
-      </div>
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Operations"
+        title="Orders"
+        description="Follow fulfilment and payments, update statuses and record cash collections from one place."
+      />
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(item) => item.id}
-          loading={query.isLoading}
-          empty="No orders match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `${query.data.meta.total} order${query.data.meta.total === 1 ? "" : "s"}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
+      <Card>
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search order number or customer…"
+              aria-label="Search orders"
+              className="pl-9"
+            />
+          </div>
+          <Select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            aria-label="Filter by order status"
+          >
+            <option value="ALL">All statuses</option>
+            {ORDER_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {humanizeEnum(value)}
+              </option>
+            ))}
+          </Select>
+          <Select
+            value={paymentStatus}
+            onChange={(event) => setPaymentStatus(event.target.value)}
+            aria-label="Filter by payment status"
+          >
+            <option value="ALL">All payments</option>
+            {PAYMENT_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {humanizeEnum(value)}
+              </option>
+            ))}
+          </Select>
+        </CardContent>
+      </Card>
+
+      <AdminListCard
+        title="Order history"
+        description="Newest orders first. Open any order to review its items, payment and delivery details."
+        count={meta?.total}
+        countLabel="orders"
+        columns={columns}
+        rows={rows}
+        getKey={(item) => item.id}
+        loading={query.isLoading}
+        empty="No orders match these filters."
+        pagination={
+          <ListPagination
+            page={page}
+            totalPages={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={limit}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
           />
-        </div>
-      </PageSection>
+        }
+      />
 
       <OrderDetailDialog
         order={order}

@@ -12,10 +12,12 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -24,8 +26,8 @@ import {
   SHIPPING_FLAT_RATE,
 } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
-import { cartSubtotal, useCartStore } from "@/stores/cart-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { cartSubtotal, useCartStore } from "@/stores/cart-store";
 
 export function CartView() {
   const hydrated = useHydrated();
@@ -41,7 +43,8 @@ export function CartView() {
 
   const subtotal = cartSubtotal(items);
   const count = items.reduce((total, item) => total + item.quantity, 0);
-  const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
+  const shipping =
+    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
@@ -50,7 +53,7 @@ export function CartView() {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-3">
           {[0, 1, 2].map((index) => (
-            <Skeleton key={index} className="h-28 w-full rounded-2xl" />
+            <Skeleton key={index} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
         <Skeleton className="h-72 w-full rounded-2xl" />
@@ -80,20 +83,26 @@ export function CartView() {
 
   const confirmClearCart = async () => {
     setClearing(true);
-    await clear();
-    setClearing(false);
-    setConfirmClear(false);
+    try {
+      await clear();
+    } finally {
+      setClearing(false);
+      setConfirmClear(false);
+    }
   };
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
       <div>
-        <div className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-soft">
+        <Card className="mb-4 p-4 shadow-soft sm:p-5">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-            <Truck className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-primary-600 dark:text-accent-300">
+              <Truck className="h-4 w-4" aria-hidden="true" />
+            </span>
             {remaining > 0 ? (
               <span>
-                You are {formatCurrency(remaining)} away from free standard shipping.
+                You are {formatCurrency(remaining)} away from free standard
+                shipping.
               </span>
             ) : (
               <span className="text-emerald-600 dark:text-emerald-400">
@@ -108,7 +117,7 @@ export function CartView() {
             ) : null}
           </div>
           <div
-            className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-border"
+            className="mt-3 h-1.5 overflow-hidden rounded-full bg-border"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -116,78 +125,85 @@ export function CartView() {
             aria-label="Progress toward free shipping"
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-primary-600 to-accent-400 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-        </div>
+        </Card>
 
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-card shadow-soft">
-          {items.map((item) => (
-            <li key={item.productId} className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
-              <Link
-                href={`/products/${item.slug}`}
-                className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-muted"
+        <Card className="overflow-hidden shadow-soft">
+          <ul className="divide-y divide-border">
+            {items.map((item) => (
+              <li
+                key={item.productId}
+                className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5"
               >
-                <SmartImage
-                  src={item.image}
-                  alt={item.name}
-                  fill
-                  sizes="112px"
-                  className="object-cover"
-                />
-              </Link>
+                <Link
+                  href={`/products/${item.slug}`}
+                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-muted"
+                >
+                  <SmartImage
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    sizes="112px"
+                    className="object-cover"
+                  />
+                </Link>
 
-              <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/products/${item.slug}`}
-                      className="line-clamp-2 text-sm font-bold leading-snug hover:underline sm:text-base"
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/products/${item.slug}`}
+                        className="line-clamp-2 text-sm font-bold leading-snug hover:underline sm:text-base"
+                      >
+                        {item.name}
+                      </Link>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span>Selected piece</span>
+                        {item.stock <= 5 ? (
+                          <Badge tone="warning">Only {item.stock} left</Badge>
+                        ) : (
+                          <Badge tone="success" dot>
+                            In stock
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void removeItem(item.productId)}
+                      aria-label={`Remove ${item.name} from bag`}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-red-500/10 hover:text-red-600"
                     >
-                      {item.name}
-                    </Link>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>Aether piece</span>
-                      {item.stock <= 5 ? (
-                        <Badge tone="warning">Only {item.stock} left</Badge>
-                      ) : (
-                        <Badge tone="success" dot>
-                          In stock
-                        </Badge>
-                      )}
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <QuantityStepper
+                      value={item.quantity}
+                      max={Math.max(1, Math.min(item.stock, 99))}
+                      onChange={(quantity) =>
+                        void updateQuantity(item.productId, quantity)
+                      }
+                      label={`Quantity of ${item.name}`}
+                    />
+                    <div className="text-right">
+                      <Price amount={item.price * item.quantity} size="md" />
+                      {item.quantity > 1 ? (
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {formatCurrency(item.price)} each
+                        </p>
+                      ) : null}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void removeItem(item.productId)}
-                    aria-label={`Remove ${item.name} from bag`}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-red-500/10 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
                 </div>
-
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                  <QuantityStepper
-                    value={item.quantity}
-                    max={Math.max(1, Math.min(item.stock, 99))}
-                    onChange={(quantity) => void updateQuantity(item.productId, quantity)}
-                    label={`Quantity of ${item.name}`}
-                  />
-                  <div className="text-right">
-                    <Price amount={item.price * item.quantity} size="md" />
-                    {item.quantity > 1 ? (
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {formatCurrency(item.price)} each
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </Card>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <Button asChild variant="ghost" size="sm">
@@ -209,11 +225,12 @@ export function CartView() {
       </div>
 
       <aside className="lg:sticky lg:top-24">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-          <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-muted-foreground">
+        <Card className="p-5 shadow-soft sm:p-6">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Order summary
           </h2>
-          <dl className="mt-4 space-y-2.5 text-sm">
+
+          <dl className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">
                 Subtotal · {count} item{count === 1 ? "" : "s"}
@@ -230,11 +247,15 @@ export function CartView() {
             </div>
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">Tax</dt>
-              <dd className="text-xs text-muted-foreground">Calculated at checkout</dd>
+              <dd className="text-xs text-muted-foreground">
+                Calculated at checkout
+              </dd>
             </div>
           </dl>
 
-          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+          <Separator className="my-4" />
+
+          <div className="flex items-center justify-between">
             <span className="text-sm font-bold">Estimated total</span>
             <Price amount={subtotal + shipping} size="lg" />
           </div>
@@ -258,7 +279,7 @@ export function CartView() {
             <li>30-day returns on unworn pieces</li>
             <li>Carbon-neutral delivery on every order</li>
           </ul>
-        </div>
+        </Card>
       </aside>
 
       <ConfirmDialog

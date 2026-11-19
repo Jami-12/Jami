@@ -7,10 +7,13 @@ const Table = React.forwardRef<
   React.HTMLAttributes<HTMLTableElement>
 >(function Table({ className, ...props }, ref) {
   return (
-    <div className="relative w-full overflow-x-auto">
+    <div className="relative w-full overflow-x-auto overscroll-x-contain">
       <table
         ref={ref}
-        className={cn("w-full caption-bottom border-collapse text-sm", className)}
+        className={cn(
+          "w-full min-w-full caption-bottom border-collapse text-sm text-[var(--foreground)]",
+          className,
+        )}
         {...props}
       />
     </div>
@@ -21,7 +24,13 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(function TableHeader({ className, ...props }, ref) {
-  return <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />;
+  return (
+    <thead
+      ref={ref}
+      className={cn("[&_tr]:border-b [&_tr]:border-[var(--border)]", className)}
+      {...props}
+    />
+  );
 });
 
 const TableBody = React.forwardRef<
@@ -44,7 +53,10 @@ const TableFooter = React.forwardRef<
   return (
     <tfoot
       ref={ref}
-      className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
+      className={cn(
+        "border-t border-[var(--border)] bg-[var(--muted)]/60 font-medium [&>tr]:last:border-b-0",
+        className,
+      )}
       {...props}
     />
   );
@@ -58,7 +70,9 @@ const TableRow = React.forwardRef<
     <tr
       ref={ref}
       className={cn(
-        "border-b border-border/70 transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted",
+        "border-b border-[var(--border)] transition-colors hover:bg-[var(--muted)]/50",
+        "data-[state=selected]:bg-[var(--muted)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
         className,
       )}
       {...props}
@@ -74,7 +88,7 @@ const TableHead = React.forwardRef<
     <th
       ref={ref}
       className={cn(
-        "h-10 whitespace-nowrap px-3 text-left align-middle text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground",
+        "h-11 whitespace-nowrap px-4 text-left align-middle text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]",
         className,
       )}
       {...props}
@@ -89,7 +103,7 @@ const TableCell = React.forwardRef<
   return (
     <td
       ref={ref}
-      className={cn("px-3 py-3 align-middle", className)}
+      className={cn("px-4 py-3.5 align-middle", className)}
       {...props}
     />
   );
@@ -102,7 +116,7 @@ const TableCaption = React.forwardRef<
   return (
     <caption
       ref={ref}
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      className={cn("mt-4 text-sm text-[var(--muted-foreground)]", className)}
       {...props}
     />
   );

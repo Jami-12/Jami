@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { PackageSearch } from "lucide-react";
 
-import { ProductCard } from "./product-card";
-
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
+
+import { ProductCard } from "./product-card";
 
 export function ProductGrid({
   products,

@@ -1,49 +1,111 @@
+"use client";
+
 import Link from "next/link";
 
+import { useSiteSettings } from "@/components/providers/site-settings-provider";
+import { SmartImage } from "@/components/ui/smart-image";
 import { cn } from "@/lib/utils";
 
+type BrandTone = "default" | "inverse";
+
+/**
+ * Single source of truth for the storefront identity.
+ *
+ * The logo always comes from the live `SiteSettings` cache, so a Super Admin
+ * upload propagates to the navbar, footer, auth screens and dashboards without
+ * a reload. When no image is configured we fall back to the configured site
+ * name, then the public build-time store name, then a sane default.
+ */
 export function Brand({
   className,
   wordmarkClassName,
   href = "/",
   showWordmark = true,
+  tone = "default",
+  onClick,
 }: {
   className?: string;
   wordmarkClassName?: string;
   href?: string;
   showWordmark?: boolean;
+  /** Use on dark photographic panels where the normal foreground is unreadable. */
+  tone?: BrandTone;
+  onClick?: () => void;
 }) {
+  const { settings } = useSiteSettings();
+
+  const name =
+    settings.siteName?.trim() ||
+    process.env.NEXT_PUBLIC_STORE_NAME?.trim() ||
+    "Store";
+  const logoUrl = settings.navbarLogoUrl?.trim() || null;
+  const inverse = tone === "inverse";
+
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("") || "A";
+
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "group inline-flex min-w-0 items-center gap-2.5 rounded-xl outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:opacity-90",
         className,
       )}
-      aria-label="Aether home"
+      aria-label={`${name} home`}
     >
-      <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-accent-300/60 bg-[linear-gradient(150deg,#172B3A,#2C4561)] shadow-soft dark:border-accent-400/40 dark:bg-[linear-gradient(150deg,#2C4561,#172B3A)]">
-        <svg
-          viewBox="0 0 32 32"
-          className="relative h-5 w-5"
-          aria-hidden="true"
-          fill="none"
-        >
-          <path
-            d="M8 25 16 6l8 19h-5l-1.2-3.4h-3.6L13 25H8Z"
-            fill="#F8FAF0"
-            className="dark:fill-[#F8FAFC]"
+      <span
+        className={cn(
+          "relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border shadow-soft transition-transform duration-300 group-hover:-rotate-3",
+          inverse
+            ? "border-white/25 bg-white/10"
+            : "border-accent-300/50 bg-gradient-to-br from-primary-800 via-primary-700 to-accent-600 dark:border-accent-400/40 dark:from-accent-600 dark:via-primary-700 dark:to-primary-900",
+          logoUrl && (inverse ? "bg-white/15" : "bg-card"),
+        )}
+      >
+        {logoUrl ? (
+          <SmartImage
+            src={logoUrl}
+            alt={`${name} logo`}
+            fill
+            priority
+            sizes="40px"
+            className="object-contain p-1.5"
           />
-          <circle cx="25" cy="7" r="2.2" fill="#5A83AB" className="dark:fill-[#97B3CE]" />
-        </svg>
-      </span>
-      {showWordmark ? (
-        <span className={cn("flex flex-col leading-none", wordmarkClassName)}>
-          <span className="font-display text-[1.15rem] font-semibold tracking-[0.26em] text-foreground">
-            AETHER
+        ) : (
+          <span
+            className={cn(
+              "font-display text-sm font-semibold tracking-tight",
+              inverse ? "text-white" : "text-white dark:text-accent-100",
+            )}
+            aria-hidden="true"
+          >
+            {initials}
           </span>
-          <span className="mt-1 text-[8px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-            Atelier
+        )}
+      </span>
+
+      {showWordmark ? (
+        <span className={cn("flex min-w-0 flex-col leading-none", wordmarkClassName)}>
+          <span
+            className={cn(
+              "truncate font-display text-[1.05rem] font-semibold uppercase leading-tight tracking-[0.16em] sm:tracking-[0.22em]",
+              inverse ? "text-white" : "text-foreground",
+            )}
+          >
+            {name}
+          </span>
+          <span
+            className={cn(
+              "mt-1 text-[9px] font-semibold uppercase tracking-[0.28em]",
+              inverse ? "text-white/65" : "text-muted-foreground",
+            )}
+          >
+            considered living
           </span>
         </span>
       ) : null}

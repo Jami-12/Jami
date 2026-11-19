@@ -20,17 +20,18 @@ export function RatingStars({
 
   return (
     <span
+      role="img"
       className={cn("inline-flex items-center gap-1.5", className)}
       aria-label={`Rated ${clamped.toFixed(1)} out of 5`}
     >
       <span className="relative inline-flex" aria-hidden="true">
-        <span className="inline-flex gap-0.5 text-muted-foreground/35">
+        <span className="inline-flex gap-0.5 text-[var(--muted-foreground)]/30">
           {[0, 1, 2, 3, 4].map((index) => (
             <Star key={index} style={{ width: size, height: size }} />
           ))}
         </span>
         <span
-          className="absolute inset-y-0 left-0 inline-flex gap-0.5 overflow-hidden text-amber-400"
+          className="absolute inset-y-0 left-0 inline-flex gap-0.5 overflow-hidden text-[var(--color-accent-400)] dark:text-[var(--color-accent-300)]"
           style={{ width: `${percent}%` }}
         >
           {[0, 1, 2, 3, 4].map((index) => (
@@ -43,12 +44,12 @@ export function RatingStars({
         </span>
       </span>
       {showValue ? (
-        <span className="text-xs font-semibold tabular-nums text-foreground">
+        <span className="text-xs font-semibold tabular-nums text-[var(--foreground)]">
           {clamped.toFixed(1)}
         </span>
       ) : null}
       {count !== undefined ? (
-        <span className="text-xs text-muted-foreground">({count})</span>
+        <span className="text-xs tabular-nums text-[var(--muted-foreground)]">({count})</span>
       ) : null}
     </span>
   );

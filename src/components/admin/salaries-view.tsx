@@ -7,13 +7,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select, Textarea } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -50,13 +56,18 @@ export function SalariesView() {
   const [status, setStatus] = React.useState("ALL");
   const [employeeId, setEmployeeId] = React.useState("ALL");
   const [search, setSearch] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(15);
   const debounced = useDebouncedValue(search, 300);
   const [open, setOpen] = React.useState(false);
   const [paying, setPaying] = React.useState<SalaryPayment | null>(null);
   const [cancelling, setCancelling] = React.useState<SalaryPayment | null>(null);
 
-  React.useEffect(() => setPage(1), [year, month, status, employeeId, debounced]);
+  React.useEffect(
+    () => setPage(1),
+    [year, month, status, employeeId, debounced, sortOrder, limit],
+  );
 
   const summary = useQuery({
     queryKey: ["salaries", "summary", year],
@@ -71,16 +82,20 @@ export function SalariesView() {
   });
 
   const query = useQuery({
-    queryKey: ["salaries", { page, year, month, status, employeeId, search: debounced }],
+    queryKey: [
+      "salaries",
+      { page, limit, year, month, status, employeeId, search: debounced, sortOrder },
+    ],
     queryFn: () =>
       salariesApi.list({
         page,
-        limit: 15,
+        limit,
         year,
         month: month === "ALL" ? undefined : Number(month),
         status: status === "ALL" ? undefined : status,
         employeeId: employeeId === "ALL" ? undefined : employeeId,
         search: debounced.trim() || undefined,
+        sortOrder,
       }),
   });
 
@@ -90,7 +105,9 @@ export function SalariesView() {
   });
 
   const selectedEmployeeId = watch("employeeId");
-  const selectedEmployee = employees.data?.items.find((employee) => employee.id === selectedEmployeeId);
+  const selectedEmployee = employees.data?.items.find(
+    (employee) => employee.id === selectedEmployeeId,
+  );
 
   const openCreate = () => {
     reset({ ...EMPTY, year, month: month === "ALL" ? now.getMonth() + 1 : Number(month) });
@@ -120,7 +137,8 @@ export function SalariesView() {
       setOpen(false);
       invalidate();
     },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not record the salary payment")),
+    onError: (error) =>
+      toast.error(getErrorMessage(error, "Could not record the salary payment")),
   });
 
   const pay = useMutation({
@@ -150,7 +168,7 @@ export function SalariesView() {
     {
       header: "Employee",
       cell: (salary) => (
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-bold">{salary.employee.name}</p>
           <p className="text-[11px] text-muted-foreground">
             {salary.employee.position}
@@ -236,6 +254,22 @@ export function SalariesView() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Payroll
+            </p>
+            <CardTitle className="font-display text-xl">Salaries</CardTitle>
+            <CardDescription>Record, pay and track monthly salary payments.</CardDescription>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New salary
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label={`Paid in ${year}`}
@@ -260,8 +294,12 @@ export function SalariesView() {
         />
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-base">Salary payments</CardTitle>
+          <CardDescription>Filter by period, employee and status.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Tabs
             items={[
               { value: "ALL", label: "All" },
@@ -272,87 +310,93 @@ export function SalariesView() {
             value={status}
             onChange={setStatus}
           />
-          <div className="relative w-full sm:max-w-56">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search notes or employee…"
-              aria-label="Search salaries"
-              className="pl-9"
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <div className="relative sm:col-span-2 xl:col-span-2">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search notes or employee…"
+                aria-label="Search salaries"
+                className="pl-9"
+              />
+            </div>
+            <Select
+              aria-label="Filter by month"
+              value={month}
+              onChange={(event) => setMonth(event.target.value)}
+            >
+              <option value="ALL">All months</option>
+              {MONTHS.map((label, index) => (
+                <option key={label} value={index + 1}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+            <Select
+              aria-label="Filter by year"
+              value={year}
+              onChange={(event) => setYear(Number(event.target.value))}
+            >
+              {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map(
+                (value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ),
+              )}
+            </Select>
+            <Select
+              aria-label="Filter by employee"
+              value={employeeId}
+              onChange={(event) => setEmployeeId(event.target.value)}
+            >
+              <option value="ALL">All employees</option>
+              {employeeOptions.map((employee) => (
+                <option key={employee.id} value={employee.id}>
+                  {employee.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              aria-label="Sort salaries"
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value as "asc" | "desc")}
+            >
+              <option value="desc">Newest first</option>
+              <option value="asc">Oldest first</option>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="px-0 pb-4 pt-4 sm:px-0">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getKey={(salary) => salary.id}
+            loading={query.isLoading}
+            empty="No salary payments match these filters."
+          />
+          <div className="px-4 sm:px-5">
+            <ListPagination
+              page={query.data?.meta.page ?? page}
+              pageCount={query.data?.meta.totalPages ?? 1}
+              totalItems={query.data?.meta.total ?? 0}
+              pageSize={query.data?.meta.limit ?? limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setLimit(size);
+                setPage(1);
+              }}
             />
           </div>
-          <Select
-            aria-label="Filter by month"
-            value={month}
-            onChange={(event) => setMonth(event.target.value)}
-            className="w-auto"
-          >
-            <option value="ALL">All months</option>
-            {MONTHS.map((label, index) => (
-              <option key={label} value={index + 1}>
-                {label}
-              </option>
-            ))}
-          </Select>
-          <Select
-            aria-label="Filter by year"
-            value={year}
-            onChange={(event) => setYear(Number(event.target.value))}
-            className="w-auto"
-          >
-            {[now.getFullYear() + 1, now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2].map(
-              (value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ),
-            )}
-          </Select>
-          <Select
-            aria-label="Filter by employee"
-            value={employeeId}
-            onChange={(event) => setEmployeeId(event.target.value)}
-            className="w-auto"
-          >
-            <option value="ALL">All employees</option>
-            {employeeOptions.map((employee) => (
-              <option key={employee.id} value={employee.id}>
-                {employee.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          New salary
-        </Button>
-      </div>
-
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(salary) => salary.id}
-          loading={query.isLoading}
-          empty="No salary payments match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `${query.data.meta.total} payment${query.data.meta.total === 1 ? "" : "s"}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </PageSection>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={open}
@@ -420,13 +464,7 @@ export function SalariesView() {
             }
             error={errors.amount?.message}
           >
-            <Input
-              id="salary-amount"
-              type="number"
-              step="0.01"
-              min="0"
-              {...register("amount")}
-            />
+            <Input id="salary-amount" type="number" step="0.01" min="0" {...register("amount")} />
           </FormField>
           <FormField label="Payment date" htmlFor="salary-date" error={errors.paymentDate?.message}>
             <Input id="salary-date" type="date" {...register("paymentDate")} />

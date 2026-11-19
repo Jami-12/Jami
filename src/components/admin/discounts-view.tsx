@@ -7,13 +7,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Price } from "@/components/ui/price";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { productDiscountsApi, productsApi } from "@/lib/api/services";
@@ -58,6 +64,7 @@ export function DiscountsView() {
   const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(15);
   const debounced = useDebouncedValue(search, 300);
   const [open, setOpen] = React.useState(false);
   const [productId, setProductId] = React.useState("");
@@ -65,14 +72,14 @@ export function DiscountsView() {
   const [removing, setRemoving] = React.useState<Product | null>(null);
   const [productError, setProductError] = React.useState<string | undefined>();
 
-  React.useEffect(() => setPage(1), [debounced]);
+  React.useEffect(() => setPage(1), [debounced, limit]);
 
   const query = useQuery({
-    queryKey: ["products", "discounts", { page, search: debounced }],
+    queryKey: ["products", "discounts", { page, limit, search: debounced }],
     queryFn: () =>
       productsApi.list({
         page,
-        limit: 15,
+        limit,
         search: debounced.trim() || undefined,
         sortBy: "createdAt",
         sortOrder: "desc",
@@ -120,7 +127,12 @@ export function DiscountsView() {
     return detail !== undefined ? Boolean(detail) : Boolean(product.discount);
   };
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<DiscountValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DiscountValues>({
     resolver: formResolver<DiscountValues>(discountSchema),
     defaultValues: EMPTY,
   });
@@ -226,9 +238,10 @@ export function DiscountsView() {
       cell: (product) => {
         const detail = detailFor(product);
         if (detail) {
-          const amount = detail.discountType === "PERCENTAGE"
-            ? `${detail.discountValue}% off`
-            : `${detail.discountValue} BDT off`;
+          const amount =
+            detail.discountType === "PERCENTAGE"
+              ? `${detail.discountValue}% off`
+              : `${detail.discountValue} BDT off`;
           return (
             <div>
               <p className="text-xs font-bold">{amount}</p>
@@ -271,7 +284,8 @@ export function DiscountsView() {
         const detail = detailFor(product);
         const startDate = detail?.startDate ?? product.discount?.startDate;
         const endDate = detail?.endDate ?? product.discount?.endDate;
-        if (!startDate && !endDate) return <span className="text-[11px] text-muted-foreground">—</span>;
+        if (!startDate && !endDate)
+          return <span className="text-[11px] text-muted-foreground">—</span>;
         return (
           <div className="text-[11px] text-muted-foreground">
             <p>{startDate ? formatDate(startDate) : "Immediate"}</p>
@@ -326,6 +340,24 @@ export function DiscountsView() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Pricing campaigns
+            </p>
+            <CardTitle className="font-display text-xl">Discounts</CardTitle>
+            <CardDescription>
+              Apply, schedule and monitor product discounts from one place.
+            </CardDescription>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New discount
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label="Discounted on page"
@@ -350,45 +382,49 @@ export function DiscountsView() {
         />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
+      <Card>
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="font-display text-base">Product discounts</CardTitle>
+            <CardDescription>Paginated catalogue with live campaign status.</CardDescription>
+          </div>
+          <div className="relative w-full sm:max-w-xs">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search products…"
+              aria-label="Search products for discounts"
+              className="pl-9"
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="px-0 pb-4 sm:px-0">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getKey={(product) => product.id}
+            loading={query.isLoading}
+            empty="No products match this search."
           />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search products…"
-            aria-label="Search products for discounts"
-            className="pl-9"
-          />
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          New discount
-        </Button>
-      </div>
-
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(product) => product.id}
-          loading={query.isLoading}
-          empty="No products match this search."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data ? `${query.data.meta.total} product${query.data.meta.total === 1 ? "" : "s"}` : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </PageSection>
+          <div className="px-4 sm:px-5">
+            <ListPagination
+              page={query.data?.meta.page ?? page}
+              pageCount={query.data?.meta.totalPages ?? 1}
+              totalItems={query.data?.meta.total ?? 0}
+              pageSize={query.data?.meta.limit ?? limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setLimit(size);
+                setPage(1);
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={open}

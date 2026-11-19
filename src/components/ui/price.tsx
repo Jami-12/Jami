@@ -6,10 +6,10 @@ import { cn, formatCurrency } from "@/lib/utils";
 
 const SIZES = {
   xs: "text-xs font-semibold",
-  sm: "text-sm font-bold",
-  md: "text-base font-bold",
-  lg: "text-xl font-extrabold",
-  xl: "text-3xl font-extrabold",
+  sm: "text-sm font-semibold",
+  md: "text-base font-semibold",
+  lg: "text-xl font-bold",
+  xl: "text-3xl font-bold",
 } as const;
 
 export function Price({
@@ -31,7 +31,13 @@ export function Price({
   const value = displayAmount(amount, display);
 
   const price = (
-    <span className={cn("tabular-nums tracking-tight", SIZES[size], className)}>
+    <span
+      className={cn(
+        "tabular-nums tracking-tight text-[var(--foreground)]",
+        SIZES[size],
+        className,
+      )}
+    >
       {formatCurrency(value, { currency: display })}
     </span>
   );
@@ -41,7 +47,7 @@ export function Price({
   return (
     <span className={cn("inline-flex items-baseline gap-2", inline && "gap-1.5")}>
       {price}
-      <span className="text-xs font-medium text-muted-foreground line-through tabular-nums">
+      <span className="text-xs font-medium tabular-nums text-[var(--muted-foreground)] line-through">
         {formatCurrency(displayAmount(compareAt, display), { currency: display })}
       </span>
     </span>

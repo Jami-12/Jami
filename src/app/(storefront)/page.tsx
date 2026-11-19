@@ -1,39 +1,79 @@
+import Script from "next/script";
+
 import {
+  AllCategoriesSection,
   BrandShowcase,
-  CategoryGrid,
-  HeroBanner,
+  CategoryProductSection,
+  HeroSection,
   NewArrivals,
   NewsletterSection,
+  ProductFinder,
   PromoBanners,
 } from "@/components/home";
 import { SITE } from "@/lib/constants";
 import {
+  isHomeSectionVisible,
+  visibleCategorySections,
+} from "@/lib/site-settings";
+import {
+  catalog,
   getActiveBanners,
   getBrands,
   getCategories,
   getFeaturedProducts,
   getNewArrivals,
+  getSiteSettings,
   getTrendingProducts,
 } from "@/services/catalog";
-
-export const revalidate = 120;
+import type { Product } from "@/types";
 
 export default async function HomePage() {
-  const [featured, trending, newArrivals, categories, brands, banners] =
-    await Promise.all([
-      getFeaturedProducts(8),
-      getTrendingProducts(8),
-      getNewArrivals(8),
-      getCategories(),
-      getBrands(),
-      getActiveBanners(),
-    ]);
+  const settings = await getSiteSettings();
+  const sections = visibleCategorySections(settings);
 
-  const heroProducts =
-    featured.length > 0 ? featured : trending.length > 0 ? trending : newArrivals;
-  const newArrivalItems =
-    newArrivals.length > 0 ? newArrivals.slice(0, 8) : featured.slice(0, 8);
-  const promoBanners = banners.filter((banner) => banner.placement === "PROMO");
+  const catalogData = Promise.all([
+    getFeaturedProducts(8),
+    getTrendingProducts(8),
+    getNewArrivals(8),
+    getCategories(),
+    getBrands(),
+    getActiveBanners(),
+  ]);
+
+  const sectionProductsData = Promise.all(
+    sections.map(async (section) => {
+      try {
+        const result = await catalog.products({
+          category: section.categorySlug,
+          inStock: true,
+          limit: 6,
+          sortBy: "soldCount",
+          sortOrder: "desc",
+        });
+        return result.items;
+      } catch {
+        return [];
+      }
+    }),
+  );
+
+  const [featured, trending, newArrivals, categories, brands, banners] =
+    await catalogData;
+  const sectionProducts = await sectionProductsData;
+
+  const catalogProducts = Array.from(
+    new Map<string, Product>(
+      [...featured, ...trending, ...newArrivals].map((product) => [
+        product.id,
+        product,
+      ]),
+    ).values(),
+  );
+  const heroProducts = catalogProducts.slice(0, 5);
+  const newArrivalItems = newArrivals.length > 0 ? newArrivals : featured;
+  const categoryDescriptions = new Map(
+    categories.map((category) => [category.slug, category.description]),
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -48,28 +88,51 @@ export default async function HomePage() {
 
   return (
     <>
-      <script
+      <Script
+        id="organization-json-ld"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <HeroBanner
-        products={heroProducts}
-      />
+      {isHomeSectionVisible(settings, "showHero") ? (
+        <HeroSection products={heroProducts} />
+      ) : null}
 
-      <CategoryGrid categories={categories} />
+      {isHomeSectionVisible(settings, "showProductFinder") ? (
+        <ProductFinder products={catalogProducts} />
+      ) : null}
 
+      {isHomeSectionVisible(settings, "showMiddleCategories") ? (
+        <AllCategoriesSection categories={categories} />
+      ) : null}
 
-      <NewArrivals products={newArrivalItems} />
+      {sections.map((section, index) => (
+        <CategoryProductSection
+          key={section.id}
+          title={section.categoryName}
+          slug={section.categorySlug}
+          description={
+            categoryDescriptions.get(section.categorySlug) ?? undefined
+          }
+          products={sectionProducts[index] ?? []}
+        />
+      ))}
 
+      {isHomeSectionVisible(settings, "showNewArrivals") ? (
+        <NewArrivals products={newArrivalItems} />
+      ) : null}
 
-      <BrandShowcase brands={brands} />
+      {isHomeSectionVisible(settings, "showBrands") ? (
+        <BrandShowcase brands={brands} />
+      ) : null}
 
-      <PromoBanners banners={promoBanners} />
+      {isHomeSectionVisible(settings, "showPromoBanners") ? (
+        <PromoBanners banners={banners} />
+      ) : null}
 
-
-
-      <NewsletterSection />
+      {isHomeSectionVisible(settings, "showNewsletter") ? (
+        <NewsletterSection />
+      ) : null}
     </>
   );
 }

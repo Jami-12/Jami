@@ -9,11 +9,17 @@ import type {
   Role,
 } from "@/types";
 
+/**
+ * Build-time storefront identity.
+ * Runtime name/logo/favicon are driven by Super Admin site settings via
+ * `SiteSettingsProvider` + `Brand`; these values act as safe fallbacks so
+ * metadata, manifest and first paint stay branded before settings load.
+ */
 export const SITE = {
-  name: process.env.NEXT_PUBLIC_STORE_NAME ?? "Aether",
-  tagline: "Modern wardrobe, considered",
+  name: process.env.NEXT_PUBLIC_STORE_NAME?.trim() || "Store",
+  tagline: "Modern commerce, thoughtfully made",
   description:
-    "Aether is an editorial fashion house for considered wardrobes — elevated essentials, quiet tailoring and pieces made to be worn for years, not seasons.",
+    "A modern storefront for considered essentials — quality pieces, clear details and a smooth shopping experience.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@example.com",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+880 1000 000000",
@@ -279,6 +285,18 @@ export const INVENTORY_MOVEMENT_LABEL: Record<InventoryMovementType, string> = {
   ORDER_RETURN: "Order return",
 };
 
+export interface NavItemDefinition {
+  label: string;
+  href: string;
+  icon?: string;
+  superOnly?: boolean;
+}
+
+export interface NavGroupDefinition {
+  label: string;
+  items: readonly NavItemDefinition[];
+}
+
 export const CUSTOMER_NAV = [
   { label: "Overview", href: "/account", icon: "layout" },
   { label: "Orders", href: "/account/orders", icon: "receipt" },
@@ -298,6 +316,7 @@ export const ADMIN_NAV = [
   { label: "Categories", href: "/admin/categories", icon: "tag", superOnly: false },
   { label: "Brands", href: "/admin/brands", icon: "badge", superOnly: false },
   { label: "Banners", href: "/admin/banners", icon: "layout", superOnly: false },
+  { label: "Home sections", href: "/admin/home-sections", icon: "layout", superOnly: false },
   { label: "Coupons", href: "/admin/coupons", icon: "ticket", superOnly: false },
   { label: "Reviews", href: "/admin/reviews", icon: "star", superOnly: false },
   { label: "Expenses", href: "/admin/expenses", icon: "wallet", superOnly: false },
@@ -320,8 +339,123 @@ export const SUPER_ADMIN_NAV = [
   { label: "Salaries", href: "/super-admin/salaries", icon: "banknote" },
   { label: "Notifications", href: "/super-admin/notifications", icon: "bell" },
   { label: "Audit logs", href: "/super-admin/audit", icon: "scroll" },
+  { label: "Settings", href: "/super-admin/settings", icon: "shield" },
   { label: "Admin console", href: "/admin", icon: "shield" },
 ] as const;
+
+/**
+ * Grouped navigation used by the collapsible dashboard sidebar. Every item in
+ * the flat arrays above appears exactly once below; the flat exports are kept
+ * for callers that do not need grouping.
+ */
+export const CUSTOMER_NAV_GROUPS: readonly NavGroupDefinition[] = [
+  {
+    label: "Workspace",
+    items: [
+      { label: "Overview", href: "/account", icon: "layout" },
+      { label: "Orders", href: "/account/orders", icon: "receipt" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { label: "Profile", href: "/account/profile", icon: "user" },
+      { label: "Addresses", href: "/account/addresses", icon: "map" },
+      { label: "Wishlist", href: "/account/wishlist", icon: "heart" },
+      { label: "Notifications", href: "/account/notifications", icon: "bell" },
+    ],
+  },
+  {
+    label: "Preferences",
+    items: [{ label: "Security", href: "/account/security", icon: "shield" }],
+  },
+];
+
+export const ADMIN_NAV_GROUPS: readonly NavGroupDefinition[] = [
+  {
+    label: "Workspace",
+    items: [
+      { label: "Overview", href: "/admin", icon: "layout" },
+      {
+        label: "Analytics",
+        href: "/super-admin/analytics",
+        icon: "chart",
+        superOnly: true,
+      },
+      {
+        label: "Accounting",
+        href: "/super-admin/accounting",
+        icon: "calculator",
+        superOnly: true,
+      },
+      { label: "Users", href: "/super-admin/users", icon: "users", superOnly: true },
+    ],
+  },
+  {
+    label: "Commerce",
+    items: [
+      { label: "Products", href: "/admin/products", icon: "package" },
+      { label: "Orders", href: "/admin/orders", icon: "receipt" },
+      { label: "Customers", href: "/admin/customers", icon: "user" },
+      { label: "Inventory", href: "/admin/inventory", icon: "boxes" },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { label: "Categories", href: "/admin/categories", icon: "tag" },
+      { label: "Brands", href: "/admin/brands", icon: "badge" },
+      { label: "Banners", href: "/admin/banners", icon: "layout" },
+      { label: "Home sections", href: "/admin/home-sections", icon: "layout" },
+      { label: "Coupons", href: "/admin/coupons", icon: "ticket" },
+      { label: "Reviews", href: "/admin/reviews", icon: "star" },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Expenses", href: "/admin/expenses", icon: "wallet" },
+      { label: "Notifications", href: "/admin/notifications", icon: "bell" },
+    ],
+  },
+];
+
+export const SUPER_ADMIN_NAV_GROUPS: readonly NavGroupDefinition[] = [
+  {
+    label: "Overview",
+    items: [
+      { label: "Overview", href: "/super-admin", icon: "layout" },
+      { label: "Analytics", href: "/super-admin/analytics", icon: "chart" },
+      { label: "Accounting", href: "/super-admin/accounting", icon: "calculator" },
+      { label: "Transactions", href: "/super-admin/transactions", icon: "arrow" },
+    ],
+  },
+  {
+    label: "Commerce",
+    items: [
+      { label: "Discounts", href: "/super-admin/discounts", icon: "ticket" },
+      { label: "Expenses", href: "/super-admin/expenses", icon: "wallet" },
+      { label: "Investments", href: "/super-admin/investments", icon: "trending" },
+    ],
+  },
+  {
+    label: "Team",
+    items: [
+      { label: "Users", href: "/super-admin/users", icon: "users" },
+      { label: "Employees", href: "/super-admin/employees", icon: "id" },
+      { label: "Salaries", href: "/super-admin/salaries", icon: "banknote" },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { label: "Notifications", href: "/super-admin/notifications", icon: "bell" },
+      { label: "Audit logs", href: "/super-admin/audit", icon: "scroll" },
+      { label: "Settings", href: "/super-admin/settings", icon: "shield" },
+      { label: "Admin console", href: "/admin", icon: "shield" },
+    ],
+  },
+];
 
 export const MONTHS = [
   "January",

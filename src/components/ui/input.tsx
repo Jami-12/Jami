@@ -9,7 +9,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const fieldBase =
-  "w-full rounded-xl border border-[var(--input)] bg-[var(--card)] px-3.5 text-sm text-[var(--foreground)] shadow-sm outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--color-primary-400)] focus:ring-4 focus:ring-[var(--color-accent-300)]/20 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-red-500";
+  "w-full rounded-2xl border border-[var(--input)] bg-[var(--card)] px-4 text-sm text-[var(--foreground)] shadow-sm outline-none transition-[color,background-color,border-color,box-shadow] duration-200 placeholder:text-[var(--muted-foreground)] focus:border-primary focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-[var(--muted)] disabled:opacity-60 aria-[invalid=true]:border-[var(--destructive)] aria-[invalid=true]:focus:ring-[var(--destructive)]/20";
+
+const pillField = "rounded-full px-4";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
@@ -23,7 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn(fieldBase, "h-11", className)}
+      className={cn(fieldBase, pillField, "h-11", className)}
       {...props}
     />
   );
@@ -60,10 +62,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     <select
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn(fieldBase, "h-11 appearance-none bg-[length:16px] pr-10", className)}
+      className={cn(
+        fieldBase,
+        pillField,
+        "h-11 appearance-none bg-[length:16px] pr-10",
+        className,
+      )}
       style={{
         backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f766e' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 0.75rem center",
       }}
@@ -88,17 +95,20 @@ export function Label({
   return (
     <label
       htmlFor={htmlFor}
-      className={cn("mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted-foreground)]", className)}
+      className={cn(
+        "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]",
+        className,
+      )}
     >
       {children}
-      {required ? <span className="ml-1 text-red-500">*</span> : null}
+      {required ? <span className="ml-1 text-[var(--destructive)]">*</span> : null}
     </label>
   );
 }
 
 export function FieldError({ children }: { children?: ReactNode }) {
   if (!children) return null;
-  return <p className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400">{children}</p>;
+  return <p className="mt-1.5 text-xs font-medium text-[var(--destructive)]">{children}</p>;
 }
 
 export function FieldHint({ children }: { children?: ReactNode }) {

@@ -37,7 +37,12 @@ export function SmartImage({
   if (!optimizable) {
     if (fill) {
       return (
-        <span className={cn("absolute inset-0 block", wrapperClassName)}>
+        <span
+          className={cn(
+            "absolute inset-0 block overflow-hidden bg-[var(--muted)]",
+            wrapperClassName,
+          )}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={resolved}
@@ -59,7 +64,7 @@ export function SmartImage({
         width={width}
         height={height}
         sizes={sizes}
-        className={className}
+        className={cn("bg-[var(--muted)]", className)}
         onError={() => setFailed(true)}
         loading={priority ? "eager" : "lazy"}
       />
@@ -74,7 +79,7 @@ export function SmartImage({
         fill
         sizes={sizes}
         priority={priority}
-        className={className}
+        className={cn("object-cover", className)}
         onError={() => setFailed(true)}
       />
     );
@@ -88,7 +93,7 @@ export function SmartImage({
       height={height}
       sizes={sizes}
       priority={priority}
-      className={className}
+      className={cn("bg-[var(--muted)]", className)}
       onError={() => setFailed(true)}
     />
   );

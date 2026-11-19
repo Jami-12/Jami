@@ -6,10 +6,10 @@ export function Footer() {
   return (
     <footer
       id="contact"
-      className="mt-16 scroll-mt-24 border-t border-border bg-[#E9ECE4]/60 dark:bg-[#12202A]"
+      className="mt-16 border-t border-border bg-muted/30 dark:bg-card/30"
     >
-      <div className="container-page py-14 sm:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.15fr_2fr] lg:gap-16">
+      <div className="container-page py-14 sm:py-16 lg:py-20">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_2fr] lg:gap-14 xl:gap-20">
           <FooterBrand />
           <FooterLinks />
         </div>

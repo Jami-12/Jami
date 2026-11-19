@@ -44,7 +44,7 @@ export const useThemeStore = create<ThemeState>()(
       setHydrated: (value) => set({ hydrated: value }),
     }),
     {
-      name: "aether-theme",
+      name: "store-theme",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ theme: state.theme }),
       onRehydrateStorage: () => (state) => {

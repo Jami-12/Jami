@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { SiteSettingsProvider } from "./site-settings-provider";
 import { SoundProvider } from "./sound-provider";
 import { ThemeProvider } from "./theme-provider";
 
@@ -12,6 +13,7 @@ import { authApi } from "@/lib/api/services";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCartStore } from "@/stores/cart-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
+import type { SiteSettings } from "@/types";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,14 +66,22 @@ function ThemedToaster() {
   return <Toaster />;
 }
 
-export function AppProviders({ children }: { children: React.ReactNode }) {
+export function AppProviders({
+  initialSettings = null,
+  children,
+}: {
+  initialSettings?: SiteSettings | null;
+  children: React.ReactNode;
+}) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <SessionSync />
-        <SoundProvider />
-        {children}
-        <ThemedToaster />
+        <SiteSettingsProvider initialSettings={initialSettings}>
+          <SessionSync />
+          <SoundProvider />
+          {children}
+          <ThemedToaster />
+        </SiteSettingsProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

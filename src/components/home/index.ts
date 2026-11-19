@@ -1,10 +1,11 @@
-export { HeroBanner } from "./hero-banner";
-export { CategoryGrid } from "./category-grid";
-// export { FeaturedProducts } from "./featured-products";
+export { HeroSection } from "./hero-section";
+export { ProductFinder, ProductFinder as HeroBanner } from "./product-finder";
+export {
+  AllCategoriesSection,
+  AllCategoriesSection as CategoryGrid,
+} from "./all-categories-section";
+export { CategoryProductSection } from "./category-product-section";
 export { NewArrivals } from "./new-arrivals";
-// export { ProductWall } from "./product-wall";
 export { BrandShowcase } from "./brand-showcase";
 export { PromoBanners } from "./promo-banners";
-// export { BrandEditorial } from "./editorial";
-// export { Testimonials } from "./testimonials";
 export { NewsletterSection } from "./newsletter-section";

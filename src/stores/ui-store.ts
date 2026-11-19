@@ -43,7 +43,7 @@ export const useUiStore = create<UiState>()(
         set({ mobileNavOpen: false, searchOpen: false, cartOpen: false }),
     }),
     {
-      name: "aether-ui",
+      name: "store-ui",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ currency: state.currency }),
     },

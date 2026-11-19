@@ -3,14 +3,23 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Switch } from "@/components/ui/switch";
 import { bannersApi } from "@/lib/api/services";
@@ -19,6 +28,8 @@ import type { Banner } from "@/types";
 
 export function BannersAdmin() {
   const queryClient = useQueryClient();
+  const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [deleting, setDeleting] = React.useState<Banner | null>(null);
   const [statusPendingId, setStatusPendingId] = React.useState<string | null>(null);
 
@@ -73,6 +84,14 @@ export function BannersAdmin() {
   });
 
   const rows = query.data ?? [];
+  const totalItems = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const safePage = Math.min(page, totalPages);
+  const pagedRows = rows.slice((safePage - 1) * limit, safePage * limit);
+
+  React.useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
 
   const columns: DataColumn<Banner>[] = [
     {
@@ -130,21 +149,30 @@ export function BannersAdmin() {
     {
       header: "",
       cell: (banner) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/admin/banners/${banner.id}/edit`} aria-label={`Edit ${banner.title}`}>
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${banner.title}`}
-            className="text-muted-foreground hover:text-red-600"
-            onClick={() => setDeleting(banner)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label={`Actions for ${banner.title}`}>
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/banners/${banner.id}/edit`}>
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  Edit banner
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                onClick={() => setDeleting(banner)}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Delete banner
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
       className: "text-right",
@@ -153,31 +181,45 @@ export function BannersAdmin() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight">Storefront banners</h2>
-          <p className="text-xs text-muted-foreground">
-            Hero slides and promo cards streamed from the media library.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/banners/new">
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New banner
-          </Link>
-        </Button>
-      </div>
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Storefront"
+        title="Banners"
+        description="Manage hero slides and promo placements shown across the storefront."
+        actions={
+          <Button asChild>
+            <Link href="/admin/banners/new">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New banner
+            </Link>
+          </Button>
+        }
+      />
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(banner) => banner.id}
-          loading={query.isLoading}
-          empty="No banners yet. Create your first hero or promo banner."
-        />
-      </PageSection>
+      <AdminListCard
+        title="All banners"
+        description="Use placement and sort order to control where each banner appears."
+        count={totalItems}
+        countLabel="banners"
+        columns={columns}
+        rows={pagedRows}
+        getKey={(banner) => banner.id}
+        loading={query.isLoading}
+        empty="No banners yet. Create your first hero or promo banner."
+        pagination={
+          <ListPagination
+            page={safePage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
+          />
+        }
+      />
 
       <ConfirmDialog
         open={Boolean(deleting)}

@@ -214,6 +214,7 @@ export interface CategoryInput {
   slug?: string;
   description?: string | null;
   image?: string | null;
+  isActive?: boolean;
 }
 
 export interface Brand {
@@ -233,6 +234,7 @@ export interface BrandInput {
   slug?: string;
   logo?: string | null;
   description?: string | null;
+  isActive?: boolean;
 }
 
 export interface ProductCategorySummary {

@@ -7,12 +7,18 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
-import { FormField, Input, Textarea } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
+import { FormField, Input, Select, Textarea } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { investmentsApi } from "@/lib/api/services";
@@ -33,13 +39,18 @@ export function InvestmentsView() {
   const [search, setSearch] = React.useState("");
   const [startDate, setStartDate] = React.useState("");
   const [endDate, setEndDate] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(15);
   const debounced = useDebouncedValue(search, 300);
   const [open, setOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Investment | null>(null);
   const [deleting, setDeleting] = React.useState<Investment | null>(null);
 
-  React.useEffect(() => setPage(1), [debounced, startDate, endDate]);
+  React.useEffect(
+    () => setPage(1),
+    [debounced, startDate, endDate, sortOrder, limit],
+  );
 
   const summary = useQuery({
     queryKey: ["investments", "summary"],
@@ -48,18 +59,24 @@ export function InvestmentsView() {
   });
 
   const query = useQuery({
-    queryKey: ["investments", { page, search: debounced, startDate, endDate }],
+    queryKey: ["investments", { page, limit, search: debounced, startDate, endDate, sortOrder }],
     queryFn: () =>
       investmentsApi.list({
         page,
-        limit: 15,
+        limit,
         search: debounced.trim() || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
+        sortOrder,
       }),
   });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<InvestmentValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<InvestmentValues>({
     resolver: formResolver<InvestmentValues>(investmentSchema),
     defaultValues: EMPTY,
   });
@@ -123,7 +140,7 @@ export function InvestmentsView() {
     {
       header: "Source",
       cell: (investment) => (
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-bold">{investment.source}</p>
           <p className="max-w-72 truncate text-[11px] text-muted-foreground">
             {investment.description || "—"}
@@ -175,6 +192,24 @@ export function InvestmentsView() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Capital
+            </p>
+            <CardTitle className="font-display text-xl">Investments</CardTitle>
+            <CardDescription>
+              Record capital contributions and keep the ledger in sync.
+            </CardDescription>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Record investment
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label="Total capital"
@@ -196,67 +231,84 @@ export function InvestmentsView() {
         />
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="relative w-full sm:max-w-xs">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search source or description…"
-              aria-label="Search investments"
-              className="pl-9"
+      <Card>
+        <CardHeader className="gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="font-display text-base">Investment ledger</CardTitle>
+            <CardDescription>Filter by source, period and sort order.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="relative sm:col-span-2">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search source or description…"
+                aria-label="Search investments"
+                className="pl-9"
+              />
+            </div>
+            <FormField label="From" htmlFor="investment-start">
+              <Input
+                id="investment-start"
+                type="date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </FormField>
+            <FormField label="To" htmlFor="investment-end">
+              <Input
+                id="investment-end"
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </FormField>
+            <FormField label="Sort" htmlFor="investment-sort">
+              <Select
+                id="investment-sort"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value as "asc" | "desc")}
+              >
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest first</option>
+              </Select>
+            </FormField>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="px-0 pb-4 pt-4 sm:px-0">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getKey={(investment) => investment.id}
+            loading={query.isLoading}
+            empty="No investments recorded yet."
+          />
+          <div className="px-4 sm:px-5">
+            <ListPagination
+              page={query.data?.meta.page ?? page}
+              pageCount={query.data?.meta.totalPages ?? 1}
+              totalItems={query.data?.meta.total ?? 0}
+              pageSize={query.data?.meta.limit ?? limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setLimit(size);
+                setPage(1);
+              }}
             />
           </div>
-          <FormField label="From" htmlFor="investment-start" className="w-full sm:w-40">
-            <Input
-              id="investment-start"
-              type="date"
-              value={startDate}
-              max={endDate || undefined}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
-          </FormField>
-          <FormField label="To" htmlFor="investment-end" className="w-full sm:w-40">
-            <Input
-              id="investment-end"
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(event) => setEndDate(event.target.value)}
-            />
-          </FormField>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Record investment
-        </Button>
-      </div>
-
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(investment) => investment.id}
-          loading={query.isLoading}
-          empty="No investments recorded yet."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `${query.data.meta.total} investment${query.data.meta.total === 1 ? "" : "s"}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </PageSection>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={open}

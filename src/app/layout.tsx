@@ -2,54 +2,61 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 
+import { DynamicFavicon } from "@/components/layout/dynamic-favicon";
 import { AppProviders } from "@/components/providers/app-providers";
 import { THEME_SCRIPT } from "@/components/providers/theme-provider";
 import { SITE } from "@/lib/constants";
-import { Geist } from "next/font/google";
+import { getSiteSettings } from "@/services/catalog";
+import { Jost } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const jost = Jost({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "Aether — Modern wardrobe, considered",
-    template: "%s · Aether",
+    default: `${SITE.name} — ${SITE.tagline}`,
+    template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
   keywords: [
-    "luxury fashion",
-    "designer clothing",
-    "modern wardrobe",
-    "editorial fashion",
+    "modern commerce",
+    "online store",
+    "fashion",
+    "lifestyle",
     "premium essentials",
     "ecommerce",
-    "Aether",
+    SITE.name,
   ],
-  authors: [{ name: "Aether Studio", url: SITE.url }],
-  creator: "Aether Studio",
-  publisher: "Aether Studio",
+  authors: [{ name: `${SITE.name} Studio`, url: SITE.url }],
+  creator: `${SITE.name} Studio`,
+  publisher: `${SITE.name} Studio`,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: SITE.url,
     siteName: SITE.name,
-    title: "Aether — Modern wardrobe, considered",
+    title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
     images: [
       {
         url: "/og.svg",
         width: 1200,
         height: 630,
-        alt: "Aether — pieces for a considered wardrobe",
+        alt: `${SITE.name} storefront`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aether — Modern wardrobe, considered",
+    title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
     images: ["/og.svg"],
   },
@@ -59,7 +66,10 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
     apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
   category: "shopping",
@@ -69,30 +79,33 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F8F6F0" },
-    { media: "(prefers-color-scheme: dark)", color: "#0F1B24" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f7f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c1311" },
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const initialSettings = await getSiteSettings();
+
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn("font-sans", jost.variable)}
+    >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Jost:ital,wght@0,300..700;1,300..600&display=swap"
-          rel="stylesheet"
-        />
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-dvh antialiased">
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders initialSettings={initialSettings}>
+          <DynamicFavicon />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

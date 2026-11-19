@@ -4,34 +4,50 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { AdminFormPage } from "@/components/admin/admin-form-page";
 import { ImageUploadField } from "@/components/admin/shared/image-upload-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField, Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { brandsApi, categoriesApi } from "@/lib/api/services";
 import { formResolver } from "@/lib/form-resolver";
 import { slugify } from "@/lib/slug";
 import { getErrorMessage } from "@/lib/utils";
-import { brandSchema, categorySchema } from "@/lib/validations";
 import type { Brand, Category } from "@/types";
 
 type Mode = "categories" | "brands";
 
-interface TaxonomyFormValues {
-  name: string;
-  slug: string;
-  description: string;
-}
+const taxonomyFormSchema = z
+  .object({
+    name: z.string().trim().min(2, "Name is required").max(120),
+    slug: z.string().trim().max(160).optional().or(z.literal("")),
+    description: z.string().trim().max(5000).optional().or(z.literal("")),
+    isActive: z.boolean(),
+  })
+  .superRefine((values, ctx) => {
+    if (!slugify(values.slug || values.name)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["slug"],
+        message: "Enter a slug containing letters or numbers.",
+      });
+    }
+  });
+
+type TaxonomyFormValues = z.infer<typeof taxonomyFormSchema>;
 
 const EMPTY: TaxonomyFormValues = {
   name: "",
   slug: "",
   description: "",
+  isActive: true,
 };
 
 function itemImage(item: Category | Brand, mode: Mode): string | null {
@@ -48,6 +64,7 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
   const [slugTouched, setSlugTouched] = React.useState(isEdit);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [existingImage, setExistingImage] = React.useState<string | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
 
   const item = useQuery<Category | Brand>({
     queryKey: [mode, "detail", itemId],
@@ -61,15 +78,15 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<TaxonomyFormValues>({
-    resolver: formResolver<TaxonomyFormValues>(
-      mode === "categories" ? categorySchema : brandSchema,
-    ),
+    resolver: formResolver<TaxonomyFormValues>(taxonomyFormSchema),
     defaultValues: EMPTY,
   });
 
   const name = watch("name");
+  const isActive = watch("isActive");
 
   React.useEffect(() => {
     if (!slugTouched) setValue("slug", slugify(name ?? ""), { shouldDirty: true });
@@ -80,35 +97,46 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
     setSlugTouched(true);
     setExistingImage(itemImage(item.data, mode));
     setImageFile(null);
+    setSaveError(null);
     reset({
       name: item.data.name,
       slug: item.data.slug,
       description: item.data.description ?? "",
+      isActive: item.data.isActive,
     });
   }, [item.data, mode, reset]);
 
   const save = useMutation<Category | Brand, Error, TaxonomyFormValues>({
-    mutationFn: (values: TaxonomyFormValues) => {
-      const imageValue = imageFile ? undefined : (existingImage ?? "");
-      const common = {
-        name: values.name,
-        slug: values.slug || undefined,
-        description: values.description || null,
+    mutationFn: (values) => {
+      const description = values.description?.trim() || "";
+      const base = {
+        name: values.name.trim(),
+        slug: values.slug?.trim() || undefined,
+        isActive: values.isActive,
       };
 
       if (mode === "categories") {
-        const payload = { ...common, image: imageValue };
+        const payload = {
+          ...base,
+          description: isEdit ? description || null : description || undefined,
+          image: imageFile ? undefined : (existingImage ?? (isEdit ? "" : undefined)),
+        };
         return itemId
           ? categoriesApi.update(itemId, payload, imageFile)
           : categoriesApi.create(payload, imageFile);
       }
 
-      const payload = { ...common, logo: imageValue };
+      const payload = {
+        ...base,
+        description: isEdit ? description || null : description || undefined,
+        logo: imageFile ? undefined : (existingImage ?? (isEdit ? "" : undefined)),
+      };
       return itemId
         ? brandsApi.update(itemId, payload, imageFile)
         : brandsApi.create(payload, imageFile);
     },
     onSuccess: () => {
+      setSaveError(null);
       toast.success(
         `${singular[0]!.toUpperCase()}${singular.slice(1)} ${isEdit ? "updated" : "created"}`,
       );
@@ -118,7 +146,11 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
       router.push(`/admin/${mode}`);
       router.refresh();
     },
-    onError: (error) => toast.error(getErrorMessage(error, `Could not save the ${singular}`)),
+    onError: (error) => {
+      const message = getErrorMessage(error, `Could not save the ${singular}`);
+      setSaveError(message);
+      toast.error(message);
+    },
   });
 
   if (isEdit && item.isLoading) {
@@ -162,64 +194,75 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
           ? "Categories organise the storefront navigation and home page edits."
           : "Brands power the maker filters and the Shop by brand section."
       }
+      badge={isEdit ? item.data?.name : undefined}
     >
       <form
         id="taxonomy-form"
         onSubmit={handleSubmit((values) => {
           if (save.isPending) return;
+          setSaveError(null);
           save.mutate(values);
         })}
         className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
         noValidate
       >
-        <Card>
-          <CardHeader>
-            <CardTitle>Basics</CardTitle>
-            <CardDescription>
-              The name customers see, the URL segment and a short description.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <FormField
-              label="Name"
-              htmlFor="taxonomy-name"
-              required
-              error={errors.name?.message}
-            >
-              <Input
-                id="taxonomy-name"
-                placeholder={mode === "categories" ? "Outerwear" : "Studio name"}
-                invalid={Boolean(errors.name)}
-                {...register("name")}
-              />
-            </FormField>
-            <FormField
-              label="Slug"
-              htmlFor="taxonomy-slug"
-              hint="Auto-generated from the name."
-              error={errors.slug?.message}
-            >
-              <Input
-                id="taxonomy-slug"
-                placeholder="outerwear"
-                {...register("slug", { onChange: () => setSlugTouched(true) })}
-              />
-            </FormField>
-            <FormField
-              label="Description"
-              htmlFor="taxonomy-description"
-              error={errors.description?.message}
-              className="sm:col-span-2"
-            >
-              <Textarea
-                id="taxonomy-description"
-                rows={4}
-                placeholder="A short note shown on the storefront."
-                {...register("description")}
-              />
-            </FormField>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          {saveError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{saveError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Basics</CardTitle>
+              <CardDescription>
+                The name customers see, the URL segment and a short description.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="Name"
+                htmlFor="taxonomy-name"
+                required
+                error={errors.name?.message}
+              >
+                <Input
+                  id="taxonomy-name"
+                  placeholder={mode === "categories" ? "Outerwear" : "Studio name"}
+                  invalid={Boolean(errors.name)}
+                  {...register("name")}
+                />
+              </FormField>
+              <FormField
+                label="Slug"
+                htmlFor="taxonomy-slug"
+                hint="Auto-generated from the name. Letters, numbers and dashes work best."
+                error={errors.slug?.message}
+              >
+                <Input
+                  id="taxonomy-slug"
+                  placeholder="outerwear"
+                  invalid={Boolean(errors.slug)}
+                  {...register("slug", { onChange: () => setSlugTouched(true) })}
+                />
+              </FormField>
+              <FormField
+                label="Description"
+                htmlFor="taxonomy-description"
+                error={errors.description?.message}
+                className="sm:col-span-2"
+              >
+                <Textarea
+                  id="taxonomy-description"
+                  rows={4}
+                  placeholder="A short note shown on the storefront."
+                  {...register("description")}
+                />
+              </FormField>
+            </CardContent>
+          </Card>
+        </div>
 
         <aside className="space-y-4 self-start lg:sticky lg:top-24">
           <Card>
@@ -240,6 +283,39 @@ export function TaxonomyForm({ mode, itemId }: { mode: Mode; itemId?: string }) 
                 onClearExisting={() => setExistingImage(null)}
                 aspect="square"
                 disabled={save.isPending}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Visibility</CardTitle>
+              <CardDescription>
+                Inactive {mode} stay in the admin but are hidden from the storefront.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Controller
+                control={control}
+                name="isActive"
+                render={({ field }) => (
+                  <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-muted/30 p-3">
+                    <div>
+                      <p className="text-xs font-semibold">{isActive ? "Active" : "Inactive"}</p>
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                        {isActive
+                          ? `Customers can browse this ${singular}.`
+                          : `This ${singular} is hidden from the storefront.`}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={Boolean(field.value)}
+                      onCheckedChange={field.onChange}
+                      disabled={save.isPending}
+                      aria-label={`${singular} active`}
+                    />
+                  </div>
+                )}
               />
             </CardContent>
           </Card>

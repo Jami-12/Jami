@@ -23,14 +23,22 @@ export function Toaster() {
         duration: 4200,
         classNames: {
           toast:
-            "!rounded-2xl !border !border-border !bg-card/95 !text-card-foreground !shadow-[0_28px_60px_-32px_rgba(23,43,58,0.6)] !backdrop-blur-xl",
-          title: "!text-sm !font-semibold !tracking-tight",
-          description: "!text-xs !leading-relaxed !text-muted-foreground",
+            "!rounded-2xl !border !border-[var(--border)] !bg-[var(--card)]/95 !text-[var(--card-foreground)] !shadow-[var(--shadow-lift)] !backdrop-blur-xl",
+          title: "!text-sm !font-semibold !tracking-tight !text-[var(--foreground)]",
+          description: "!text-xs !leading-relaxed !text-[var(--muted-foreground)]",
           closeButton:
-            "!border-border !bg-card !text-muted-foreground hover:!text-foreground",
+            "!border-[var(--border)] !bg-[var(--card)] !text-[var(--muted-foreground)] hover:!text-[var(--foreground)] focus-visible:!ring-2 focus-visible:!ring-[var(--ring)]",
           actionButton:
-            "!rounded-full !bg-primary !text-primary-foreground !font-semibold dark:!bg-accent-300 dark:!text-[#172B3A]",
-          cancelButton: "!rounded-full !bg-muted !text-foreground !font-semibold",
+            "!rounded-full !bg-[var(--primary)] !text-[var(--primary-foreground)] !font-semibold",
+          cancelButton:
+            "!rounded-full !bg-[var(--muted)] !text-[var(--foreground)] !font-semibold",
+          success:
+            "!border-[var(--success)]/30 !bg-[var(--card)] !text-[var(--foreground)]",
+          info: "!border-[var(--info)]/30 !bg-[var(--card)] !text-[var(--foreground)]",
+          warning:
+            "!border-[var(--warning)]/30 !bg-[var(--card)] !text-[var(--foreground)]",
+          error:
+            "!border-[var(--danger)]/30 !bg-[var(--card)] !text-[var(--foreground)]",
         },
       }}
     />

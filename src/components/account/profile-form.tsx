@@ -10,10 +10,13 @@ import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { FormField, Input } from "@/components/ui/input";
 import { PageSection } from "@/components/dashboard/page-section";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { uploadsApi, usersApi } from "@/lib/api/services";
+import { ROLE_META } from "@/lib/constants";
 import { getErrorMessage, humanizeEnum } from "@/lib/utils";
 import { profileSchema, type ProfileValues } from "@/lib/validations";
 import { useAuthStore } from "@/stores/auth-store";
@@ -128,7 +131,7 @@ export function ProfileForm() {
           className="space-y-4"
           noValidate
         >
-          <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-sm">
+          <Card className="flex flex-wrap items-center gap-4 border-dashed bg-muted/30 p-4">
             <div className="relative">
               <Avatar
                 name={watch("name") || user?.name || "Account"}
@@ -182,7 +185,7 @@ export function ProfileForm() {
                 )}
               </div>
             </div>
-          </div>
+          </Card>
 
           <FormField label="Full name" htmlFor="profile-name" required error={errors.name?.message}>
             <Input
@@ -264,9 +267,22 @@ export function ProfileForm() {
                 <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                   Email
                 </dt>
-                <dd className="mt-0.5 font-semibold">{profile.data?.email ?? user?.email}</dd>
+                <dd className="mt-0.5 break-all font-semibold">{profile.data?.email ?? user?.email}</dd>
               </div>
             </div>
+            {user?.role ? (
+              <div className="flex items-start gap-3">
+                <UserRound className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <div>
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    Role
+                  </dt>
+                  <dd className="mt-1">
+                    <Badge tone={ROLE_META[user.role].tone}>{ROLE_META[user.role].label}</Badge>
+                  </dd>
+                </div>
+              </div>
+            ) : null}
             <div className="flex items-start gap-3">
               <Phone className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <div>
@@ -303,10 +319,13 @@ export function ProfileForm() {
               </div>
             </div>
             {typeof profile.data?.orderCount === "number" ? (
-              <p className="border-t border-border pt-3 text-xs text-muted-foreground">
-                {profile.data.orderCount} lifetime order
-                {profile.data.orderCount === 1 ? "" : "s"} on this account.
-              </p>
+              <>
+                <Separator />
+                <p className="text-xs text-muted-foreground">
+                  {profile.data.orderCount} lifetime order
+                  {profile.data.orderCount === 1 ? "" : "s"} on this account.
+                </p>
+              </>
             ) : null}
           </dl>
         )}

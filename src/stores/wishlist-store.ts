@@ -93,7 +93,7 @@ export const useWishlistStore = create<WishlistState>()(
       setHydrated: (value) => set({ hydrated: value }),
     }),
     {
-      name: "aether-wishlist",
+      name: "store-wishlist",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ ids: state.ids }),
       onRehydrateStorage: () => (state) => {

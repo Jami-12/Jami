@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { PageSection } from "@/components/dashboard/page-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/dialog";
 import { FormField, Input } from "@/components/ui/input";
 import { authApi, usersApi } from "@/lib/api/services";
 import { getErrorMessage } from "@/lib/utils";
@@ -17,6 +18,7 @@ import { changePasswordSchema, type ChangePasswordValues } from "@/lib/validatio
 
 export function SecurityForm() {
   const [show, setShow] = React.useState(false);
+  const [pendingValues, setPendingValues] = React.useState<ChangePasswordValues | null>(null);
 
   const profile = useQuery({
     queryKey: ["users", "me"],
@@ -45,9 +47,15 @@ export function SecurityForm() {
     onSuccess: () => {
       toast.success("Password updated. Use it next time you sign in.");
       reset();
+      setPendingValues(null);
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not update your password")),
   });
+
+  const confirmChange = () => {
+    if (!pendingValues) return;
+    mutation.mutate(pendingValues);
+  };
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
@@ -60,7 +68,7 @@ export function SecurityForm() {
         }
       >
         <form
-          onSubmit={handleSubmit((values) => mutation.mutate(values))}
+          onSubmit={handleSubmit((values) => setPendingValues(values))}
           className="max-w-md space-y-4"
           noValidate
         >
@@ -168,6 +176,20 @@ export function SecurityForm() {
           </li>
         </ul>
       </PageSection>
+
+      <ConfirmDialog
+        open={Boolean(pendingValues)}
+        onClose={() => setPendingValues(null)}
+        onConfirm={confirmChange}
+        title={googleOnly ? "Set a password?" : "Change your password?"}
+        description={
+          googleOnly
+            ? "You will be able to sign in with your email address and this password."
+            : "Make sure your new password is saved somewhere secure. You will use it next time you sign in."
+        }
+        confirmLabel={googleOnly ? "Set password" : "Update password"}
+        loading={mutation.isPending}
+      />
     </div>
   );
 }

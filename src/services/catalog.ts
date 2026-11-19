@@ -7,6 +7,7 @@ import type {
   Product,
   ProductListParams,
   ProductReviews,
+  SiteSettings,
 } from "@/types";
 
 /**
@@ -35,10 +36,11 @@ interface ApiEnvelope<T> {
 
 async function publicRequest<T>(
   path: string,
-  options: { revalidate?: number | false } = {},
+  options: { revalidate?: number | false; signal?: AbortSignal } = {},
 ): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: { Accept: "application/json" },
+    signal: options.signal,
     next:
       options.revalidate === false
         ? undefined
@@ -177,5 +179,22 @@ export async function getActiveBanners(): Promise<Banner[]> {
     return await catalog.banners();
   } catch {
     return [];
+  }
+}
+
+/**
+ * Live storefront settings (navbar logo + section visibility). Read on every
+ * request so an admin toggle is reflected on the next visit, and degrade to
+ * `null` when the API is unavailable so every page still renders.
+ */
+export async function getSiteSettings(): Promise<SiteSettings | null> {
+  try {
+    const result = await publicRequest<{ settings: SiteSettings }>("/settings", {
+      revalidate: false,
+      signal: AbortSignal.timeout(4_000),
+    });
+    return result.settings ?? null;
+  } catch {
+    return null;
   }
 }

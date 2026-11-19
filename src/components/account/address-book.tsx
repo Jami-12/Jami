@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { PageSection } from "@/components/dashboard/page-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormField, Input } from "@/components/ui/input";
@@ -123,18 +124,21 @@ export function AddressBook() {
   const addresses = query.data ?? [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+    <PageSection
+      title="Delivery addresses"
+      description="Used for checkout, receipts and delivery updates."
+      actions={
         <Button size="sm" onClick={openCreate}>
           <Plus className="h-4 w-4" aria-hidden="true" />
           Add address
         </Button>
-      </div>
-
+      }
+    >
       {query.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Skeleton className="h-44 w-full rounded-2xl" />
           <Skeleton className="h-44 w-full rounded-2xl" />
+          <Skeleton className="hidden h-44 w-full rounded-2xl xl:block" />
         </div>
       ) : addresses.length === 0 ? (
         <EmptyState
@@ -142,12 +146,16 @@ export function AddressBook() {
           title="No delivery addresses"
           description="Add an address so checkout can pre-fill your delivery details."
           action={<Button onClick={openCreate}>Add your first address</Button>}
+          className="border-border bg-card"
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {addresses.map((address) => (
-            <PageSection key={address.id} className="flex h-full flex-col">
-              <div className="flex items-start justify-between gap-2">
+            <Card
+              key={address.id}
+              className="flex h-full flex-col overflow-hidden transition hover:border-accent-300/60"
+            >
+              <CardHeader className="flex-row items-start justify-between gap-2 space-y-0 p-4 pb-0 sm:p-5 sm:pb-0">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">{address.fullName}</p>
                   <p className="text-xs text-muted-foreground">{address.phone}</p>
@@ -157,16 +165,20 @@ export function AddressBook() {
                     Default
                   </Badge>
                 ) : null}
-              </div>
-              <p className="mt-3 flex-1 text-xs leading-relaxed text-muted-foreground">
-                {address.addressLine}
-                {address.area ? `, ${address.area}` : ""}
-                <br />
-                {address.district}
-                {address.division ? `, ${address.division}` : ""}
-                {address.postalCode ? ` ${address.postalCode}` : ""}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+              </CardHeader>
+
+              <CardContent className="flex-1 p-4 pt-3 sm:p-5 sm:pt-3">
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {address.addressLine}
+                  {address.area ? `, ${address.area}` : ""}
+                  <br />
+                  {address.district}
+                  {address.division ? `, ${address.division}` : ""}
+                  {address.postalCode ? ` ${address.postalCode}` : ""}
+                </p>
+              </CardContent>
+
+              <CardFooter className="flex flex-wrap items-center gap-1.5 border-t border-border p-3 sm:p-4">
                 <Button variant="ghost" size="sm" onClick={() => openEdit(address)}>
                   <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                   Edit
@@ -179,7 +191,7 @@ export function AddressBook() {
                     onClick={() => makeDefault.mutate(address.id)}
                   >
                     <Star className="h-3.5 w-3.5" aria-hidden="true" />
-                    Make default
+                    Default
                   </Button>
                 ) : null}
                 <Button
@@ -191,8 +203,8 @@ export function AddressBook() {
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   Remove
                 </Button>
-              </div>
-            </PageSection>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
@@ -259,7 +271,7 @@ export function AddressBook() {
             />
           </FormField>
           <label className="flex items-center gap-2 text-sm sm:col-span-2">
-            <input type="checkbox" className="h-4 w-4 rounded border-border" {...register("isDefault")} />
+            <input type="checkbox" className="h-4 w-4 rounded border-border accent-[var(--color-accent-500)]" {...register("isDefault")} />
             Use as my default delivery address
           </label>
         </form>
@@ -275,6 +287,6 @@ export function AddressBook() {
         loading={remove.isPending}
         destructive
       />
-    </div>
+    </PageSection>
   );
 }

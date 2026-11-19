@@ -3,10 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, ReceiptText } from "lucide-react";
 
 import { OrderDetailView } from "@/components/account/order-detail";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { paymentsApi } from "@/lib/api/services";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -52,6 +54,7 @@ export function PaymentReturnView({
         setReconcileState("checked");
         void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
         void queryClient.invalidateQueries({ queryKey: ["orders"] });
+        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
       } catch (error) {
         setReconcileState("error");
         setReconcileError(
@@ -82,37 +85,52 @@ export function PaymentReturnView({
 
     return (
       <div className="container-page py-16">
-        <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-soft">
-          <h1 className="text-xl font-extrabold">Sign in to view this order</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your payment may still be processing. Sign in with the account used at
-            checkout to confirm the result.
-          </p>
-          <Button asChild className="mt-5">
-            <Link href={`/login?next=${encodeURIComponent(nextPath)}`}>Sign in</Link>
-          </Button>
-        </div>
+        <Card className="mx-auto max-w-md text-center">
+          <CardContent className="p-8">
+            <h1 className="font-display text-xl font-semibold">Sign in to view this order</h1>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Your payment may still be processing. Sign in with the account used at
+              checkout to confirm the result.
+            </p>
+            <Button asChild className="mt-5">
+              <Link href={`/login?next=${encodeURIComponent(nextPath)}`}>Sign in</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
-            Payment return
-          </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Confirming your order</h1>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/account/orders/${orderId}`}>Open in your account</Link>
-        </Button>
-      </div>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <Card className="mb-5 overflow-hidden">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 ring-1 ring-primary-100 dark:bg-primary-900/40 dark:text-accent-200 dark:ring-primary-800/50">
+              <ReceiptText className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="eyebrow text-primary-500 dark:text-accent-300">Payment return</p>
+              <h1 className="mt-1 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                Confirming your order
+              </h1>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Status shown below always comes from the server.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {verifiedStatus ? <Badge tone="info">Verified: {verifiedStatus}</Badge> : null}
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/account/orders/${orderId}`}>Open in your account</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {paymentIntent ? (
         <div
-          className="mb-5 flex items-start gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-xs"
+          className="mb-5 flex items-start gap-3 rounded-2xl border border-border bg-muted/40 p-4 text-xs"
           role="status"
         >
           {reconcileState === "checking" ? (

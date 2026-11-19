@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export function AdminFormPage({
   backHref,
@@ -22,29 +25,31 @@ export function AdminFormPage({
 }) {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <div>
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-          {backLabel}
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
-              {eyebrow}
+      <Card className="overflow-hidden">
+        <CardContent className="space-y-4 p-4 sm:p-5">
+          <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
+            <Link href={backHref}>
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              {backLabel}
+            </Link>
+          </Button>
+          <Separator />
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+                {eyebrow}
+              </p>
+              <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                {title}
+              </h1>
+              {badge ? <Badge tone="info">{badge}</Badge> : null}
+            </div>
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              {description}
             </p>
-            <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              {title}
-            </h1>
           </div>
-          {badge ? <Badge tone="info">{badge}</Badge> : null}
-        </div>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-      </div>
+        </CardContent>
+      </Card>
 
       {children}
     </div>

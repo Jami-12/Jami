@@ -1,5 +1,14 @@
 import type { ReactNode } from "react";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export function PageSection({
@@ -8,29 +17,50 @@ export function PageSection({
   actions,
   children,
   className,
+  footer,
 }: {
   title?: string;
   description?: string;
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Optional pinned area, typically pagination or a summary row. */
+  footer?: ReactNode;
 }) {
+  const hasHeader = Boolean(title || description || actions);
+
   return (
-    <section className={cn("rounded-2xl border border-border bg-card shadow-soft", className)}>
-      {title || actions ? (
-        <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div>
+    <Card className={cn("overflow-hidden", className)}>
+      {hasHeader ? (
+        <CardHeader className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="min-w-0 space-y-1">
             {title ? (
-              <h2 className="font-display text-base font-semibold tracking-tight">{title}</h2>
+              <CardTitle className="font-display text-base leading-tight">
+                {title}
+              </CardTitle>
             ) : null}
             {description ? (
-              <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+              <CardDescription className="text-xs leading-relaxed">
+                {description}
+              </CardDescription>
             ) : null}
           </div>
-          {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-        </div>
+          {actions ? (
+            <div className="flex flex-wrap items-center gap-2">{actions}</div>
+          ) : null}
+        </CardHeader>
       ) : null}
-      <div className="p-4 sm:p-5">{children}</div>
-    </section>
+
+      <CardContent className="p-4 sm:p-5">{children}</CardContent>
+
+      {footer ? (
+        <>
+          <Separator />
+          <CardFooter className="flex-col items-stretch gap-0 p-4 sm:p-5">
+            {footer}
+          </CardFooter>
+        </>
+      ) : null}
+    </Card>
   );
 }

@@ -7,13 +7,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select, Textarea } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -45,13 +51,15 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
   const queryClient = useQueryClient();
   const [filter, setFilter] = React.useState("ALL");
   const [search, setSearch] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(15);
   const debounced = useDebouncedValue(search, 300);
   const [open, setOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Expense | null>(null);
   const [cancelling, setCancelling] = React.useState<Expense | null>(null);
 
-  React.useEffect(() => setPage(1), [filter, debounced]);
+  React.useEffect(() => setPage(1), [filter, debounced, sortOrder, limit]);
 
   const summary = useQuery({
     queryKey: ["expenses", "summary"],
@@ -60,17 +68,23 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
   });
 
   const query = useQuery({
-    queryKey: ["expenses", { page, filter, search: debounced }],
+    queryKey: ["expenses", { page, limit, filter, search: debounced, sortOrder }],
     queryFn: () =>
       expensesApi.list({
         page,
-        limit: 15,
+        limit,
         status: filter === "ALL" ? undefined : filter,
         search: debounced.trim() || undefined,
+        sortOrder,
       }),
   });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ExpenseValues>({
     resolver: formResolver<ExpenseValues>(expenseSchema),
     defaultValues: EMPTY,
   });
@@ -131,8 +145,7 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
   });
 
   const approve = useMutation({
-    mutationFn: (id: string) =>
-      expensesApi.update(id, { status: "APPROVED", isPaid: true }),
+    mutationFn: (id: string) => expensesApi.update(id, { status: "APPROVED", isPaid: true }),
     onSuccess: () => {
       toast.success("Expense approved");
       invalidate();
@@ -156,7 +169,7 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
     {
       header: "Expense",
       cell: (expense) => (
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-bold">{EXPENSE_CATEGORY_LABEL[expense.category]}</p>
           <p className="max-w-64 truncate text-[11px] text-muted-foreground">
             {expense.description || "—"}
@@ -167,6 +180,8 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
     {
       header: "Amount",
       cell: (expense) => <Price amount={expense.amount} size="sm" />,
+      className: "text-right",
+      headerClassName: "text-right",
     },
     {
       header: "Date",
@@ -234,6 +249,26 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Operating spend
+            </p>
+            <CardTitle className="font-display text-xl">Expenses</CardTitle>
+            <CardDescription>
+              {canApprove
+                ? "Approve, record and track business expenses."
+                : "Submit expenses and track their approval status."}
+            </CardDescription>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New expense
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label="Recorded"
@@ -241,11 +276,7 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
           hint={`${summary.data?.count ?? 0} entries`}
           icon={Wallet}
         />
-        <StatCard
-          label="Paid"
-          value={<Price amount={summary.data?.paid ?? 0} size="lg" />}
-          tone="success"
-        />
+        <StatCard label="Paid" value={<Price amount={summary.data?.paid ?? 0} size="lg" />} tone="success" />
         <StatCard
           label="Unpaid"
           value={<Price amount={summary.data?.unpaid ?? 0} size="lg" />}
@@ -253,54 +284,74 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
         />
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <Tabs
-            items={[
-              { value: "ALL", label: "All" },
-              { value: "PENDING", label: "Pending" },
-              { value: "APPROVED", label: "Approved" },
-              { value: "CANCELLED", label: "Cancelled" },
-            ]}
-            value={filter}
-            onChange={setFilter}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-base">Expense register</CardTitle>
+          <CardDescription>Filter, sort and page through expenses.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <Tabs
+              items={[
+                { value: "ALL", label: "All" },
+                { value: "PENDING", label: "Pending" },
+                { value: "APPROVED", label: "Approved" },
+                { value: "CANCELLED", label: "Cancelled" },
+              ]}
+              value={filter}
+              onChange={setFilter}
+            />
+            <div className="grid w-full gap-2 sm:grid-cols-2 lg:max-w-md">
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search description…"
+                  aria-label="Search expenses"
+                  className="pl-9"
+                />
+              </div>
+              <Select
+                aria-label="Sort expenses"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value as "asc" | "desc")}
+              >
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest first</option>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="px-0 pb-4 pt-4 sm:px-0">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getKey={(expense) => expense.id}
+            loading={query.isLoading}
+            empty="No expenses match these filters."
           />
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search description…"
-              aria-label="Search expenses"
-              className="pl-9"
+          <div className="px-4 sm:px-5">
+            <ListPagination
+              page={query.data?.meta.page ?? page}
+              pageCount={query.data?.meta.totalPages ?? 1}
+              totalItems={query.data?.meta.total ?? 0}
+              pageSize={query.data?.meta.limit ?? limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setLimit(size);
+                setPage(1);
+              }}
             />
           </div>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          New expense
-        </Button>
-      </div>
-
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(expense) => expense.id}
-          loading={query.isLoading}
-          empty="No expenses match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data ? `${query.data.meta.total} expense${query.data.meta.total === 1 ? "" : "s"}` : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </PageSection>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={open}
@@ -339,18 +390,40 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
             </Select>
           </FormField>
           <FormField label="Amount (BDT)" htmlFor="expense-amount" required error={errors.amount?.message}>
-            <Input id="expense-amount" type="number" step="0.01" min="0" invalid={Boolean(errors.amount)} {...register("amount")} />
+            <Input
+              id="expense-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              invalid={Boolean(errors.amount)}
+              {...register("amount")}
+            />
           </FormField>
           <FormField label="Expense date" htmlFor="expense-date" error={errors.expenseDate?.message}>
             <Input id="expense-date" type="date" {...register("expenseDate")} />
           </FormField>
-          <FormField label="Due date" htmlFor="expense-due" hint="Leave blank for an immediate expense." error={errors.dueDate?.message}>
+          <FormField
+            label="Due date"
+            htmlFor="expense-due"
+            hint="Leave blank for an immediate expense."
+            error={errors.dueDate?.message}
+          >
             <Input id="expense-due" type="date" {...register("dueDate")} />
           </FormField>
-          <FormField label="Description" htmlFor="expense-description" error={errors.description?.message} className="sm:col-span-2">
+          <FormField
+            label="Description"
+            htmlFor="expense-description"
+            error={errors.description?.message}
+            className="sm:col-span-2"
+          >
             <Textarea id="expense-description" rows={3} {...register("description")} />
           </FormField>
-          <FormField label="Receipt URL" htmlFor="expense-receipt" error={errors.receiptUrl?.message} className="sm:col-span-2">
+          <FormField
+            label="Receipt URL"
+            htmlFor="expense-receipt"
+            error={errors.receiptUrl?.message}
+            className="sm:col-span-2"
+          >
             <Input id="expense-receipt" type="url" placeholder="https://…" {...register("receiptUrl")} />
           </FormField>
           {canApprove ? (

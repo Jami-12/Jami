@@ -7,7 +7,7 @@ import { DashboardShell, type ShellNavItem } from "@/components/dashboard/dashbo
 import { ADMIN_NAV, CUSTOMER_NAV, SUPER_ADMIN_NAV } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth-store";
 
-function ShellFrame({
+export function ShellFrame({
   title,
   subtitle,
   nav,

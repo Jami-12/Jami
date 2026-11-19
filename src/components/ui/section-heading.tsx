@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { cn } from "@/lib/utils";
 
 export function SectionHeading({
@@ -11,7 +13,7 @@ export function SectionHeading({
   eyebrow?: string;
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   align?: "left" | "center";
   className?: string;
 }) {
@@ -19,21 +21,21 @@ export function SectionHeading({
     <div
       className={cn(
         "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
-        align === "center" && "sm:flex-col sm:items-center",
+        align === "center" && "sm:flex-col sm:items-center sm:text-center",
         className,
       )}
     >
-      <div className={cn("max-w-2xl", align === "center" && "text-center")}>
+      <div className={cn("max-w-2xl", align === "center" && "mx-auto")}>
         {eyebrow ? (
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+          <p className="eyebrow mb-2 text-[var(--color-primary-500)] dark:text-[var(--color-accent-300)]">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
           {title}
         </h2>
         {description ? (
-          <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-base">
             {description}
           </p>
         ) : null}

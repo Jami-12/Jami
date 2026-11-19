@@ -7,13 +7,20 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
+import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { usersApi } from "@/lib/api/services";
@@ -69,7 +76,9 @@ export function UsersView() {
   const [roleFilter, setRoleFilter] = React.useState("ALL");
   const [statusFilter, setStatusFilter] = React.useState("ALL");
   const [search, setSearch] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(15);
   const [includeDeleted, setIncludeDeleted] = React.useState(false);
   const debounced = useDebouncedValue(search, 300);
 
@@ -79,21 +88,25 @@ export function UsersView() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<UserResponse | null>(null);
 
-  React.useEffect(() => setPage(1), [roleFilter, statusFilter, debounced, includeDeleted]);
+  React.useEffect(
+    () => setPage(1),
+    [roleFilter, statusFilter, debounced, includeDeleted, sortOrder, limit],
+  );
 
   const query = useQuery({
     queryKey: [
       "users",
-      { page, role: roleFilter, status: statusFilter, search: debounced, includeDeleted },
+      { page, limit, role: roleFilter, status: statusFilter, search: debounced, includeDeleted, sortOrder },
     ],
     queryFn: () =>
       usersApi.list({
         page,
-        limit: 15,
+        limit,
         role: roleFilter === "ALL" ? undefined : (roleFilter as Role),
         status: statusFilter === "ALL" ? undefined : (statusFilter as UserStatus),
         search: debounced.trim() || undefined,
         includeDeleted,
+        sortOrder,
       }),
   });
 
@@ -278,11 +291,27 @@ export function UsersView() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Access control
+            </p>
+            <CardTitle className="font-display text-xl">Users</CardTitle>
+            <CardDescription>Manage customers, admins and account access.</CardDescription>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New admin
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label="Matching users"
           value={query.data?.meta.total ?? "—"}
-          hint={`Page ${query.data?.meta.page ?? 1} of ${query.data?.meta.totalPages ?? 1}`}
+          hint={`Page ${query.data?.meta.page ?? page} of ${query.data?.meta.totalPages ?? 1}`}
           icon={Users}
         />
         <StatCard
@@ -290,7 +319,7 @@ export function UsersView() {
           value={rows.filter((user) => user.role === "ADMIN").length}
           hint="Admin role assignment"
           icon={UserCog}
-          tone="default"
+          tone="accent"
         />
         <StatCard
           label="Blocked on this page"
@@ -301,8 +330,12 @@ export function UsersView() {
         />
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-base">Directory</CardTitle>
+          <CardDescription>Search, filter, sort and page through user accounts.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Tabs
             items={[
               { value: "ALL", label: "All roles" },
@@ -311,69 +344,82 @@ export function UsersView() {
             value={roleFilter}
             onChange={setRoleFilter}
           />
-          <div className="relative w-full sm:max-w-xs">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name or email…"
-              aria-label="Search users"
-              className="pl-9"
+          <Separator />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="relative sm:col-span-2 xl:col-span-2">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search name or email…"
+                aria-label="Search users"
+                className="pl-9"
+              />
+            </div>
+            <FormField label="Status" htmlFor="user-status-filter">
+              <Select
+                id="user-status-filter"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value="ALL">All statuses</option>
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {humanizeEnum(status)}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+            <FormField label="Sort" htmlFor="user-sort">
+              <Select
+                id="user-sort"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value as "asc" | "desc")}
+              >
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest first</option>
+              </Select>
+            </FormField>
+            <label className="flex items-center gap-2 self-end pb-2.5 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-border"
+                checked={includeDeleted}
+                onChange={(event) => setIncludeDeleted(event.target.checked)}
+              />
+              Include deleted
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="px-0 pb-4 pt-4 sm:px-0">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getKey={(user) => user.id}
+            loading={query.isLoading}
+            empty="No users match these filters."
+          />
+          <div className="px-4 sm:px-5">
+            <ListPagination
+              page={query.data?.meta.page ?? page}
+              pageCount={query.data?.meta.totalPages ?? 1}
+              totalItems={query.data?.meta.total ?? 0}
+              pageSize={query.data?.meta.limit ?? limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setLimit(size);
+                setPage(1);
+              }}
             />
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            aria-label="Filter by status"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-auto"
-          >
-            <option value="ALL">All statuses</option>
-            {STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {humanizeEnum(status)}
-              </option>
-            ))}
-          </Select>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-border"
-              checked={includeDeleted}
-              onChange={(event) => setIncludeDeleted(event.target.checked)}
-            />
-            Include deleted
-          </label>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New admin
-          </Button>
-        </div>
-      </div>
-
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(user) => user.id}
-          loading={query.isLoading}
-          empty="No users match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data ? `${query.data.meta.total} user${query.data.meta.total === 1 ? "" : "s"}` : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </PageSection>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={Boolean(editing)}
@@ -395,12 +441,7 @@ export function UsersView() {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              form="user-form"
-              size="sm"
-              loading={saveProfile.isPending}
-            >
+            <Button type="submit" form="user-form" size="sm" loading={saveProfile.isPending}>
               Save changes
             </Button>
           </>
@@ -437,18 +478,10 @@ export function UsersView() {
               {...profileForm.register("email")}
             />
           </FormField>
-          <FormField
-            label="Phone"
-            htmlFor="user-phone"
-            error={profileForm.formState.errors.phone?.message}
-          >
+          <FormField label="Phone" htmlFor="user-phone" error={profileForm.formState.errors.phone?.message}>
             <Input id="user-phone" {...profileForm.register("phone")} />
           </FormField>
-          <FormField
-            label="Image URL"
-            htmlFor="user-image"
-            error={profileForm.formState.errors.image?.message}
-          >
+          <FormField label="Image URL" htmlFor="user-image" error={profileForm.formState.errors.image?.message}>
             <Input id="user-image" type="url" placeholder="https://…" {...profileForm.register("image")} />
           </FormField>
           <FormField
@@ -466,9 +499,7 @@ export function UsersView() {
               disabled={editingProtected}
               onChange={(event) => setEditRole(event.target.value as Role)}
             >
-              {editing?.role === "SUPER_ADMIN" ? (
-                <option value="SUPER_ADMIN">Super admin</option>
-              ) : null}
+              {editing?.role === "SUPER_ADMIN" ? <option value="SUPER_ADMIN">Super admin</option> : null}
               {ASSIGNABLE_ROLES.map((role) => (
                 <option key={role} value={role}>
                   {humanizeEnum(role)}
@@ -525,24 +556,14 @@ export function UsersView() {
           className="grid gap-4 sm:grid-cols-2"
           noValidate
         >
-          <FormField
-            label="Name"
-            htmlFor="admin-name"
-            required
-            error={adminForm.formState.errors.name?.message}
-          >
+          <FormField label="Name" htmlFor="admin-name" required error={adminForm.formState.errors.name?.message}>
             <Input
               id="admin-name"
               invalid={Boolean(adminForm.formState.errors.name)}
               {...adminForm.register("name")}
             />
           </FormField>
-          <FormField
-            label="Email"
-            htmlFor="admin-email"
-            required
-            error={adminForm.formState.errors.email?.message}
-          >
+          <FormField label="Email" htmlFor="admin-email" required error={adminForm.formState.errors.email?.message}>
             <Input
               id="admin-email"
               type="email"
@@ -565,11 +586,7 @@ export function UsersView() {
               {...adminForm.register("password")}
             />
           </FormField>
-          <FormField
-            label="Phone"
-            htmlFor="admin-phone"
-            error={adminForm.formState.errors.phone?.message}
-          >
+          <FormField label="Phone" htmlFor="admin-phone" error={adminForm.formState.errors.phone?.message}>
             <Input id="admin-phone" {...adminForm.register("phone")} />
           </FormField>
         </form>

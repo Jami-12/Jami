@@ -3,14 +3,24 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs } from "@/components/ui/tabs";
@@ -23,9 +33,13 @@ export function CouponsAdmin() {
   const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
   const [filter, setFilter] = React.useState("ALL");
+  const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [deleting, setDeleting] = React.useState<Coupon | null>(null);
   const [statusPendingId, setStatusPendingId] = React.useState<string | null>(null);
   const debounced = useDebouncedValue(search, 300);
+
+  React.useEffect(() => setPage(1), [debounced, filter, limit]);
 
   const query = useQuery({
     queryKey: ["admin", "coupons", { search: debounced, filter }],
@@ -83,6 +97,14 @@ export function CouponsAdmin() {
   });
 
   const rows = query.data ?? [];
+  const totalItems = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const safePage = Math.min(page, totalPages);
+  const pagedRows = rows.slice((safePage - 1) * limit, safePage * limit);
+
+  React.useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
 
   const columns: DataColumn<Coupon>[] = [
     {
@@ -146,21 +168,30 @@ export function CouponsAdmin() {
     {
       header: "",
       cell: (coupon) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/admin/coupons/${coupon.id}/edit`} aria-label={`Edit ${coupon.code}`}>
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${coupon.code}`}
-            className="text-muted-foreground hover:text-red-600"
-            onClick={() => setDeleting(coupon)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label={`Actions for ${coupon.code}`}>
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/coupons/${coupon.id}/edit`}>
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  Edit coupon
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                onClick={() => setDeleting(coupon)}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Delete coupon
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
       className: "text-right",
@@ -169,9 +200,23 @@ export function CouponsAdmin() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Marketing"
+        title="Coupons"
+        description="Create and manage discount codes. Toggle availability without deleting order history."
+        actions={
+          <Button asChild>
+            <Link href="/admin/coupons/new">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New coupon
+            </Link>
+          </Button>
+        }
+      />
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
           <Tabs
             items={[
               { value: "ALL", label: "All" },
@@ -194,24 +239,33 @@ export function CouponsAdmin() {
               className="pl-9"
             />
           </div>
-        </div>
-        <Button asChild>
-          <Link href="/admin/coupons/new">
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New coupon
-          </Link>
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(coupon) => coupon.id}
-          loading={query.isLoading}
-          empty="No coupons match these filters."
-        />
-      </PageSection>
+      <AdminListCard
+        title="Discount codes"
+        description="Codes are applied at checkout and validated against their window and limits."
+        count={totalItems}
+        countLabel="coupons"
+        columns={columns}
+        rows={pagedRows}
+        getKey={(coupon) => coupon.id}
+        loading={query.isLoading}
+        empty="No coupons match these filters."
+        pagination={
+          <ListPagination
+            page={safePage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
+          />
+        }
+      />
 
       <ConfirmDialog
         open={Boolean(deleting)}

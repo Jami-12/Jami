@@ -7,7 +7,7 @@ import { ProductGrid } from "@/components/storefront/product-grid";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { FREE_SHIPPING_THRESHOLD, SITE } from "@/lib/constants";
 import { productColors } from "@/lib/product-options";
 import { formatCurrency } from "@/lib/utils";
 import { productQuerySchema } from "@/lib/validations";
@@ -18,7 +18,7 @@ import { mapSort } from "@/types/ui";
 export const metadata: Metadata = {
   title: "Shop the collection",
   description:
-    "Browse the full Aether wardrobe: elevated essentials, quiet tailoring, softened knits and pieces made to be worn for years, not seasons.",
+    "Browse the full collection: elevated essentials, considered details and pieces made to be worn for years, not seasons.",
   alternates: { canonical: "/products" },
 };
 
@@ -162,7 +162,7 @@ export default async function ProductsPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Aether collection",
+    name: `${SITE.name} collection`,
     numberOfItems: total,
     itemListElement: items.map((product, index) => ({
       "@type": "ListItem",
@@ -193,17 +193,16 @@ export default async function ProductsPage({
         </ol>
       </nav>
 
-      <header className="mt-5 max-w-2xl">
-        <p className="eyebrow text-primary-500 dark:text-accent-300">
+      <header className="mt-5 max-w-3xl">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-600 dark:text-accent-300">
           The collection
         </p>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
           {activeCategory ? activeCategory.name : "Everything we make."}
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {total} considered piece{total === 1 ? "" : "s"},
-          photographed on the hanger and close up. Prices show in your selected
-          currency.
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {total} considered piece{total === 1 ? "" : "s"}, photographed on the
+          hanger and close up. Prices show in your selected currency.
         </p>
       </header>
 

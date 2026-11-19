@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Search, X } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { SmartImage } from "@/components/ui/smart-image";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { productsApi } from "@/lib/api/services";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -121,11 +122,12 @@ export function NavSearch({
                     className="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-muted"
                   >
                     <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={productPrimaryImage(product) ?? "/showcase/rail-tee-1.webp"}
+                      <SmartImage
+                        src={productPrimaryImage(product)}
                         alt=""
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="40px"
+                        className="object-cover"
                       />
                     </span>
                     <span className="min-w-0 flex-1">

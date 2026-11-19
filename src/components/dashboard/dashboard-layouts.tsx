@@ -8,20 +8,20 @@ import {
   SuperAdminShell,
 } from "@/components/dashboard/shells";
 
-interface TitleEntry {
+export interface TitleEntry {
   path: string;
   title: string;
   subtitle?: string;
 }
 
-function matchTitle(pathname: string, entries: TitleEntry[], fallback: string): TitleEntry {
+export function matchTitle(pathname: string, entries: TitleEntry[], fallback: string): TitleEntry {
   const match = entries
     .filter((entry) => pathname === entry.path || pathname.startsWith(`${entry.path}/`))
     .sort((a, b) => b.path.length - a.path.length)[0];
   return match ?? { path: fallback, title: fallback };
 }
 
-const ACCOUNT_TITLES: TitleEntry[] = [
+export const ACCOUNT_TITLES: TitleEntry[] = [
   { path: "/account/orders", title: "Your orders", subtitle: "Track delivery and payment status." },
   { path: "/account/profile", title: "Profile", subtitle: "Keep your contact details current." },
   { path: "/account/addresses", title: "Delivery addresses", subtitle: "Manage where orders arrive." },
@@ -31,7 +31,7 @@ const ACCOUNT_TITLES: TitleEntry[] = [
   { path: "/account", title: "Account overview", subtitle: "Orders, saved pieces and recent activity." },
 ];
 
-const ADMIN_TITLES: TitleEntry[] = [
+export const ADMIN_TITLES: TitleEntry[] = [
   { path: "/admin/products/new", title: "New product", subtitle: "Create a catalogue entry and upload images." },
   { path: "/admin/products", title: "Products", subtitle: "Catalogue, pricing and publication." },
   { path: "/admin/orders", title: "Orders", subtitle: "Fulfilment and payment reconciliation." },
@@ -40,6 +40,7 @@ const ADMIN_TITLES: TitleEntry[] = [
   { path: "/admin/categories", title: "Categories", subtitle: "The structure of the catalogue." },
   { path: "/admin/brands", title: "Brands", subtitle: "Studios and makers behind the pieces." },
   { path: "/admin/banners", title: "Banners", subtitle: "Promotional and hero displays." },
+  { path: "/admin/home-sections", title: "Home sections", subtitle: "Switch storefront sections on or off instantly." },
   { path: "/admin/coupons", title: "Coupons", subtitle: "Discount codes and usage limits." },
   { path: "/admin/reviews", title: "Reviews", subtitle: "Moderate customer feedback." },
   { path: "/admin/expenses", title: "Expenses", subtitle: "Operating spend and bills." },
@@ -47,7 +48,7 @@ const ADMIN_TITLES: TitleEntry[] = [
   { path: "/admin", title: "Admin overview", subtitle: "Today's commerce at a glance." },
 ];
 
-const SUPER_TITLES: TitleEntry[] = [
+export const SUPER_TITLES: TitleEntry[] = [
   { path: "/super-admin/analytics", title: "Analytics", subtitle: "Revenue, orders and customer trends." },
   { path: "/super-admin/accounting", title: "Accounting", subtitle: "Profit, expenses and financial reports." },
   { path: "/super-admin/transactions", title: "Transactions", subtitle: "Every income, expense and investment entry." },
@@ -59,6 +60,7 @@ const SUPER_TITLES: TitleEntry[] = [
   { path: "/super-admin/salaries", title: "Salaries", subtitle: "Monthly payroll and payment status." },
   { path: "/super-admin/notifications", title: "Notifications", subtitle: "Order, payment and account updates." },
   { path: "/super-admin/audit", title: "Audit logs", subtitle: "Immutable record of privileged actions." },
+  { path: "/super-admin/settings", title: "Settings", subtitle: "Super admin profile and storefront identity." },
   { path: "/super-admin", title: "Super admin", subtitle: "Full business and access overview." },
 ];
 

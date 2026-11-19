@@ -5,7 +5,7 @@ import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to your Aether account to track orders, wishlist and payments.",
+  description: "Sign in to your account to track orders, wishlist and payments.",
   alternates: { canonical: "/login" },
 };
 
@@ -23,7 +23,7 @@ export default async function LoginPage({
   return (
     <AuthShell
       eyebrow="Welcome back"
-      title="Sign in to Aether"
+      title="Sign in to your store"
       description="Your orders, saved pieces and delivery details, exactly where you left them."
     >
       <LoginForm next={next} />

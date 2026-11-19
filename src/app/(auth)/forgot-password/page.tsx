@@ -5,7 +5,7 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export const metadata: Metadata = {
   title: "Forgot password",
-  description: "Request help resetting the password for your Aether account.",
+  description: "Request help resetting the password for your account.",
   robots: { index: false, follow: false },
 };
 

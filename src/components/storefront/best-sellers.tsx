@@ -65,7 +65,7 @@ export function BestSellers({ products }: { products: Product[] }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      {product.category?.name ?? "Aether"}
+                      {product.category?.name ?? "Collection"}
                     </span>
                     <span className="mt-0.5 block truncate font-display text-sm font-semibold sm:text-base">
                       {name}

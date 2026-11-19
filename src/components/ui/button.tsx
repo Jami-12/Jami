@@ -11,39 +11,58 @@ import { cn } from "@/lib/utils";
 
 export type ButtonVariant =
   | "primary"
+  | "default"
   | "secondary"
   | "outline"
   | "ghost"
   | "danger"
+  | "destructive"
   | "subtle"
   | "link";
 
-export type ButtonSize = "sm" | "md" | "lg" | "icon";
+/** `default`, `icon-xs` and `icon-sm` are kept for newer shadcn registry parts. */
+export type ButtonSize =
+  | "sm"
+  | "default"
+  | "md"
+  | "lg"
+  | "icon"
+  | "icon-xs"
+  | "icon-sm"
+  | "icon-lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] whitespace-nowrap";
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none active:translate-y-px motion-reduce:active:translate-y-0";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--color-primary-700)] text-white shadow-[0_10px_28px_-14px_rgba(44,69,97,0.7)] hover:bg-[var(--color-primary-800)] active:translate-y-px dark:bg-[var(--color-accent-300)] dark:text-[#082f49] dark:hover:bg-[var(--color-accent-200)]",
+    "bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90 hover:shadow-[var(--shadow-lift)]",
+  default:
+    "bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90",
   secondary:
-    "bg-[var(--color-accent-300)] text-[#082f49] shadow-[0_10px_28px_-14px_rgba(125,211,252,0.8)] hover:bg-[var(--color-accent-200)] active:translate-y-px",
+    "bg-secondary text-secondary-foreground shadow-[var(--shadow-soft)] hover:bg-secondary/70",
   outline:
-    "border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:border-[var(--color-primary-400)] hover:bg-[var(--muted)]",
+    "border border-[var(--border)] bg-[var(--card)]/80 text-[var(--foreground)] hover:border-primary/40 hover:bg-[var(--secondary)]",
   ghost:
-    "bg-transparent text-[var(--foreground)] hover:bg-[var(--muted)]",
+    "bg-transparent text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
   danger:
-    "bg-red-600 text-white hover:bg-red-700 active:translate-y-px dark:bg-red-500 dark:hover:bg-red-600",
+    "bg-[var(--danger)] text-white shadow-[var(--shadow-soft)] hover:brightness-110",
+  destructive:
+    "bg-[var(--destructive)] text-[var(--destructive-foreground)] shadow-[var(--shadow-soft)] hover:brightness-110",
   subtle:
     "bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--border)]",
-  link: "bg-transparent text-[var(--color-primary-600)] underline-offset-4 hover:underline dark:text-[var(--color-accent-300)] rounded-none px-0",
+  link: "rounded-none bg-transparent px-0 text-primary underline-offset-4 hover:underline",
 };
 
 const sizes: Record<ButtonSize, string> = {
+  "icon-xs": "h-8 w-8 p-0",
+  "icon-sm": "h-9 w-9 p-0",
+  "icon-lg": "h-12 w-12 p-0",
   sm: "h-9 px-4 text-xs",
+  default: "h-11 px-5 text-sm",
   md: "h-11 px-5 text-sm",
-  lg: "h-13 px-7 text-sm sm:text-base",
-  icon: "h-10 w-10 p-0",
+  lg: "h-12 px-7 text-sm sm:text-base",
+  icon: "h-11 w-11 p-0",
 };
 
 export function buttonVariants({

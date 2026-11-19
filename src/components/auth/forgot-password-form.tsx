@@ -15,7 +15,7 @@ export function ForgotPasswordForm() {
   const mailto = `mailto:${SITE.email}?subject=${encodeURIComponent(
     "Password reset request",
   )}&body=${encodeURIComponent(
-    `Please help me reset the password for my Aether account${
+    `Please help me reset the password for my account${
       email ? ` (${email})` : ""
     }.`,
   )}`;

@@ -7,13 +7,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { Price } from "@/components/ui/price";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -39,13 +45,18 @@ export function EmployeesView() {
   const [status, setStatus] = React.useState("ALL");
   const [department, setDepartment] = React.useState("ALL");
   const [search, setSearch] = React.useState("");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(15);
   const debounced = useDebouncedValue(search, 300);
   const [open, setOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Employee | null>(null);
   const [deactivating, setDeactivating] = React.useState<Employee | null>(null);
 
-  React.useEffect(() => setPage(1), [status, department, debounced]);
+  React.useEffect(
+    () => setPage(1),
+    [status, department, debounced, sortOrder, limit],
+  );
 
   const summary = useQuery({
     queryKey: ["employees", "summary"],
@@ -54,18 +65,24 @@ export function EmployeesView() {
   });
 
   const query = useQuery({
-    queryKey: ["employees", { page, status, department, search: debounced }],
+    queryKey: ["employees", { page, limit, status, department, search: debounced, sortOrder }],
     queryFn: () =>
       employeesApi.list({
         page,
-        limit: 15,
+        limit,
         isActive: status === "ALL" ? undefined : status === "ACTIVE",
         department: department === "ALL" ? undefined : department,
         search: debounced.trim() || undefined,
+        sortOrder,
       }),
   });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<EmployeeValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EmployeeValues>({
     resolver: formResolver<EmployeeValues>(employeeSchema),
     defaultValues: EMPTY,
   });
@@ -139,7 +156,7 @@ export function EmployeesView() {
     {
       header: "Employee",
       cell: (employee) => (
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-bold">{employee.name}</p>
           <p className="text-[11px] text-muted-foreground">{employee.position}</p>
         </div>
@@ -148,17 +165,15 @@ export function EmployeesView() {
     {
       header: "Contact",
       cell: (employee) => (
-        <div>
-          <p className="text-[11px] text-muted-foreground">{employee.email ?? "—"}</p>
+        <div className="min-w-0">
+          <p className="truncate text-[11px] text-muted-foreground">{employee.email ?? "—"}</p>
           <p className="text-[11px] text-muted-foreground">{employee.phone ?? "—"}</p>
         </div>
       ),
     },
     {
       header: "Department",
-      cell: (employee) => (
-        <span className="text-xs">{employee.department || "—"}</span>
-      ),
+      cell: (employee) => <span className="text-xs">{employee.department || "—"}</span>,
     },
     {
       header: "Monthly salary",
@@ -217,6 +232,22 @@ export function EmployeesView() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30">
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              People & payroll
+            </p>
+            <CardTitle className="font-display text-xl">Employees</CardTitle>
+            <CardDescription>Manage the team roster and monthly salary base.</CardDescription>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add employee
+          </Button>
+        </CardHeader>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label="Team size"
@@ -234,77 +265,93 @@ export function EmployeesView() {
         <StatCard
           label="Departments"
           value={departments.length}
-          hint={departments.map((row) => row.department ?? "Unassigned").slice(0, 3).join(", ") || "—"}
+          hint={
+            departments.map((row) => row.department ?? "Unassigned").slice(0, 3).join(", ") || "—"
+          }
           icon={Users}
           tone="accent"
         />
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-end">
-          <Tabs
-            items={[
-              { value: "ALL", label: "All" },
-              { value: "ACTIVE", label: "Active" },
-              { value: "INACTIVE", label: "Inactive" },
-            ]}
-            value={status}
-            onChange={setStatus}
-          />
-          <div className="relative w-full sm:max-w-xs">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-base">Team directory</CardTitle>
+          <CardDescription>Filter, sort and page through employees.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <Tabs
+              items={[
+                { value: "ALL", label: "All" },
+                { value: "ACTIVE", label: "Active" },
+                { value: "INACTIVE", label: "Inactive" },
+              ]}
+              value={status}
+              onChange={setStatus}
             />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name or position…"
-              aria-label="Search employees"
-              className="pl-9"
+            <div className="grid flex-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="relative sm:col-span-2 lg:col-span-1">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search name or position…"
+                  aria-label="Search employees"
+                  className="pl-9"
+                />
+              </div>
+              <Select
+                aria-label="Filter by department"
+                value={department}
+                onChange={(event) => setDepartment(event.target.value)}
+              >
+                <option value="ALL">All departments</option>
+                {departments.map((row) => (
+                  <option key={row.department ?? "unassigned"} value={row.department ?? ""}>
+                    {row.department ?? "Unassigned"}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                aria-label="Sort employees"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value as "asc" | "desc")}
+              >
+                <option value="desc">Newest first</option>
+                <option value="asc">Oldest first</option>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="px-0 pb-4 pt-4 sm:px-0">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getKey={(employee) => employee.id}
+            loading={query.isLoading}
+            empty="No employees match these filters."
+          />
+          <div className="px-4 sm:px-5">
+            <ListPagination
+              page={query.data?.meta.page ?? page}
+              pageCount={query.data?.meta.totalPages ?? 1}
+              totalItems={query.data?.meta.total ?? 0}
+              pageSize={query.data?.meta.limit ?? limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setLimit(size);
+                setPage(1);
+              }}
             />
           </div>
-          <Select
-            aria-label="Filter by department"
-            value={department}
-            onChange={(event) => setDepartment(event.target.value)}
-            className="w-auto"
-          >
-            <option value="ALL">All departments</option>
-            {departments.map((row) => (
-              <option key={row.department ?? "unassigned"} value={row.department ?? ""}>
-                {row.department ?? "Unassigned"}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Add employee
-        </Button>
-      </div>
-
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(employee) => employee.id}
-          loading={query.isLoading}
-          empty="No employees match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `${query.data.meta.total} employee${query.data.meta.total === 1 ? "" : "s"}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onPageChange={setPage}
-          />
-        </div>
-      </PageSection>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={open}

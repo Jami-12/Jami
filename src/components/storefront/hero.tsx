@@ -339,7 +339,7 @@ export function Hero({ products }: { products: Product[] }) {
             transition={{ duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="pointer-events-none absolute -left-3 top-1/2 hidden -translate-y-1/2 -rotate-90 text-[9px] font-bold uppercase tracking-[0.4em] text-white/35 xl:block"
           >
-            Aether · Est. 2019
+            Considered living · Made modern
           </motion.div>
         </div>
       </div>

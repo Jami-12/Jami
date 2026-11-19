@@ -5,12 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck, MailOpen, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { PageSection } from "@/components/dashboard/page-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/tabs";
 import { notificationsApi } from "@/lib/api/services";
@@ -23,23 +23,26 @@ const FILTERS = [
   { value: "UNREAD", label: "Unread" },
 ] as const;
 
+const PAGE_SIZES = [10, 20, 50];
+
 export function NotificationsView() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = React.useState<string>("ALL");
   const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
   const [deleting, setDeleting] = React.useState<Notification | null>(null);
 
   const query = useQuery({
-    queryKey: ["notifications", { page, filter }],
+    queryKey: ["notifications", { page, pageSize, filter }],
     queryFn: () =>
       notificationsApi.list({
         page,
-        limit: 15,
+        limit: pageSize,
         isRead: filter === "UNREAD" ? false : undefined,
       }),
   });
 
-  React.useEffect(() => setPage(1), [filter]);
+  React.useEffect(() => setPage(1), [filter, pageSize]);
 
   const invalidate = () =>
     void queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -70,27 +73,54 @@ export function NotificationsView() {
   });
 
   const notifications = query.data?.items ?? [];
+  const meta = query.data?.meta;
   const unread = query.data?.unreadCount ?? 0;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs items={FILTERS.map((item) => ({ ...item }))} value={filter} onChange={setFilter} />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => markAll.mutate()}
-          loading={markAll.isPending}
-          disabled={unread === 0}
-        >
-          <CheckCheck className="h-4 w-4" aria-hidden="true" />
-          Mark all read
-        </Button>
+        <Tabs
+          items={FILTERS.map((item) => ({ ...item }))}
+          value={filter}
+          onChange={setFilter}
+        />
+        <div className="flex items-center gap-2">
+          {unread > 0 ? (
+            <Badge tone="accent" dot>
+              {unread} unread
+            </Badge>
+          ) : (
+            <Badge tone="success" dot>
+              All caught up
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => markAll.mutate()}
+            loading={markAll.isPending}
+            disabled={unread === 0}
+          >
+            <CheckCheck className="h-4 w-4" aria-hidden="true" />
+            Mark all read
+          </Button>
+        </div>
       </div>
 
       <PageSection
         title="Inbox"
-        description={query.data ? `${unread} unread notification${unread === 1 ? "" : "s"}` : "Loading…"}
+        description={query.data ? "Order, payment and account updates." : "Loading…"}
+        footer={
+          <ListPagination
+            page={meta?.page ?? page}
+            pageCount={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={pageSize}
+            pageSizeOptions={PAGE_SIZES}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        }
       >
         {query.isLoading ? (
           <div className="space-y-2">
@@ -111,7 +141,8 @@ export function NotificationsView() {
         ) : (
           <ul className="divide-y divide-border">
             {notifications.map((notification) => {
-              const meta = NOTIFICATION_META[notification.type] ?? NOTIFICATION_META.SYSTEM;
+              const notificationMeta =
+                NOTIFICATION_META[notification.type] ?? NOTIFICATION_META.SYSTEM;
               return (
                 <li
                   key={notification.id}
@@ -123,20 +154,25 @@ export function NotificationsView() {
                   <div className="flex min-w-0 flex-1 items-start gap-3">
                     <span
                       className={cn(
-                        "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                        "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset",
                         notification.isRead
-                          ? "bg-muted text-muted-foreground"
-                          : "bg-accent-100 text-accent-800 dark:bg-accent-300/10 dark:text-accent-200",
+                          ? "bg-muted text-muted-foreground ring-border"
+                          : "bg-accent-100 text-accent-800 ring-accent-200 dark:bg-accent-300/10 dark:text-accent-200 dark:ring-accent-300/20",
                       )}
                     >
                       <Bell className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className={cn("text-sm", notification.isRead ? "font-semibold" : "font-extrabold")}>
+                        <p
+                          className={cn(
+                            "text-sm",
+                            notification.isRead ? "font-semibold" : "font-extrabold",
+                          )}
+                        >
                           {notification.title}
                         </p>
-                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                        <Badge tone={notificationMeta.tone}>{notificationMeta.label}</Badge>
                         {!notification.isRead ? (
                           <span
                             className="h-2 w-2 rounded-full bg-accent-500"
@@ -166,7 +202,7 @@ export function NotificationsView() {
                     ) : null}
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="icon-sm"
                       aria-label="Delete notification"
                       className="text-muted-foreground hover:text-red-600"
                       onClick={() => setDeleting(notification)}
@@ -179,16 +215,6 @@ export function NotificationsView() {
             })}
           </ul>
         )}
-
-        {query.data && query.data.meta.totalPages > 1 ? (
-          <div className="mt-4 border-t border-border pt-4">
-            <Pagination
-              page={query.data.meta.page}
-              totalPages={query.data.meta.totalPages}
-              onPageChange={setPage}
-            />
-          </div>
-        ) : null}
       </PageSection>
 
       <ConfirmDialog

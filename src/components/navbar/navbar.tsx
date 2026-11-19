@@ -1,9 +1,9 @@
-
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Menu } from "lucide-react";
 
 import { Brand } from "@/components/layout/brand";
@@ -15,12 +15,17 @@ import { cartItemCount, useCartStore } from "@/stores/cart-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
 
-import { BrandsMenu } from "./brands-menu";
 import { CategoriesMenu } from "./categories-menu";
 import { DesktopActions } from "./desktop-actions";
 import { MobileNav } from "./mobile-nav";
-import { NavSearch } from "./nav-search";
 import { FALLBACK_CATEGORIES, useNavCategories } from "./use-nav-categories";
+
+// Navbar font. Swap for any Google font you like.
+const navFont = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -41,9 +46,7 @@ export function Navbar() {
   const setMobileNav = useUiStore((state) => state.setMobileNav);
 
   const user = useAuthStore((state) => state.user);
-  const isStaff =
-    user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
-
+  const isStaff = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
   const accountHref = isStaff ? "/admin" : "/account";
 
   const navCategories = useNavCategories();
@@ -65,10 +68,7 @@ export function Navbar() {
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        event.key.toLowerCase() === "k"
-      ) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setSearchOpen(true);
       }
@@ -79,8 +79,6 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [setSearchOpen]);
 
-  const closeMobile = () => setMobileNav(false);
-
   const isActive = (href: string) =>
     href === "/"
       ? pathname === "/"
@@ -90,89 +88,78 @@ export function Navbar() {
     <>
       <header
         className={cn(
-          "sticky top-0 z-40 w-full border-b transition-all duration-300",
+          navFont.className,
+          "sticky top-0 z-40 w-full transition-colors duration-300",
           scrolled
-            ? "border-border/80 bg-background/95 shadow-sm backdrop-blur-xl"
-            : "border-border/50 bg-background/85 backdrop-blur-md",
+            ? "border-b border-border bg-background/90 backdrop-blur-lg"
+            : "border-b border-transparent bg-background",
         )}
       >
         <div
           className={cn(
-            "container-page flex items-center gap-3 transition-all duration-300 lg:gap-6",
-            scrolled ? "h-14 lg:h-16" : "h-16 lg:h-[4.75rem]",
+            "container-page grid grid-cols-[1fr_auto_1fr] items-center gap-3 transition-[height] duration-300",
+            scrolled ? "h-14 lg:h-16" : "h-16 lg:h-20",
           )}
         >
-          {/* Mobile menu */}
-          <button
-            type="button"
-            onClick={() => setMobileNav(true)}
-            aria-label="Open navigation menu"
-            aria-expanded={mobileNavOpen}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/70 text-foreground transition-colors hover:border-[#B18A48]/50 hover:bg-muted lg:hidden"
-          >
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          </button>
+          {/* Left: menu button on mobile, links on desktop */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setMobileNav(true)}
+              aria-label="Open navigation menu"
+              aria-expanded={mobileNavOpen}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-muted lg:hidden"
+            >
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </button>
 
-          {/* Brand */}
-          <div className="shrink-0">
-            <Brand
-              wordmarkClassName="hidden sm:flex"
-              className="shrink-0"
-            />
+            <nav
+              aria-label="Main navigation"
+              className="hidden items-center gap-6 lg:flex"
+            >
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  className={cn(
+                    "border-b-2 py-1 text-sm font-semibold transition-colors",
+                    isActive(link.href)
+                      ? "border-foreground text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              <CategoriesMenu />
+            </nav>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav
-            aria-label="Main navigation"
-            className="hidden shrink-0 items-center gap-1 lg:flex"
-          >
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={isActive(link.href) ? "page" : undefined}
-                className={cn(
-                  "relative inline-flex h-10 items-center rounded-lg px-3.5 text-[11px] font-bold uppercase tracking-[0.14em] transition-colors",
-                  isActive(link.href)
-                    ? "text-[#B18A48]"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                )}
-              >
-                {link.label}
+          {/* Center: logo */}
+          <div className="flex justify-center">
+            <Brand wordmarkClassName="hidden sm:flex" className="shrink-0" />
+          </div>
 
-                {isActive(link.href) && (
-                  <span className="absolute inset-x-3 bottom-1 h-[2px] rounded-full bg-[#B18A48]" />
-                )}
-              </Link>
-            ))}
+          {/* Right: one search + actions */}
+          <div className="flex items-center justify-end gap-2 lg:gap-3">
 
-            <CategoriesMenu />
-            <BrandsMenu />
-          </nav>
-
-          {/* Search */}
-          <NavSearch className="ml-auto hidden max-w-sm flex-1 md:block" />
-
-          {/* Actions */}
-          <DesktopActions
-            isStaff={isStaff}
-            accountHref={accountHref}
-            wishlistCount={wishlistCount}
-            cartCount={count}
-            onSearchOpen={() => setSearchOpen(true)}
-            onOpenCart={openCart}
-          />
-        </div>
-
-        {/* Mobile search */}
-        <div className="border-t border-border/50 px-4 py-2.5 md:hidden">
-          <NavSearch className="w-full" />
+            <DesktopActions
+              isStaff={isStaff}
+              accountHref={accountHref}
+              wishlistCount={wishlistCount}
+              cartCount={count}
+              onSearchOpen={() => setSearchOpen(true)}
+              onOpenCart={openCart}
+            />
+          </div>
         </div>
       </header>
 
       <MobileNav
         open={mobileNavOpen}
-        onClose={closeMobile}
+        onClose={() => setMobileNav(false)}
         categories={mobileCategories}
         isStaff={isStaff}
         accountHref={accountHref}

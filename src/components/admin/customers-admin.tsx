@@ -2,13 +2,15 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Mail, Phone, Search, ShieldCheck, Users } from "lucide-react";
+import { Mail, Phone, Search, ShieldCheck } from "lucide-react";
 
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { customersApi } from "@/lib/api/services";
 import type { Tone } from "@/lib/constants";
@@ -23,24 +25,26 @@ const STATUS_TONE: Record<UserStatus, Tone> = {
 
 export function CustomersAdmin() {
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("ALL");
   const debounced = useDebouncedValue(search, 300);
 
-  React.useEffect(() => setPage(1), [debounced, status]);
+  React.useEffect(() => setPage(1), [debounced, status, limit]);
 
   const query = useQuery({
-    queryKey: ["admin", "customers", { page, search: debounced, status }],
+    queryKey: ["admin", "customers", { page, limit, search: debounced, status }],
     queryFn: () =>
       customersApi.list({
         page,
-        limit: 15,
+        limit,
         search: debounced.trim() || undefined,
         status: status === "ALL" ? undefined : (status as UserStatus),
       }),
   });
 
   const rows = query.data?.items ?? [];
+  const meta = query.data?.meta;
 
   const columns: DataColumn<CustomerSummary>[] = [
     {
@@ -87,7 +91,7 @@ export function CustomersAdmin() {
     {
       header: "Total spent",
       cell: (customer) => (
-        <span className="text-xs font-semibold">
+        <span className="text-xs font-semibold tabular-nums">
           ৳{customer.totalSpent.toLocaleString("en-US")}
         </span>
       ),
@@ -121,68 +125,71 @@ export function CustomersAdmin() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search name, email or phone…"
-            aria-label="Search customers"
-            className="pl-9"
-          />
-        </div>
-        <Select
-          value={status}
-          onChange={(event) => setStatus(event.target.value)}
-          aria-label="Filter by account status"
-          className="sm:max-w-44"
-        >
-          <option value="ALL">All statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="BLOCKED">Blocked</option>
-        </Select>
-        <p className="ml-auto inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-          Read-only · roles and access are super-admin only
-        </p>
-      </div>
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="People"
+        title="Customers"
+        description="A read-only directory of everyone who has shopped with you. Roles and access changes belong to super-admins."
+        badge={
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            Read-only
+          </span>
+        }
+      />
 
-      <PageSection>
-        <div className="mb-3 flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <p className="text-xs font-semibold">
-            Customer directory
-            <span className="ml-1.5 font-normal text-muted-foreground">
-              {query.data ? `${query.data.meta.total} customer${query.data.meta.total === 1 ? "" : "s"}` : ""}
-            </span>
-          </p>
-        </div>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(customer) => customer.id}
-          loading={query.isLoading}
-          empty="No customers match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `Page ${query.data.meta.page} of ${query.data.meta.totalPages}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
+      <Card>
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search name, email or phone…"
+              aria-label="Search customers"
+              className="pl-9"
+            />
+          </div>
+          <Select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            aria-label="Filter by account status"
+          >
+            <option value="ALL">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="BLOCKED">Blocked</option>
+          </Select>
+        </CardContent>
+      </Card>
+
+      <AdminListCard
+        title="Customer directory"
+        description="Spend and order totals are lifetime figures across all paid orders."
+        count={meta?.total}
+        countLabel="customers"
+        columns={columns}
+        rows={rows}
+        getKey={(customer) => customer.id}
+        loading={query.isLoading}
+        empty="No customers match these filters."
+        pagination={
+          <ListPagination
+            page={page}
+            totalPages={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={limit}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
           />
-        </div>
-      </PageSection>
+        }
+      />
     </div>
   );
 }

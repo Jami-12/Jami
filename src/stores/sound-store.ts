@@ -23,6 +23,6 @@ export const useSoundStore = create<SoundState>()(
       },
       setEnabled: (enabled) => set({ enabled }),
     }),
-    { name: "aether-sound" },
+    { name: "store-sound" },
   ),
 );

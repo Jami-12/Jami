@@ -20,26 +20,31 @@ export function Avatar({
 }) {
   return (
     <span
-      aria-hidden="true"
+      role="img"
+      aria-label={name}
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-600 to-accent-500 font-bold text-white ring-2 ring-card",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
+        "bg-gradient-to-br from-primary-600 via-primary-700 to-accent-500",
+        "font-bold text-white ring-2 ring-[var(--card)] shadow-[var(--shadow-soft)]",
         SIZES[size],
         className,
       )}
     >
+      <span aria-hidden="true" className="select-none">
+        {getInitials(name)}
+      </span>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
-          alt={name}
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            (e.currentTarget as HTMLElement).style.display = "none";
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={(event) => {
+            (event.currentTarget as HTMLElement).style.display = "none";
           }}
         />
-      ) : (
-        getInitials(name)
-      )}
+      ) : null}
     </span>
   );
 }

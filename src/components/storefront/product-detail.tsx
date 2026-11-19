@@ -17,24 +17,23 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { RatingStars } from "@/components/ui/rating-stars";
+import { Separator } from "@/components/ui/separator";
 import { SmartImage } from "@/components/ui/smart-image";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
-import { productColors, productSizes } from "@/lib/product-options";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { productColors, productSizes } from "@/lib/product-options";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCartStore } from "@/stores/cart-store";
 import { useRecentlyViewedStore } from "@/stores/recently-viewed-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
 import type { Product } from "@/types";
-import {
-  discountPercentOf,
-  hasDiscount,
-  productName,
-} from "@/types";
+import { discountPercentOf, hasDiscount, productName } from "@/types";
+
 import { ReviewForm } from "./review-form";
 import { ReviewList } from "./review-list";
 
@@ -56,7 +55,10 @@ function buildGallery(product: Product): GalleryImage[] {
     }))
     .filter((image): image is GalleryImage => Boolean(image.url));
 
-  if (product.thumbnail && !ordered.some((image) => image.url === product.thumbnail)) {
+  if (
+    product.thumbnail &&
+    !ordered.some((image) => image.url === product.thumbnail)
+  ) {
     ordered.push({ url: product.thumbnail, alt: "" });
   }
 
@@ -75,7 +77,6 @@ export function ProductDetail({ product }: { product: Product }) {
   const [buying, setBuying] = React.useState(false);
   const [color, setColor] = React.useState<string | null>(null);
   const [size, setSize] = React.useState<string | null>(null);
-  const [selectionError, setSelectionError] = React.useState<string | null>(null);
 
   const addItem = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggle);
@@ -88,58 +89,67 @@ export function ProductDetail({ product }: { product: Product }) {
     addRecentlyViewed(product.id);
   }, [addRecentlyViewed, product.id]);
 
+  React.useEffect(() => {
+    setActiveImage(0);
+    setQuantity(1);
+    setColor(null);
+    setSize(null);
+  }, [product.id]);
+
   const name = productName(product);
   const saved = hydrated && wishlistIds.includes(product.id);
   const outOfStock = product.stock <= 0 || product.status === "OUT_OF_STOCK";
   const discounted = hasDiscount(product);
   const percent = discountPercentOf(product);
   const needsColor = colors.length > 0 && !color;
-  const needsSize = Boolean(sizes) && !size;
+  const needsSize = Boolean(sizes?.length) && !size;
+  const selectionIncomplete = needsColor || needsSize;
   const image = gallery[activeImage] ?? gallery[0] ?? null;
+  const maxQty = Math.max(1, Math.min(product.stock || 1, 10));
 
   const selectColor = (option: { name: string; hex: string }) => {
     setColor(option.name);
-    setSelectionError(null);
     const match = gallery.findIndex((entry) =>
       entry.alt.toLowerCase().includes(option.name.toLowerCase()),
     );
     if (match >= 0) setActiveImage(match);
   };
 
-  const validate = (): boolean => {
-    if (needsColor || needsSize) {
-      setSelectionError(
-        needsColor && needsSize
-          ? "Choose a colour and size to continue."
-          : needsColor
-            ? "Choose a colour to continue."
-            : "Choose a size to continue.",
-      );
-      return false;
-    }
-    return true;
-  };
-
   const handleAdd = async (): Promise<boolean> => {
-    if (outOfStock || !validate()) return false;
+    if (outOfStock || selectionIncomplete) return false;
     setAdding(true);
-    await addItem(product, quantity);
-    setAdding(false);
-    return true;
+    try {
+      await addItem(product, quantity);
+      return true;
+    } finally {
+      setAdding(false);
+    }
   };
 
   const handleBuyNow = async () => {
-    if (outOfStock) return;
+    if (outOfStock || selectionIncomplete) return;
     setBuying(true);
-    const ok = await handleAdd();
-    setBuying(false);
-    if (ok) router.push("/checkout");
+    try {
+      const ok = await handleAdd();
+      if (ok) router.push("/checkout");
+    } finally {
+      setBuying(false);
+    }
   };
 
+  const selectionHint = selectionIncomplete
+    ? [
+        needsColor ? "Select a colour" : null,
+        needsSize ? "Select a size" : null,
+      ]
+        .filter(Boolean)
+        .join(" and ")
+    : null;
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.08fr_1fr] lg:gap-14">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12 xl:gap-16">
       <div className="min-w-0">
-        <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-muted shadow-soft sm:aspect-[5/6]">
+        <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl border border-border bg-muted shadow-soft sm:aspect-[5/6]">
           <SmartImage
             src={image?.url ?? null}
             alt={image?.alt || name}
@@ -167,7 +177,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   )
                 }
                 aria-label="Previous image"
-                className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/85 text-[#172B3A] shadow-soft backdrop-blur transition hover:bg-white"
+                className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/85 text-primary-950 shadow-soft backdrop-blur transition hover:bg-white"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -177,14 +187,14 @@ export function ProductDetail({ product }: { product: Product }) {
                   setActiveImage((current) => (current + 1) % gallery.length)
                 }
                 aria-label="Next image"
-                className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/85 text-[#172B3A] shadow-soft backdrop-blur transition hover:bg-white"
+                className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/85 text-primary-950 shadow-soft backdrop-blur transition hover:bg-white"
               >
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </>
           ) : null}
 
-          <span className="absolute bottom-3 right-3 rounded-full bg-[#252B2B]/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur">
+          <span className="absolute bottom-3 right-3 rounded-full border border-white/20 bg-primary-950/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur">
             {activeImage === 0 ? "On the hanger" : `View ${activeImage + 1}`}
           </span>
         </div>
@@ -201,7 +211,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 className={cn(
                   "relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-muted transition",
                   activeImage === index
-                    ? "border-primary-500 dark:border-accent-300"
+                    ? "border-primary-600 dark:border-accent-300"
                     : "border-transparent opacity-70 hover:opacity-100",
                 )}
               >
@@ -213,7 +223,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   className="object-cover"
                 />
                 {index === 0 ? (
-                  <span className="absolute inset-x-0 bottom-0 bg-[#252B2B]/65 py-0.5 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-white">
+                  <span className="absolute inset-x-0 bottom-0 bg-primary-950/65 py-0.5 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-white">
                     Hanger
                   </span>
                 ) : null}
@@ -240,19 +250,17 @@ export function ProductDetail({ product }: { product: Product }) {
               copy: "bKash, Nagad, card, COD",
             },
           ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-start gap-2.5 rounded-xl border border-border bg-card p-3"
-            >
-              <item.icon
-                className="mt-0.5 h-4 w-4 shrink-0 text-primary-500 dark:text-accent-300"
-                aria-hidden="true"
-              />
+            <Card key={item.label} className="flex items-start gap-2.5 p-3.5">
+              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary-600 dark:text-accent-300">
+                <item.icon className="h-4 w-4" aria-hidden="true" />
+              </span>
               <div>
                 <p className="text-xs font-bold">{item.label}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{item.copy}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {item.copy}
+                </p>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </div>
@@ -275,7 +283,7 @@ export function ProductDetail({ product }: { product: Product }) {
           ) : null}
         </div>
 
-        <h1 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-[-0.02em] sm:text-4xl">
+        <h1 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
           {name}
         </h1>
 
@@ -306,7 +314,7 @@ export function ProductDetail({ product }: { product: Product }) {
           ) : null}
         </div>
 
-        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
           {product.shortDescription ?? product.description.slice(0, 260)}
         </p>
 
@@ -314,7 +322,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {outOfStock ? (
             <span className="inline-flex items-center gap-1.5 text-red-600 dark:text-red-400">
               <Package className="h-3.5 w-3.5" aria-hidden="true" />
-              Out of stock — join the restock list
+              Out of stock
             </span>
           ) : product.stock <= product.minimumStockLevel ? (
             <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
@@ -330,85 +338,105 @@ export function ProductDetail({ product }: { product: Product }) {
           <span className="text-muted-foreground">· SKU {product.sku}</span>
         </div>
 
-        {colors.length > 0 ? (
-          <fieldset className="mt-6">
-            <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              <span>Colour</span>
-              <span className="font-medium normal-case tracking-normal text-foreground">
-                {color ?? "Choose one"}
-              </span>
-            </legend>
-            <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
-              {colors.map((option) => (
-                <button
-                  key={option.name}
-                  type="button"
-                  onClick={() => selectColor(option)}
-                  aria-label={option.name}
-                  aria-pressed={color === option.name}
-                  title={option.name}
-                  className={cn(
-                    "inline-flex h-9 w-9 items-center justify-center rounded-full border-2 transition",
-                    color === option.name
-                      ? "border-primary-700 dark:border-accent-300"
-                      : "border-border hover:border-primary-300",
-                  )}
-                >
-                  <span
-                    className="h-6 w-6 rounded-full border border-black/10"
-                    style={{ backgroundColor: option.hex }}
-                  />
-                </button>
-              ))}
+        <Card className="mt-6 space-y-5 p-4 shadow-soft sm:p-5">
+          {colors.length > 0 ? (
+            <fieldset>
+              <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                <span>Colour</span>
+                <span className="font-medium normal-case tracking-normal text-foreground">
+                  {color ?? "Select a colour"}
+                </span>
+              </legend>
+              <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                {colors.map((option) => {
+                  const active = color === option.name;
+                  return (
+                    <button
+                      key={option.name}
+                      type="button"
+                      onClick={() => selectColor(option)}
+                      aria-label={option.name}
+                      aria-pressed={active}
+                      title={option.name}
+                      className={cn(
+                        "inline-flex h-10 w-10 items-center justify-center rounded-full border-2 transition",
+                        active
+                          ? "border-primary-700 bg-primary-50 dark:border-accent-300 dark:bg-accent-300/10"
+                          : "border-border hover:border-accent-400/60",
+                      )}
+                    >
+                      <span
+                        className="h-6 w-6 rounded-full border border-black/10"
+                        style={{ backgroundColor: option.hex }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ) : null}
+
+          {sizes && sizes.length > 0 ? (
+            <fieldset>
+              <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                <span>Size</span>
+                <span className="font-medium normal-case tracking-normal text-foreground">
+                  {size ?? "Select a size"}
+                </span>
+              </legend>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {sizes.map((option) => {
+                  const active = size === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setSize(option)}
+                      aria-pressed={active}
+                      className={cn(
+                        "inline-flex h-10 min-w-11 items-center justify-center rounded-xl border px-3 text-xs font-semibold transition",
+                        active
+                          ? "border-primary-700 bg-primary-700 text-primary-50 dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950"
+                          : "border-border bg-card text-muted-foreground hover:border-accent-400/60 hover:text-foreground",
+                      )}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ) : null}
+
+          {(colors.length > 0 || (sizes && sizes.length > 0)) && (
+            <div
+              className={cn(
+                "rounded-xl border px-3 py-2.5 text-xs",
+                selectionIncomplete
+                  ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+              )}
+              aria-live="polite"
+            >
+              {selectionIncomplete ? (
+                <span className="font-medium">
+                  {selectionHint} to enable add to bag and checkout.
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  Selection complete — ready to add.
+                </span>
+              )}
             </div>
-          </fieldset>
-        ) : null}
+          )}
 
-        {sizes ? (
-          <fieldset className="mt-5">
-            <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              <span>Size</span>
-              <span className="font-medium normal-case tracking-normal text-foreground">
-                {size ?? "Choose one"}
-              </span>
-            </legend>
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {sizes.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => {
-                    setSize(option);
-                    setSelectionError(null);
-                  }}
-                  aria-pressed={size === option}
-                  className={cn(
-                    "inline-flex h-10 min-w-11 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition",
-                    size === option
-                      ? "border-primary-700 bg-primary-700 text-white dark:border-accent-300 dark:bg-accent-300 dark:text-[#172B3A]"
-                      : "border-border text-muted-foreground hover:border-primary-300 hover:text-foreground",
-                  )}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        ) : null}
-
-        {selectionError ? (
-          <p role="alert" className="mt-3 text-xs font-medium text-red-600 dark:text-red-400">
-            {selectionError}
-          </p>
-        ) : null}
-
-        <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-soft">
           <div className="flex flex-wrap items-center gap-3">
             <QuantityStepper
               value={quantity}
               onChange={setQuantity}
               min={1}
-              max={Math.max(1, Math.min(product.stock, 10))}
+              max={maxQty}
               disabled={outOfStock}
               label={`Quantity of ${name}`}
             />
@@ -417,7 +445,7 @@ export function ProductDetail({ product }: { product: Product }) {
               className="min-w-40 flex-1"
               onClick={() => void handleAdd()}
               loading={adding}
-              disabled={outOfStock}
+              disabled={outOfStock || selectionIncomplete}
             >
               <ShoppingBag className="h-4 w-4" aria-hidden="true" />
               {outOfStock ? "Sold out" : "Add to bag"}
@@ -437,21 +465,23 @@ export function ProductDetail({ product }: { product: Product }) {
               />
             </Button>
           </div>
+
           <Button
             size="lg"
             variant="secondary"
-            className="mt-2.5 w-full"
+            className="w-full"
             onClick={() => void handleBuyNow()}
             loading={buying}
-            disabled={outOfStock}
+            disabled={outOfStock || selectionIncomplete}
           >
             Buy it now
           </Button>
-          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-            Secure checkout with bKash, Nagad, card or cash on delivery. Taxes and
-            delivery are calculated at checkout.
+
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Secure checkout with bKash, Nagad, card or cash on delivery. Taxes
+            and delivery are calculated at checkout.
           </p>
-        </div>
+        </Card>
 
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           {[
@@ -459,17 +489,14 @@ export function ProductDetail({ product }: { product: Product }) {
             { label: "Rating", value: product.averageRating.toFixed(1) },
             { label: "Reviews", value: product.reviewCount },
           ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl border border-border bg-card px-2 py-3"
-            >
+            <Card key={stat.label} className="px-2 py-3">
               <p className="font-display text-lg font-semibold tabular-nums">
                 {stat.value}
               </p>
               <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 {stat.label}
               </p>
-            </div>
+            </Card>
           ))}
         </div>
 
@@ -482,10 +509,13 @@ export function ProductDetail({ product }: { product: Product }) {
               .split("\n")
               .filter(Boolean)
               .map((paragraph) => (
-                <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+                <p key={paragraph.slice(0, 48)}>{paragraph}</p>
               ))}
           </div>
-          <dl className="mt-5 divide-y divide-border rounded-xl border border-border bg-card text-sm">
+
+          <Separator className="my-5" />
+
+          <dl className="grid gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
             {[
               [
                 "Material",
@@ -500,20 +530,19 @@ export function ProductDetail({ product }: { product: Product }) {
                 outOfStock ? "Out of stock" : `${product.stock} in stock`,
               ],
             ].map(([label, value]) => (
-              <div
-                key={label}
-                className="flex items-center justify-between gap-4 px-4 py-2.5"
-              >
-                <dt className="text-xs font-semibold text-muted-foreground">
+              <div key={label} className="rounded-xl border border-border bg-card px-4 py-3">
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {label}
                 </dt>
-                <dd className="text-right text-xs font-semibold">{value}</dd>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {value}
+                </dd>
               </div>
             ))}
           </dl>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-10">
           <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Reviews
           </h2>
@@ -523,7 +552,9 @@ export function ProductDetail({ product }: { product: Product }) {
               averageRating={product.averageRating}
               reviewCount={product.reviewCount}
             />
-            {hydrated && user?.role === "CUSTOMER" ? <ReviewForm productId={product.id} /> : null}
+            {hydrated && user?.role === "CUSTOMER" ? (
+              <ReviewForm productId={product.id} />
+            ) : null}
           </div>
         </div>
       </div>
@@ -534,7 +565,7 @@ export function ProductDetail({ product }: { product: Product }) {
 export function ProductDetailSkeleton() {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <div className="aspect-[4/5] animate-pulse rounded-2xl bg-muted" />
+      <div className="aspect-[4/5] animate-pulse rounded-3xl bg-muted" />
       <div className="space-y-4">
         <div className="h-4 w-24 animate-pulse rounded bg-muted" />
         <div className="h-10 w-3/4 animate-pulse rounded bg-muted" />

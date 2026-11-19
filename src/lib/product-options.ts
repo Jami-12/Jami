@@ -124,5 +124,5 @@ export function productDetailLine(product: Product): string {
   const firstSentence = product.description.split(/(?<=[.!?])\s/)[0];
   return firstSentence && firstSentence.length < 160
     ? firstSentence
-    : `${product.category?.name ?? "Aether"} · made in small runs`;
+    : `${product.category?.name ?? "Collection"} · thoughtfully made`;
 }

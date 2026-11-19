@@ -5,13 +5,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { DataTable, type DataColumn } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
+import type { DataColumn } from "@/components/dashboard/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Tabs } from "@/components/ui/tabs";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -24,17 +26,18 @@ export function ReviewsAdmin() {
   const [filter, setFilter] = React.useState("PENDING");
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [deleting, setDeleting] = React.useState<Review | null>(null);
   const debounced = useDebouncedValue(search, 300);
 
-  React.useEffect(() => setPage(1), [filter]);
+  React.useEffect(() => setPage(1), [filter, limit]);
 
   const query = useQuery({
-    queryKey: ["admin", "reviews", { filter, page }],
+    queryKey: ["admin", "reviews", { filter, page, limit }],
     queryFn: () =>
       reviewsApi.list({
         page,
-        limit: 15,
+        limit,
         isApproved: filter === "PENDING" ? false : filter === "APPROVED" ? true : undefined,
       }),
   });
@@ -142,52 +145,71 @@ export function ReviewsAdmin() {
     },
   ];
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs
-          items={[
-            { value: "PENDING", label: "Pending" },
-            { value: "APPROVED", label: "Published" },
-            { value: "ALL", label: "All" },
-          ]}
-          value={filter}
-          onChange={setFilter}
-        />
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search reviewer or comment…"
-            aria-label="Search reviews"
-            className="pl-9"
-          />
-        </div>
-      </div>
+  const meta = query.data?.meta;
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={reviews}
-          getKey={(review) => review.id}
-          loading={query.isLoading}
-          empty={
-            filter === "PENDING"
-              ? "No reviews are waiting for moderation."
-              : "No reviews match these filters."
-          }
-        />
-        {query.data && query.data.meta.totalPages > 1 ? (
-          <div className="mt-3 border-t border-border pt-3">
-            <Pagination
-              page={query.data.meta.page}
-              totalPages={query.data.meta.totalPages}
-              onPageChange={setPage}
+  return (
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Moderation"
+        title="Reviews"
+        description="Approve, hide or remove customer feedback. Search filters the current page."
+      />
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <Tabs
+            items={[
+              { value: "PENDING", label: "Pending" },
+              { value: "APPROVED", label: "Published" },
+              { value: "ALL", label: "All" },
+            ]}
+            value={filter}
+            onChange={setFilter}
+          />
+          <div className="relative w-full sm:max-w-xs">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search reviewer or comment…"
+              aria-label="Search reviews"
+              className="pl-9"
             />
           </div>
-        ) : null}
-      </PageSection>
+        </CardContent>
+      </Card>
+
+      <AdminListCard
+        title="Customer reviews"
+        description="Moderation changes update the storefront rating immediately."
+        count={meta?.total}
+        countLabel="reviews"
+        columns={columns}
+        rows={reviews}
+        getKey={(review) => review.id}
+        loading={query.isLoading}
+        empty={
+          filter === "PENDING"
+            ? "No reviews are waiting for moderation."
+            : "No reviews match these filters."
+        }
+        pagination={
+          <ListPagination
+            page={page}
+            totalPages={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
+          />
+        }
+      />
 
       <ConfirmDialog
         open={Boolean(deleting)}

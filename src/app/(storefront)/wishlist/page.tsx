@@ -4,19 +4,21 @@ import { WishlistView } from "@/components/storefront/wishlist-view";
 
 export const metadata: Metadata = {
   title: "Wishlist",
-  description: "Pieces you have saved for later at Aether.",
+  description: "Pieces you have saved for later.",
   alternates: { canonical: "/wishlist" },
 };
 
 export default function WishlistPage() {
   return (
-    <div className="container-page py-10 sm:py-14">
-      <header className="mb-7">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+    <div className="container-page py-10 sm:py-14 lg:py-16">
+      <header className="mb-8 max-w-2xl">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-600 dark:text-accent-300">
           Saved for later
         </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Wishlist</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          Wishlist
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
           A considered shortlist. Saved pieces sync to your account when you
           sign in as a customer.
         </p>

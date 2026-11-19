@@ -24,10 +24,13 @@ export function QuantityStepper({
   const decrease = () => onChange(Math.max(min, value - 1));
   const increase = () => onChange(Math.min(max, value + 1));
 
+  const controlClass =
+    "inline-flex h-full w-10 shrink-0 items-center justify-center text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40";
+
   return (
     <div
       className={cn(
-        "inline-flex h-11 items-center rounded-xl border border-border bg-card",
+        "inline-flex h-11 items-center rounded-xl border border-[var(--input)] bg-[var(--card)] shadow-[var(--shadow-soft)]",
         className,
       )}
       role="group"
@@ -38,13 +41,13 @@ export function QuantityStepper({
         onClick={decrease}
         disabled={disabled || value <= min}
         aria-label={`Decrease ${label.toLowerCase()}`}
-        className="inline-flex h-full w-10 items-center justify-center rounded-l-xl text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+        className={cn(controlClass, "rounded-l-xl")}
       >
         <Minus className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
       <span
         aria-live="polite"
-        className="min-w-9 text-center text-sm font-bold tabular-nums"
+        className="min-w-9 text-center text-sm font-bold tabular-nums text-[var(--foreground)]"
       >
         {value}
       </span>
@@ -53,7 +56,7 @@ export function QuantityStepper({
         onClick={increase}
         disabled={disabled || value >= max}
         aria-label={`Increase ${label.toLowerCase()}`}
-        className="inline-flex h-full w-10 items-center justify-center rounded-r-xl text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+        className={cn(controlClass, "rounded-r-xl")}
       >
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

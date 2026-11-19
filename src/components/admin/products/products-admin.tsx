@@ -9,12 +9,13 @@ import { toast } from "sonner";
 import { ProductImagesDialog } from "./product-images-dialog";
 import { productColumns } from "./product-columns";
 
-import { DataTable } from "@/components/dashboard/data-table";
-import { PageSection } from "@/components/dashboard/page-section";
+import { AdminListCard } from "@/components/admin/shared/admin-list-card";
+import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
+import { ListPagination } from "@/components/dashboard/list-pagination";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Input, Select } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { categoriesApi, productsApi } from "@/lib/api/services";
 import { PRODUCT_STATUSES } from "@/lib/constants";
@@ -25,6 +26,7 @@ import { productName } from "@/types";
 export function ProductsAdmin() {
   const queryClient = useQueryClient();
   const [page, setPage] = React.useState(1);
+  const [limit, setLimit] = React.useState(10);
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("ALL");
   const [categoryId, setCategoryId] = React.useState("ALL");
@@ -34,7 +36,10 @@ export function ProductsAdmin() {
   const [featuredPendingId, setFeaturedPendingId] = React.useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  React.useEffect(() => setPage(1), [debouncedSearch, status, categoryId]);
+  React.useEffect(
+    () => setPage(1),
+    [debouncedSearch, status, categoryId, limit],
+  );
 
   const categories = useQuery({
     queryKey: ["categories"],
@@ -49,9 +54,9 @@ export function ProductsAdmin() {
       [
         "admin",
         "products",
-        { page, search: debouncedSearch, status, categoryId },
+        { page, limit, search: debouncedSearch, status, categoryId },
       ] as const,
-    [page, debouncedSearch, status, categoryId],
+    [page, limit, debouncedSearch, status, categoryId],
   );
 
   const query = useQuery({
@@ -59,7 +64,7 @@ export function ProductsAdmin() {
     queryFn: () =>
       productsApi.list({
         page,
-        limit: 12,
+        limit,
         search: debouncedSearch.trim() || undefined,
         status: status === "ALL" ? undefined : (status as Product["status"]),
         category: categoryId === "ALL" ? undefined : categorySlug,
@@ -94,9 +99,7 @@ export function ProductsAdmin() {
           ? {
               ...current,
               items: current.items.map((item) =>
-                item.id === product.id
-                  ? { ...item, isFeatured: !item.isFeatured }
-                  : item,
+                item.id === product.id ? { ...item, isFeatured: !item.isFeatured } : item,
               ),
             }
           : current,
@@ -165,11 +168,27 @@ export function ProductsAdmin() {
     onDelete: (product) => setDeleting(product),
   });
 
+  const meta = query.data?.meta;
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row">
-          <div className="relative w-full sm:max-w-xs">
+    <div className="space-y-5">
+      <AdminListHeader
+        eyebrow="Catalogue"
+        title="Products"
+        description="Search, filter and manage the catalogue. Visibility, featured flags and imagery update immediately."
+        actions={
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New product
+            </Link>
+          </Button>
+        }
+      />
+
+      <Card>
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_12rem_12rem]">
+          <div className="relative">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
@@ -186,7 +205,6 @@ export function ProductsAdmin() {
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
             aria-label="Filter by category"
-            className="sm:max-w-44"
           >
             <option value="ALL">All categories</option>
             {categories.data?.map((category) => (
@@ -199,7 +217,6 @@ export function ProductsAdmin() {
             value={status}
             onChange={(event) => setStatus(event.target.value)}
             aria-label="Filter by status"
-            className="sm:max-w-40"
           >
             <option value="ALL">All statuses</option>
             {PRODUCT_STATUSES.map((value) => (
@@ -208,36 +225,33 @@ export function ProductsAdmin() {
               </option>
             ))}
           </Select>
-        </div>
-        <Button asChild>
-          <Link href="/admin/products/new">
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New product
-          </Link>
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
 
-      <PageSection>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getKey={(product) => product.id}
-          loading={query.isLoading}
-          empty="No products match these filters."
-        />
-        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {query.data
-              ? `${query.data.meta.total} product${query.data.meta.total === 1 ? "" : "s"}`
-              : "—"}
-          </p>
-          <Pagination
-            page={query.data?.meta.page ?? 1}
-            totalPages={query.data?.meta.totalPages ?? 1}
+      <AdminListCard
+        title="All products"
+        description="Tablet and desktop layouts show full details; swipe horizontally on a phone."
+        count={meta?.total}
+        countLabel="products"
+        columns={columns}
+        rows={rows}
+        getKey={(product) => product.id}
+        loading={query.isLoading}
+        empty="No products match these filters."
+        pagination={
+          <ListPagination
+            page={page}
+            totalPages={meta?.totalPages ?? 1}
+            totalItems={meta?.total}
+            pageSize={limit}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
           />
-        </div>
-      </PageSection>
+        }
+      />
 
       {imagesFor ? (
         <ProductImagesDialog

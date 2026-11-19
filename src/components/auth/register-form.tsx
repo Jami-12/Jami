@@ -52,7 +52,7 @@ export function RegisterForm({ next }: { next?: string }) {
     onSuccess: (result) => {
       setSession(result);
       void adoptGuestState();
-      toast.success("Welcome to Aether. Your account is ready.");
+      toast.success("Welcome! Your account is ready.");
       router.replace(safeNextPath(next, roleHome(result.user.role)));
       router.refresh();
     },

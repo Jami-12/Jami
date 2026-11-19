@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ImageIcon, Pencil, Star, StarOff, Trash2 } from "lucide-react";
+import { ImageIcon, MoreHorizontal, Pencil, Star, StarOff, Trash2 } from "lucide-react";
 
 import type { DataColumn } from "@/components/dashboard/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Price } from "@/components/ui/price";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Switch } from "@/components/ui/switch";
@@ -115,34 +122,40 @@ export function productColumns({
       ),
     },
     {
-      header: "",
+      header: "Actions",
       cell: (product) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Manage images for ${productName(product)}`}
-            onClick={() => onManageImages(product)}
-          >
-            <ImageIcon className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button variant="ghost" size="icon" asChild>
-            <Link
-              href={`/admin/products/${product.id}/edit`}
-              aria-label={`Edit ${productName(product)}`}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${productName(product)}`}
-            className="text-muted-foreground hover:text-red-600"
-            onClick={() => onDelete(product)}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Actions for ${productName(product)}`}
+              >
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/products/${product.id}/edit`}>
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  Edit product
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onManageImages(product)}>
+                <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                Manage images
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                onClick={() => onDelete(product)}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Delete product
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
       className: "text-right",

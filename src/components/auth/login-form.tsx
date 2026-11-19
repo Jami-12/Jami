@@ -133,7 +133,7 @@ export function LoginForm({ next }: { next?: string }) {
       <GoogleAuthButton />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        New to Aether?{" "}
+        New here?{" "}
         <Link
           href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
           className="font-semibold text-primary-600 hover:underline dark:text-accent-300"

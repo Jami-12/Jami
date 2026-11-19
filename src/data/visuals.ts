@@ -59,7 +59,7 @@ export const TESTIMONIALS = [
   },
   {
     quote:
-      "The knit arrived softer than it looked online, and the colour was true. Aether has become my default for pieces I keep for years.",
+      "The knit arrived softer than it looked online, and the colour was true. This store has become my default for pieces I keep for years.",
     name: "Imran Chowdhury",
     role: "Architect, Chattogram",
   },
