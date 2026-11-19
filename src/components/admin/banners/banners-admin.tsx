@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { AdminListCard } from "@/components/admin/shared/admin-list-card";
 import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
@@ -22,8 +21,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Switch } from "@/components/ui/switch";
+import {
+  clampPage,
+  useOptimisticMutation,
+} from "@/hooks/use-optimistic-mutation";
 import { bannersApi } from "@/lib/api/services";
-import { getErrorMessage } from "@/lib/utils";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import type { Banner } from "@/types";
 
 export function BannersAdmin() {
@@ -33,54 +36,48 @@ export function BannersAdmin() {
   const [deleting, setDeleting] = React.useState<Banner | null>(null);
   const [statusPendingId, setStatusPendingId] = React.useState<string | null>(null);
 
+  const listKey = queryKeys.banners.all();
+  const invalidateKeys = React.useMemo(() => relatedKeys("banners"), []);
+
   const query = useQuery({
-    queryKey: ["admin", "banners"],
+    queryKey: listKey,
     queryFn: () => bannersApi.listAdmin(),
     staleTime: 30_000,
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["admin", "banners"] });
-    void queryClient.invalidateQueries({ queryKey: ["public", "banners"] });
-  };
-
-  const toggle = useMutation<Banner, Error, Banner, { previous?: Banner[] }>({
+  const toggle = useOptimisticMutation({
     mutationFn: (banner: Banner) => bannersApi.updateStatus(banner.id, !banner.isActive),
-    onMutate: async (banner) => {
-      setStatusPendingId(banner.id);
-      const key = ["admin", "banners"] as const;
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<Banner[]>(key);
-      queryClient.setQueryData<Banner[]>(key, (current) =>
-        current?.map((entry) =>
-          entry.id === banner.id ? { ...entry, isActive: !entry.isActive } : entry,
-        ),
-      );
-      return { previous };
-    },
-    onSuccess: (_result, banner) => {
-      toast.success(banner.isActive ? "Banner disabled" : "Banner enabled");
-    },
-    onError: (error, _banner, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["admin", "banners"], context.previous);
-      }
-      toast.error(getErrorMessage(error, "Could not update the banner"));
-    },
-    onSettled: () => {
-      setStatusPendingId(null);
-      invalidate();
-    },
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, banner) =>
+      Array.isArray(current)
+        ? current.map((entry: Banner) =>
+            entry.id === banner.id ? { ...entry, isActive: !entry.isActive } : entry,
+          )
+        : current,
+    invalidateKeys,
+    successMessage: (_, banner) =>
+      banner.isActive ? "Banner disabled" : "Banner enabled",
+    errorMessage: "Could not update the banner",
+    onMutate: (banner) => setStatusPendingId(banner.id),
+    onSettled: () => setStatusPendingId(null),
   });
 
-  const remove = useMutation({
+  const remove = useOptimisticMutation({
     mutationFn: (id: string) => bannersApi.remove(id),
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, id) =>
+      Array.isArray(current) ? current.filter((entry: Banner) => entry.id !== id) : current,
+    invalidateKeys,
+    successMessage: "Banner deleted",
+    errorMessage: "Could not delete the banner",
     onSuccess: () => {
-      toast.success("Banner deleted");
       setDeleting(null);
-      invalidate();
+      const cached = queryClient.getQueryData<unknown>(listKey);
+      if (Array.isArray(cached)) {
+        const safe = clampPage(page, Math.max(0, cached.length - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
     },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not delete the banner")),
   });
 
   const rows = query.data ?? [];

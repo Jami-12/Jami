@@ -762,7 +762,76 @@ Shipping and currency values must match backend configuration. Google OAuth also
 
 ---
 
-## 12. Honest caveats / gotchas
+## 12. Mutation conventions
+
+Every write must update the UI automatically — a successful action should never
+require a manual browser refresh. **Never call `window.location.reload()`.**
+`router.refresh()` is reserved for form pages that navigate away, where it
+refreshes server-rendered page data; it is not a substitute for cache
+invalidation.
+
+### Central keys
+
+Build every `queryKey` from `src/lib/query-keys.ts`. The factories cover lists,
+details, counts, stats and analytics, so invalidating `queryKeys.orders.all`
+also refreshes `queryKeys.orders.mine(params)` and every nested order query.
+`relatedKeys(domain)` returns the whole group of caches affected by a domain
+(e.g. a product delete refreshes products, admin products, discounts, inventory
+and analytics).
+
+### The shared helper
+
+Use `useOptimisticMutation` from `src/hooks/use-optimistic-mutation.ts` for new
+mutations and when refactoring existing ones. It enforces this order:
+
+1. `onMutate` — cancel in-flight fetches, snapshot caches, apply the optimistic
+   patch immediately.
+2. `onError` — restore the snapshot, show an error toast.
+3. `onSuccess` — show a success toast, then run caller callbacks (close the
+   dialog, navigate, reset local state).
+4. `onSettled` — invalidate all related keys, including notifications and
+   analytics, so counts and badges reconcile with the server.
+
+```tsx
+const mutation = useOptimisticMutation({
+  mutationFn: (coupon: Coupon) => couponsApi.updateStatus(coupon.id, !coupon.isActive),
+  optimisticKeys: [queryKeys.coupons.list({ search: debounced, filter })],
+  applyOptimistic: (current, coupon) =>
+    (current as Coupon[] | undefined)?.map((row) =>
+      row.id === coupon.id ? { ...row, isActive: !row.isActive } : row,
+    ),
+  invalidateKeys: relatedKeys("coupons"),
+  successMessage: (_, coupon) => (coupon.isActive ? "Coupon disabled" : "Coupon enabled"),
+  errorMessage: "Could not update the coupon",
+});
+```
+
+Server-first mutations can adopt the helper with only `mutationFn`,
+`invalidateKeys` and `successMessage` — optimism is opt-in.
+
+### Rules
+
+- **Related caches:** include list + detail + count + stat + notifications +
+  analytics keys. Notification-producing actions (orders, payments) must
+  invalidate `queryKeys.notifications.all` **and**
+  `queryKeys.notifications.unreadCount()` so the header badge updates.
+- **Pagination:** after deleting the last row on a page, clamp the page with
+  `clampPage(page, totalItems, pageSize)` so the list does not go blank.
+- **Zustand stores:** update local state synchronously, then reconcile with the
+  server response in `onSettled`. Roll back the snapshot on error (cart `clear`
+  must restore its items if the API call fails).
+- **Buttons and dialogs:** every mutation button uses `loading={mutation.isPending}`
+  and is disabled while pending; `ConfirmDialog` closes in `onSuccess`.
+- **Toasts:** show errors via `getErrorMessage(error, fallback)`; never swallow a
+  failed write silently.
+- **Auth/OAuth:** session changes still call `router.refresh()` after the
+  navigation because they change server-rendered layout data.
+
+The implementation inventory and checklist live in `docs/redesign-audit.md`.
+
+---
+
+## 13. Honest caveats / gotchas
 
 - **Newsletter is simulated.** `NewsletterForm` validates with Zod and waits 650 ms before showing success; no subscription API exists yet.
 - **Password reset is manual.** There are no reset-token endpoints; support verifies ownership and resets out of band.
@@ -781,7 +850,7 @@ Shipping and currency values must match backend configuration. Google OAuth also
 
 ---
 
-## 13. Where to make common changes
+## 14. Where to make common changes
 
 | Task | Start here |
 | --- | --- |
@@ -797,7 +866,7 @@ Shipping and currency values must match backend configuration. Google OAuth also
 
 ---
 
-## 14. Mental model for new contributors
+## 15. Mental model for new contributors
 
 1. **Pages are thin.** Most behavior lives in `src/components`.
 2. **Public reads on the server use `catalog.ts`**; everything else uses `apiClient` through `services.ts`.

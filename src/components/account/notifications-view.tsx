@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck, MailOpen, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { ListPagination } from "@/components/dashboard/list-pagination";
 import { PageSection } from "@/components/dashboard/page-section";
@@ -13,10 +12,12 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/tabs";
+import { useOptimisticMutation, clampPage } from "@/hooks/use-optimistic-mutation";
 import { notificationsApi } from "@/lib/api/services";
 import { NOTIFICATION_META } from "@/lib/constants";
-import { cn, formatRelative, getErrorMessage } from "@/lib/utils";
-import type { Notification } from "@/types";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
+import { cn, formatRelative } from "@/lib/utils";
+import type { Notification, PaginatedNotifications } from "@/types";
 
 const FILTERS = [
   { value: "ALL", label: "All" },
@@ -25,6 +26,15 @@ const FILTERS = [
 
 const PAGE_SIZES = [10, 20, 50];
 
+/** Apply a change to every cached notification list variant at once. */
+function patchNotificationList(
+  current: unknown,
+  update: (list: PaginatedNotifications) => PaginatedNotifications,
+): unknown {
+  if (!current || typeof current !== "object" || !("items" in current)) return current;
+  return update(current as PaginatedNotifications);
+}
+
 export function NotificationsView() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = React.useState<string>("ALL");
@@ -32,8 +42,15 @@ export function NotificationsView() {
   const [pageSize, setPageSize] = React.useState(10);
   const [deleting, setDeleting] = React.useState<Notification | null>(null);
 
+  const listKey = queryKeys.notifications.list({ page, pageSize, filter });
+  const cacheKeys = React.useMemo(
+    () => [listKey, queryKeys.notifications.unreadCount(), queryKeys.notifications.popover()],
+    [listKey],
+  );
+  const invalidateKeys = React.useMemo(() => relatedKeys("notifications"), []);
+
   const query = useQuery({
-    queryKey: ["notifications", { page, pageSize, filter }],
+    queryKey: listKey,
     queryFn: () =>
       notificationsApi.list({
         page,
@@ -44,32 +61,63 @@ export function NotificationsView() {
 
   React.useEffect(() => setPage(1), [filter, pageSize]);
 
-  const invalidate = () =>
-    void queryClient.invalidateQueries({ queryKey: ["notifications"] });
-
-  const markRead = useMutation({
+  const markRead = useOptimisticMutation({
     mutationFn: (id: string) => notificationsApi.markRead(id),
-    onSuccess: invalidate,
-    onError: (error) => toast.error(getErrorMessage(error, "Could not mark the notification as read")),
+    optimisticKeys: cacheKeys,
+    applyOptimistic: (current, id) =>
+      patchNotificationList(current, (list) => ({
+        ...list,
+        items: list.items.map((item) =>
+          item.id === id ? { ...item, isRead: true } : item,
+        ),
+        unreadCount: Math.max(0, list.unreadCount - 1),
+      })),
+    invalidateKeys,
+    errorMessage: "Could not mark the notification as read",
+    toastOnSuccess: false,
   });
 
-  const markAll = useMutation({
+  const markAll = useOptimisticMutation({
     mutationFn: () => notificationsApi.markAllRead(),
-    onSuccess: (count) => {
-      toast.success(count > 0 ? `${count} notification${count === 1 ? "" : "s"} marked as read` : "You are all caught up");
-      invalidate();
-    },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not update notifications")),
+    optimisticKeys: cacheKeys,
+    applyOptimistic: (current) =>
+      patchNotificationList(current, (list) => ({
+        ...list,
+        items: list.items.map((item) => ({ ...item, isRead: true })),
+        unreadCount: 0,
+      })),
+    invalidateKeys,
+    successMessage: (count) =>
+      count > 0
+        ? `${count} notification${count === 1 ? "" : "s"} marked as read`
+        : "You are all caught up",
+    errorMessage: "Could not update notifications",
   });
 
-  const remove = useMutation({
+  const remove = useOptimisticMutation({
     mutationFn: (id: string) => notificationsApi.remove(id),
+    optimisticKeys: cacheKeys,
+    applyOptimistic: (current, id) =>
+      patchNotificationList(current, (list) => ({
+        ...list,
+        items: list.items.filter((item) => item.id !== id),
+        unreadCount: Math.max(
+          0,
+          list.unreadCount - (list.items.find((item) => item.id === id)?.isRead === false ? 1 : 0),
+        ),
+      })),
+    invalidateKeys,
+    successMessage: "Notification removed",
+    errorMessage: "Could not remove the notification",
     onSuccess: () => {
-      toast.success("Notification removed");
       setDeleting(null);
-      invalidate();
+      const cached = queryClient.getQueryData<PaginatedNotifications>(listKey);
+      if (cached) {
+        const total = Math.max(0, cached.meta.total - 1);
+        const safe = clampPage(page, total, pageSize);
+        if (safe !== page) setPage(safe);
+      }
     },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not remove the notification")),
   });
 
   const notifications = query.data?.items ?? [];

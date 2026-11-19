@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { AdminListCard } from "@/components/admin/shared/admin-list-card";
 import { AdminListHeader } from "@/components/admin/shared/admin-list-header";
@@ -25,8 +24,12 @@ import { Input } from "@/components/ui/input";
 import { SmartImage } from "@/components/ui/smart-image";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import {
+  clampPage,
+  useOptimisticMutation,
+} from "@/hooks/use-optimistic-mutation";
 import { brandsApi, categoriesApi } from "@/lib/api/services";
-import { getErrorMessage } from "@/lib/utils";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import type { Brand, Category } from "@/types";
 
 type Mode = "categories" | "brands";
@@ -47,8 +50,11 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
 
   React.useEffect(() => setPage(1), [mode, debounced, limit]);
 
+  const listKey = queryKeys.taxonomy.list(mode, debounced);
+  const invalidateKeys = React.useMemo(() => relatedKeys(mode), [mode]);
+
   const query = useQuery<Item[]>({
-    queryKey: [mode, debounced],
+    queryKey: listKey,
     queryFn: async (): Promise<Item[]> =>
       mode === "categories"
         ? categoriesApi.list(debounced.trim() || undefined)
@@ -56,58 +62,42 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
     staleTime: 60_000,
   });
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: [mode] });
-    void queryClient.invalidateQueries({ queryKey: ["categories"] });
-    void queryClient.invalidateQueries({ queryKey: ["brands"] });
-  };
-
-  const toggle = useMutation<
-    Category | Brand,
-    Error,
-    Item,
-    { previous?: Item[] }
-  >({
+  const toggle = useOptimisticMutation<Category | Brand, Error, Item>({
     mutationFn: (item: Item) =>
       mode === "categories"
         ? categoriesApi.updateStatus(item.id, !item.isActive)
         : brandsApi.updateStatus(item.id, !item.isActive),
-    onMutate: async (item) => {
-      setStatusPendingId(item.id);
-      const key = [mode, debounced] as const;
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<Item[]>(key);
-      queryClient.setQueryData<Item[]>(key, (current) =>
-        current?.map((entry) =>
-          entry.id === item.id ? { ...entry, isActive: !entry.isActive } : entry,
-        ),
-      );
-      return { previous };
-    },
-    onSuccess: (_result, item) => {
-      toast.success(item.isActive ? "Disabled" : "Enabled");
-    },
-    onError: (error, _item, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData([mode, debounced], context.previous);
-      }
-      toast.error(getErrorMessage(error, "Could not update the status"));
-    },
-    onSettled: () => {
-      setStatusPendingId(null);
-      invalidate();
-    },
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, item) =>
+      Array.isArray(current)
+        ? current.map((entry: Item) =>
+            entry.id === item.id ? { ...entry, isActive: !entry.isActive } : entry,
+          )
+        : current,
+    invalidateKeys,
+    successMessage: (_, item) => (item.isActive ? "Disabled" : "Enabled"),
+    errorMessage: "Could not update the status",
+    onMutate: (item) => setStatusPendingId(item.id),
+    onSettled: () => setStatusPendingId(null),
   });
 
-  const remove = useMutation({
+  const remove = useOptimisticMutation({
     mutationFn: (id: string) =>
       mode === "categories" ? categoriesApi.remove(id) : brandsApi.remove(id),
+    optimisticKeys: [listKey],
+    applyOptimistic: (current, id) =>
+      Array.isArray(current) ? current.filter((entry: Item) => entry.id !== id) : current,
+    invalidateKeys,
+    successMessage: "Deleted",
+    errorMessage: "Could not delete",
     onSuccess: () => {
-      toast.success("Deleted");
       setDeleting(null);
-      invalidate();
+      const cached = queryClient.getQueryData<unknown>(listKey);
+      if (Array.isArray(cached)) {
+        const safe = clampPage(page, Math.max(0, cached.length - 1), limit);
+        if (safe !== page) setPage(safe);
+      }
     },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not delete")),
   });
 
   const rows = query.data ?? [];
