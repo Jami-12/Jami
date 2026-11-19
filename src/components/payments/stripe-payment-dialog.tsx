@@ -104,7 +104,7 @@ function CardForm({
     <form onSubmit={submit} className="space-y-4">
       <PaymentElement />
       {error ? (
-        <p className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-300">
+        <p className="flex items-start gap-2 rounded-xl bg-danger-soft p-3 text-xs font-medium text-danger">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
@@ -145,6 +145,17 @@ export function StripePaymentDialog({
     [publishableKey],
   );
 
+  // Stripe Elements needs a concrete color, so resolve the active theme token.
+  const isDark = theme === "dark";
+  const primaryColor = React.useMemo(() => {
+    const fallback = isDark ? "#2dd4bf" : "#0d9488";
+    if (typeof window === "undefined") return fallback;
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue("--primary")
+      .trim();
+    return value || fallback;
+  }, [isDark]);
+
   return (
     <Dialog open={open} onClose={onClose} title={title} description={description} size="md">
       <Elements
@@ -155,7 +166,7 @@ export function StripePaymentDialog({
             theme: theme === "dark" ? "night" : "stripe",
             variables: {
               borderRadius: "12px",
-              colorPrimary: theme === "dark" ? "#dfc48e" : "#172B3A",
+              colorPrimary: primaryColor,
             },
           },
         }}

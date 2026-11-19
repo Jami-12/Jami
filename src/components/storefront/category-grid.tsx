@@ -28,7 +28,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow text-primary-500 dark:text-accent-300">
+          <p className="eyebrow text-primary-500 dark:text-primary">
             Shop by category
           </p>
           <h2
@@ -40,7 +40,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
         </div>
         <Link
           href="/products"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:underline dark:text-accent-300"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:underline dark:text-primary"
         >
           All pieces
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -67,7 +67,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <span className="absolute inset-0 bg-gradient-to-t from-[#252B2B]/92 via-[#252B2B]/35 to-[#252B2B]/5" />
+              <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
               <span className="relative mt-auto flex w-full items-end justify-between gap-3 p-5">
                 <span>
                   <span className="block font-display text-xl font-semibold tracking-tight text-white">
@@ -76,11 +76,11 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
                   <span className="mt-1 block max-w-[18rem] text-xs leading-relaxed text-white/75">
                     {blurb}
                   </span>
-                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#DFC48E]">
+                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-primary-200">
                     {category.productCount} piece{category.productCount === 1 ? "" : "s"}
                   </span>
                 </span>
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition group-hover:bg-accent-300 group-hover:text-[#172B3A]">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition group-hover:bg-primary group-hover:text-primary-foreground">
                   <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                 </span>
               </span>

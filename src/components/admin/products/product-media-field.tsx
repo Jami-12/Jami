@@ -89,7 +89,7 @@ export function ProductMediaField({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <p className="text-sm font-semibold">
-            Product images <span className="text-red-600">*</span>
+            Product images <span className="text-danger">*</span>
           </p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
             Select multiple photos straight from your device. The primary image
@@ -111,7 +111,7 @@ export function ProductMediaField({
         className={cn(
           "rounded-2xl border-2 border-dashed p-3 transition sm:p-4",
           dragging
-            ? "border-primary-400 bg-accent-100/50 dark:bg-accent-300/5"
+            ? "border-primary bg-primary/5"
             : "border-border bg-muted/20",
           disabled && "opacity-60",
         )}
@@ -179,9 +179,9 @@ export function ProductMediaField({
           )}
         >
           {uploading ? (
-            <Loader2 className="h-6 w-6 animate-spin text-primary-500" aria-hidden="true" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
           ) : (
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary-600 dark:text-accent-300">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary">
               <UploadCloud className="h-5 w-5" aria-hidden="true" />
             </span>
           )}
@@ -218,7 +218,7 @@ export function ProductMediaField({
             aria-valuenow={uploadProgress?.done ?? 0}
           >
             <div
-              className="h-full rounded-full bg-primary-600 transition-all duration-300 dark:bg-accent-300"
+              className="h-full rounded-full bg-primary transition-all duration-300"
               style={{
                 width: uploadProgress
                   ? `${Math.round((uploadProgress.done / Math.max(uploadProgress.total, 1)) * 100)}%`
@@ -230,7 +230,7 @@ export function ProductMediaField({
       </div>
 
       {error ? (
-        <p className="text-[11px] font-medium text-red-600" role="alert">
+        <p className="text-[11px] font-medium text-danger" role="alert">
           {error}
         </p>
       ) : (
@@ -275,10 +275,10 @@ function ImageTile({
           className={cn(
             "absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] backdrop-blur",
             primary
-              ? "bg-accent-300 text-[#172B3A]"
+              ? "bg-primary text-primary-foreground"
               : secondary
-                ? "bg-primary-600 text-white"
-                : "bg-[#252B2B]/70 text-white",
+                ? "bg-secondary text-secondary-foreground"
+                : "bg-foreground/70 text-background",
           )}
         >
           {primary || secondary ? (
@@ -287,7 +287,7 @@ function ImageTile({
           {label}
         </span>
         {badge ? (
-          <span className="absolute inset-x-1.5 bottom-1.5 rounded-full bg-[#252B2B]/70 px-1.5 py-0.5 text-center text-[9px] font-semibold text-white backdrop-blur">
+          <span className="absolute inset-x-1.5 bottom-1.5 rounded-full bg-foreground/70 px-1.5 py-0.5 text-center text-[9px] font-semibold text-background backdrop-blur">
             {badge}
           </span>
         ) : null}
@@ -322,7 +322,7 @@ function ImageTile({
           variant="ghost"
           size="icon"
           aria-label="Remove image"
-          className="h-7 w-7 text-muted-foreground hover:text-red-600"
+          className="h-7 w-7 text-muted-foreground hover:text-danger"
           disabled={disabled || !onRemove}
           onClick={onRemove}
         >

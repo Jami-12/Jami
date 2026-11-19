@@ -33,11 +33,11 @@ const CATEGORY_ICONS: LucideIcon[] = [
   Home,
 ];
 
-export function AllCategoriesSection({
-  categories,
-}: {
-  categories: Category[];
-}) {
+/**
+ * Centred all-categories showcase. This is the canonical implementation for
+ * the `showMiddleCategories` home section.
+ */
+export function MiddleCategories({ categories }: { categories: Category[] }) {
   if (categories.length === 0) return null;
 
   return (

@@ -1,6 +1,6 @@
-# Aether Storefront (`client`)
+# Store Storefront (`client`)
 
-A beginner-friendly guide to this Next.js application. This is the **frontend** for Aether/JAMI: a storefront, customer account area, admin console, and super-admin back office.
+A beginner-friendly guide to this Next.js application. This is the **frontend** for Store/JAMI: a storefront, customer account area, admin console, and super-admin back office.
 
 The client talks to the sibling Express + Prisma API (expected at `http://localhost:4000/api/v1`). Catalog, cart, orders, payments, addresses, users, banners, coupons, reviews, notifications, inventory, and accounting data are **live API data**. There is no mocked checkout and no fake authentication. The two intentional local-only exceptions are the newsletter form (local validation + simulated success) and editorial fallback artwork used when API data is empty.
 
@@ -24,7 +24,7 @@ pnpm dev
 
 Open <http://localhost:3000>.
 
-`.env` already exists with local defaults (`NEXT_PUBLIC_STORE_NAME=JAMI`, while `.env.example` uses `Aether`). Next.js loads `.env.local` with higher priority than `.env`, so copying the example to `.env.local` is the normal way to make local overrides without editing committed files.
+`.env` already exists with local defaults (`NEXT_PUBLIC_STORE_NAME=JAMI`, while `.env.example` uses `Store`). Next.js loads `.env.local` with higher priority than `.env`, so copying the example to `.env.local` is the normal way to make local overrides without editing committed files.
 
 ### Scripts
 
@@ -430,7 +430,7 @@ All admin routes are `noindex`. Route files are intentionally thin wrappers; beh
 | File | Purpose |
 | --- | --- |
 | `app-providers.tsx` | `QueryClientProvider` → `ThemeProvider` → `SessionSync` + `SoundProvider` + children + `ThemedToaster`; revalidates session and syncs cart/wishlist on load |
-| `theme-provider.tsx` | Active light/dark theme system, `aether-theme` localStorage key, `THEME_SCRIPT` to avoid flash |
+| `theme-provider.tsx` | Active light/dark theme system, `store-theme` localStorage key, `THEME_SCRIPT` to avoid flash |
 | `sound-provider.tsx` | Delegated pointer-down click sounds with reduced-motion and `data-sound-off` handling |
 
 #### `storefront/`
@@ -541,13 +541,13 @@ Empty/reserved component folders: `src/components/checkout/` and `src/components
 
 | File | localStorage key | Purpose |
 | --- | --- | --- |
-| `auth-store.ts` | `aether-auth` | Access/refresh tokens, user, session setters, `clearSession`, role helpers |
-| `cart-store.ts` | `aether-cart` | Guest cart lines; calls `cartApi` for signed-in customers; `syncFromServer` |
-| `wishlist-store.ts` | `aether-wishlist` | Persisted product IDs; server sync after auth; toggle/clear |
-| `recently-viewed-store.ts` | `aether-recently-viewed` | Persisted product ID history |
-| `ui-store.ts` | `aether-ui` | Search dialog, cart drawer, display currency |
-| `sound-store.ts` | `aether-sound` | UI sound enabled flag |
-| `theme-store.ts` | `aether-theme` | Legacy `light / dark / system` theme store; active UI uses `ThemeProvider` instead |
+| `auth-store.ts` | `store-auth` | Access/refresh tokens, user, session setters, `clearSession`, role helpers |
+| `cart-store.ts` | `store-cart` | Guest cart lines; calls `cartApi` for signed-in customers; `syncFromServer` |
+| `wishlist-store.ts` | `store-wishlist` | Persisted product IDs; server sync after auth; toggle/clear |
+| `recently-viewed-store.ts` | `store-recently-viewed` | Persisted product ID history |
+| `ui-store.ts` | `store-ui` | Search dialog, cart drawer, display currency |
+| `sound-store.ts` | `store-sound` | UI sound enabled flag |
+| `theme-store.ts` | `store-theme` | Legacy `light / dark / system` theme store; active UI uses `ThemeProvider` instead |
 
 `src/types/`
 
@@ -613,7 +613,7 @@ Empty/reserved component folders: `src/components/checkout/` and `src/components
 ### Cart
 
 - `CartView` reads `useCartStore.items`.
-- Guests get a local persisted cart in `aether-cart`; signed-in customers get server cart lines via `cartApi`.
+- Guests get a local persisted cart in `store-cart`; signed-in customers get server cart lines via `cartApi`.
 - Quantity changes, removals, and clear all go through the store, which branches on customer role.
 - `CartDrawer` is the header drawer version; it also shows progress toward `NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD`.
 - Checkout is customer-only; the cart page itself can be used by guests.
@@ -721,7 +721,7 @@ Only `NEXT_PUBLIC_*` values belong in this frontend. They are compiled into the 
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:4000/api/v1` | Axios `baseURL` and server-side catalog `fetch()` base |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Metadata base, canonical URLs, sitemap, auth redirects |
-| `NEXT_PUBLIC_STORE_NAME` | `Aether` (example) / `JAMI` (`.env`) | Storefront identity in constants |
+| `NEXT_PUBLIC_STORE_NAME` | `Store` (example) / `JAMI` (`.env`) | Storefront identity in constants |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | `support@example.com` | Footer, support links, forgot-password mailto |
 | `NEXT_PUBLIC_CONTACT_PHONE` | `+880 1000 000000` | Storefront contact details |
 | `NEXT_PUBLIC_STORE_ADDRESS` | `Dhaka, Bangladesh` | Storefront/footer copy |

@@ -42,7 +42,7 @@ export function AuthShell({
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(70%_55%_at_12%_10%,rgba(198,164,106,0.28),transparent_70%)]"
+          className="absolute inset-0 bg-[radial-gradient(70%_55%_at_12%_10%,color-mix(in_oklab,var(--accent)_28%,transparent),transparent_70%)]"
         />
 
         <div className="relative flex items-start justify-between gap-6">

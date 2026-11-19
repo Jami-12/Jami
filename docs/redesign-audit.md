@@ -1,4 +1,4 @@
-# Aether storefront redesign audit
+# Store storefront redesign audit
 
 > **Scope:** Next.js 16.4.5 / React 19.3.0 / Tailwind 4.3.4 client at `D:\E commerce Shop\client`.
 > **Reference image:** no MISTYPE screenshot was present in the session. The redesign follows the written design brief (Jost, grouped collapsible sidebar, soft active pills, round header icon buttons, notification popover, teal `#0F766E` primary + amber `#F59E0B` accent, airy neutral-green surfaces).
@@ -58,7 +58,7 @@ Loading states: `(storefront)/loading.tsx`, `products/loading.tsx`, `products/[s
 | File | Role |
 |---|---|
 | `src/components/providers/app-providers.tsx` | `QueryClientProvider` (staleTime 30s, gcTime 5m, retry 1, no refetch on focus) → `ThemeProvider` → `SiteSettingsProvider` → `SessionSync` → `SoundProvider` → children → `Toaster` |
-| `src/components/providers/theme-provider.tsx` | light/dark context, `aether-theme` localStorage, `THEME_SCRIPT` boot script, toggles `.dark` |
+| `src/components/providers/theme-provider.tsx` | light/dark context, `store-theme` localStorage, `THEME_SCRIPT` boot script, toggles `.dark` |
 | `src/components/providers/site-settings-provider.tsx` | seeds `["settings"]` from server, `refresh()` via `settingsApi.get` |
 | `src/components/dashboard/dashboard-layouts.tsx` | maps pathname to title/subtitle, picks Customer/Admin/Super shell |
 | `src/components/dashboard/shells.tsx` | `ShellFrame`, `CustomerShell`, `AdminShell`, `SuperAdminShell` (role guards) |
@@ -174,7 +174,7 @@ Recharts `PALETTE` must switch to `--chart-1..5`; chart grid to `--chart-grid`.
 - [x] Baseline typecheck/lint/build verified
 - [x] `globals.css` token system replaced (teal/amber, semantic statuses, tints, radii, transitions, reduced motion)
 - [x] Jost via `next/font/google`, system fallback, display alias
-- [x] Theme boot script/`aether-theme` verified
+- [x] Theme boot script/`store-theme` verified
 - [x] Grouped nav data added to `constants.ts`
 - [ ] Legacy `theme-store.ts` removed only after grep confirms unused
 - [ ] Foundation commit

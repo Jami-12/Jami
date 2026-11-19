@@ -49,7 +49,7 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="eyebrow text-primary-500 dark:text-accent-300">
+          <p className="eyebrow text-primary-500 dark:text-primary">
             Featured collections
           </p>
           <h2
@@ -65,7 +65,7 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
         </div>
         <Link
           href="/products"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:underline dark:text-accent-300"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:underline dark:text-primary"
         >
           All collections
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -92,10 +92,10 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
             />
             <span
               aria-hidden="true"
-              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,43,58,0.02)_30%,rgba(23,43,58,0.55)_72%,rgba(11,23,32,0.9)_100%)]"
+              className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent"
             />
             <div className="relative p-5 text-white sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#DFC48E]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary-200">
                 {item.label}
               </p>
               <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">

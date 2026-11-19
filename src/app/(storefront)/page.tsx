@@ -1,10 +1,10 @@
 import Script from "next/script";
 
 import {
-  AllCategoriesSection,
   BrandShowcase,
-  CategoryProductSection,
-  HeroSection,
+  CategorySections,
+  HeroBanner,
+  MiddleCategories,
   NewArrivals,
   NewsletterSection,
   ProductFinder,
@@ -95,7 +95,7 @@ export default async function HomePage() {
       />
 
       {isHomeSectionVisible(settings, "showHero") ? (
-        <HeroSection products={heroProducts} />
+        <HeroBanner products={heroProducts} />
       ) : null}
 
       {isHomeSectionVisible(settings, "showProductFinder") ? (
@@ -103,11 +103,11 @@ export default async function HomePage() {
       ) : null}
 
       {isHomeSectionVisible(settings, "showMiddleCategories") ? (
-        <AllCategoriesSection categories={categories} />
+        <MiddleCategories categories={categories} />
       ) : null}
 
       {sections.map((section, index) => (
-        <CategoryProductSection
+        <CategorySections
           key={section.id}
           title={section.categoryName}
           slug={section.categorySlug}

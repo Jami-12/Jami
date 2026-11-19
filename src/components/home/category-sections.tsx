@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { Product } from "@/types";
 
-export function CategoryProductSection({
+/**
+ * Settings-driven product row for a single category.
+ * This is the canonical implementation consumed by the home page.
+ */
+export function CategorySections({
   title,
   slug,
   description,

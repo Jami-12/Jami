@@ -8,7 +8,7 @@ export function JournalSection() {
     <section id="journal" aria-labelledby="journal-heading" className="container-page scroll-mt-24 py-14 sm:py-16">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-primary">
             <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
             The journal
           </p>
@@ -36,7 +36,7 @@ export function JournalSection() {
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary-800 backdrop-blur">
+              <span className="absolute left-3 top-3 rounded-full bg-card/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary backdrop-blur">
                 {post.category}
               </span>
             </div>
@@ -50,7 +50,7 @@ export function JournalSection() {
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {post.excerpt}
               </p>
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-accent-300">
+              <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary">
                 Read the note
                 <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </span>

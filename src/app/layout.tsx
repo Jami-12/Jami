@@ -7,7 +7,7 @@ import { AppProviders } from "@/components/providers/app-providers";
 import { THEME_SCRIPT } from "@/components/providers/theme-provider";
 import { SITE } from "@/lib/constants";
 import { getSiteSettings } from "@/services/catalog";
-import { Jost } from "next/font/google";
+import { Fraunces, Jost } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 const jost = Jost({
@@ -15,6 +15,13 @@ const jost = Jost({
   variable: "--font-sans",
   display: "swap",
   fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  fallback: ["Georgia", "serif"],
 });
 
 export const metadata: Metadata = {
@@ -79,8 +86,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f7f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c1311" },
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
   ],
 };
 
@@ -93,7 +100,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("font-sans", jost.variable)}
+      className={cn("font-sans", jost.variable, fraunces.variable)}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

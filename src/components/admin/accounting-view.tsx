@@ -105,11 +105,7 @@ const reportColumns: DataColumn<ReportPoint>[] = [
     header: "Net profit",
     cell: (point) => (
       <span
-        className={
-          point.netProfit >= 0
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-red-600 dark:text-red-400"
-        }
+        className={point.netProfit >= 0 ? "text-success" : "text-danger"}
       >
         <Price amount={point.netProfit} size="xs" />
       </span>
@@ -338,8 +334,8 @@ export function AccountingView() {
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="accounting-profit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -355,7 +351,7 @@ export function AccountingView() {
                     type="monotone"
                     dataKey="income"
                     name="Income"
-                    stroke="#C6A46A"
+                    stroke="var(--chart-1)"
                     strokeWidth={2}
                     fill="url(#accounting-profit)"
                   />
@@ -363,7 +359,7 @@ export function AccountingView() {
                     type="monotone"
                     dataKey="netProfit"
                     name="Net profit"
-                    stroke="#10b981"
+                    stroke="var(--chart-3)"
                     strokeWidth={2}
                     fill="transparent"
                   />
@@ -442,7 +438,7 @@ export function AccountingView() {
                       />
                       <YAxis type="category" dataKey="label" {...axisProps} width={104} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="total" fill="#8C6C3A" radius={[0, 6, 6, 0]} />
+                      <Bar dataKey="total" fill="var(--chart-4)" radius={[0, 6, 6, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

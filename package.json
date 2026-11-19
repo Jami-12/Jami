@@ -1,8 +1,8 @@
 {
-  "name": "aether-commerce",
+  "name": "store-commerce",
   "version": "1.0.0",
   "private": true,
-  "description": "Aether — a production-quality 3D commerce experience for design-led objects.",
+  "description": "Store — a modern commerce experience for design-led objects.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

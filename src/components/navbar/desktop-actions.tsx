@@ -46,7 +46,7 @@ export function DesktopActions({
         type="button"
         onClick={onSearchOpen}
         aria-label="Search products"
-        className={cn(iconButton, "md:hidden")}
+        className={iconButton}
       >
         <Search className="h-4 w-4" aria-hidden="true" />
       </button>

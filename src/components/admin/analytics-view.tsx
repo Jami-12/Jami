@@ -42,7 +42,13 @@ import { Tabs } from "@/components/ui/tabs";
 import { analyticsApi } from "@/lib/api/services";
 import { formatCompact, formatCurrency, formatDate, formatNumber, humanizeEnum } from "@/lib/utils";
 
-const PALETTE = ["#AC8A4F", "#244B50", "#C6A46A", "#3E6266", "#dfc48e", "#8C6C3A"];
+const PALETTE = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 const axisProps = {
   stroke: "var(--muted-foreground)",
@@ -174,8 +180,8 @@ export function AnalyticsView() {
               <AreaChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="revenue-fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C6A46A" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#C6A46A" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -192,7 +198,7 @@ export function AnalyticsView() {
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#AC8A4F"
+                  stroke="var(--chart-1)"
                   strokeWidth={2}
                   fill="url(#revenue-fill)"
                 />
@@ -241,7 +247,7 @@ export function AnalyticsView() {
                   />
                   <Bar
                     dataKey={monthlyMetric}
-                    fill={monthlyMetric === "revenue" ? "#244B50" : "#AC8A4F"}
+                    fill={monthlyMetric === "revenue" ? "var(--chart-1)" : "var(--chart-3)"}
                     radius={[6, 6, 0, 0]}
                   />
                 </BarChart>
@@ -304,7 +310,7 @@ export function AnalyticsView() {
                   <XAxis type="number" {...axisProps} allowDecimals={false} />
                   <YAxis type="category" dataKey="label" {...axisProps} width={82} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill="#AC8A4F" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="count" fill="var(--chart-3)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -26,7 +26,7 @@ export function BrandShowcase({ brands }: { brands: Brand[] }) {
         action={
           <Link
             href="/products"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary-700 hover:underline dark:text-accent-300"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline dark:text-accent-300"
           >
             View the full roster
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -56,21 +56,21 @@ export function BrandShowcase({ brands }: { brands: Brand[] }) {
                       className="object-contain p-3 transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <span className="font-display text-lg font-semibold tracking-[0.18em] text-primary-700 dark:text-accent-300">
+                    <span className="font-display text-lg font-semibold tracking-[0.18em] text-primary dark:text-accent-300">
                       {brand.name.slice(0, 2).toUpperCase()}
                     </span>
                   )}
                 </span>
                 <span className="flex flex-1 items-end justify-between gap-2">
                   <span>
-                    <span className="block text-sm font-semibold tracking-tight transition-colors group-hover:text-primary-700 dark:group-hover:text-accent-300">
+                    <span className="block text-sm font-semibold tracking-tight transition-colors group-hover:text-primary dark:group-hover:text-accent-300">
                       {brand.name}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">
                       {brand.productCount} piece{brand.productCount === 1 ? "" : "s"}
                     </span>
                   </span>
-                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition group-hover:border-accent-300 group-hover:bg-accent-300 group-hover:text-[#172B3A]">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
                     <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                 </span>

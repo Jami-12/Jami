@@ -29,7 +29,7 @@ function BannerCard({
       />
       <span
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,43,58,0.05)_25%,rgba(23,43,58,0.55)_70%,rgba(11,23,32,0.9)_100%)]"
+        className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent"
       />
       <div className="relative flex h-full flex-col justify-end p-5 text-white sm:p-6">
         <h3

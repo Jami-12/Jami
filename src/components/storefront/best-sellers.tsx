@@ -17,7 +17,7 @@ export function BestSellers({ products }: { products: Product[] }) {
     >
       <div className="container-page grid gap-8 py-14 sm:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <p className="eyebrow text-primary-500 dark:text-accent-300">
+          <p className="eyebrow text-primary-500 dark:text-primary">
             Best sellers
           </p>
           <h2
@@ -25,7 +25,7 @@ export function BestSellers({ products }: { products: Product[] }) {
             className="mt-2 font-display text-3xl font-semibold leading-tight tracking-[-0.02em] sm:text-4xl"
           >
             The pieces
-            <span className="block italic text-primary-600 dark:text-accent-300">
+            <span className="block italic text-primary-600 dark:text-primary">
               that keep selling out.
             </span>
           </h2>
@@ -35,7 +35,7 @@ export function BestSellers({ products }: { products: Product[] }) {
           </p>
           <Link
             href="/products?sort=popular"
-            className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:underline dark:text-accent-300"
+            className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:underline dark:text-primary"
           >
             Shop all bestsellers
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />

@@ -3,11 +3,11 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus_Jakarta_Sans } from "next/font/google";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 
 import { Brand } from "@/components/layout/brand";
 import { SearchDialog } from "@/components/layout/search-dialog";
+import { Button } from "@/components/ui/button";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -20,16 +20,9 @@ import { DesktopActions } from "./desktop-actions";
 import { MobileNav } from "./mobile-nav";
 import { FALLBACK_CATEGORIES, useNavCategories } from "./use-nav-categories";
 
-// Navbar font. Swap for any Google font you like.
-const navFont = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  display: "swap",
-});
-
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/products", label: "Shop" },
+  { href: "/products", label: "All Products" },
 ] as const;
 
 export function Navbar() {
@@ -50,7 +43,7 @@ export function Navbar() {
   const accountHref = isStaff ? "/admin" : "/account";
 
   const navCategories = useNavCategories();
-  const mobileCategories = navCategories.data?.length
+  const categoriesList = navCategories.data?.length
     ? navCategories.data
     : FALLBACK_CATEGORIES;
 
@@ -58,7 +51,7 @@ export function Navbar() {
   const wishlistCount = hydrated ? wishlistIds.length : 0;
 
   React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 10);
 
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -88,62 +81,76 @@ export function Navbar() {
     <>
       <header
         className={cn(
-          navFont.className,
-          "sticky top-0 z-40 w-full transition-colors duration-300",
-          scrolled
-            ? "border-b border-border bg-background/90 backdrop-blur-lg"
-            : "border-b border-transparent bg-background",
+          "sticky top-0 z-40 w-full border-b border-border/80 bg-background/90 backdrop-blur-md transition-all duration-300 not-italic",
+          scrolled && "bg-background/95 shadow-sm",
         )}
       >
         <div
           className={cn(
-            "container-page grid grid-cols-[1fr_auto_1fr] items-center gap-3 transition-[height] duration-300",
-            scrolled ? "h-14 lg:h-16" : "h-16 lg:h-20",
+            "container-page flex items-center justify-between gap-4 transition-[height] duration-300",
+            scrolled ? "h-15 lg:h-16" : "h-17 lg:h-20",
           )}
         >
-          {/* Left: menu button on mobile, links on desktop */}
-          <div className="flex items-center gap-1">
-            <button
+          {/* Left: Mobile Drawer Trigger + Brand Logo */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileNav(true)}
               aria-label="Open navigation menu"
               aria-expanded={mobileNavOpen}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-muted lg:hidden"
+              className="h-10 w-10 rounded-xl text-foreground hover:bg-muted lg:hidden"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
-            </button>
+            </Button>
 
-            <nav
-              aria-label="Main navigation"
-              className="hidden items-center gap-6 lg:flex"
-            >
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive(link.href) ? "page" : undefined}
-                  className={cn(
-                    "border-b-2 py-1 text-sm font-semibold transition-colors",
-                    isActive(link.href)
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <Brand
+              wordmarkClassName="text-base font-bold tracking-tight text-foreground not-italic"
+              className="shrink-0"
+            />
+          </div>
 
+          {/* Center: Desktop Nav Links & Categories Menu */}
+          <nav
+            aria-label="Main navigation"
+            className="hidden items-center gap-1 rounded-full border border-border/70 bg-muted/40 px-2 py-1 lg:flex"
+          >
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={cn(
+                  "rounded-full px-4 py-1.5 text-sm font-medium not-italic transition-all",
+                  isActive(link.href)
+                    ? "bg-primary text-primary-foreground shadow-2xs"
+                    : "text-muted-foreground hover:bg-background hover:text-foreground",
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <div className="px-1">
               <CategoriesMenu />
-            </nav>
-          </div>
+            </div>
+          </nav>
 
-          {/* Center: logo */}
-          <div className="flex justify-center">
-            <Brand wordmarkClassName="hidden sm:flex" className="shrink-0" />
-          </div>
-
-          {/* Right: one search + actions */}
-          <div className="flex items-center justify-end gap-2 lg:gap-3">
+          {/* Right: Compact Search Pill + Actions */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search catalog"
+              className="hidden h-10 items-center gap-2.5 rounded-full border border-border bg-card px-3.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground xl:flex"
+            >
+              <Search className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              <span>Search items...</span>
+              <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground">
+                Ctrl K
+              </kbd>
+            </button>
 
             <DesktopActions
               isStaff={isStaff}
@@ -155,12 +162,29 @@ export function Navbar() {
             />
           </div>
         </div>
+
+        {/* Clean Quick Category Strip on Desktop */}
+        {categoriesList.length > 0 ? (
+          <div className="hidden border-t border-border/50 bg-muted/20 lg:block">
+            <div className="container-page flex h-9 items-center gap-5 overflow-x-auto text-xs not-italic">
+              {categoriesList.slice(0, 8).map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/products?category=${encodeURIComponent(category.slug)}`}
+                  className="shrink-0 font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </header>
 
       <MobileNav
         open={mobileNavOpen}
         onClose={() => setMobileNav(false)}
-        categories={mobileCategories}
+        categories={categoriesList}
         isStaff={isStaff}
         accountHref={accountHref}
         wishlistCount={wishlistCount}

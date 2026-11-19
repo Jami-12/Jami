@@ -46,7 +46,7 @@ export function Brand({
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
-    .join("") || "A";
+    .join("") || "S";
 
   return (
     <Link
