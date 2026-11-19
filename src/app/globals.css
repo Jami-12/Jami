@@ -145,6 +145,7 @@
   --surface-foreground: #14201b;
   --glass: rgb(255 255 255 / 0.86);
   --glass-border: rgb(227 232 228 / 0.9);
+  --overlay: rgb(12 19 17 / 0.6);
   --chart-grid: #e3e8e4;
   --header-height: 4.75rem;
 
@@ -201,6 +202,7 @@
   --surface-foreground: #e8f0ec;
   --glass: rgb(19 28 25 / 0.86);
   --glass-border: rgb(45 212 191 / 0.14);
+  --overlay: rgb(0 0 0 / 0.72);
   --chart-grid: #22302b;
 
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.32),

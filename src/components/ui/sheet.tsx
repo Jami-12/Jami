@@ -36,7 +36,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-[var(--color-primary-950)]/65 backdrop-blur-sm",
+        "fixed inset-0 z-50 bg-[var(--overlay)] backdrop-blur-sm",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
         "data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className,
@@ -82,7 +82,7 @@ function SheetContent({
         {showCloseButton ? (
           <SheetPrimitive.Close
             className={cn(
-              "absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl text-[var(--muted-foreground)] transition-colors",
+              "absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full text-[var(--muted-foreground)] transition-colors duration-200",
               "hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]",
               "disabled:pointer-events-none disabled:opacity-50 data-[state=open]:bg-[var(--muted)]",
