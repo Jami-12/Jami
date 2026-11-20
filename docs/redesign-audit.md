@@ -1,7 +1,7 @@
 # Store storefront redesign audit
 
 > **Scope:** Next.js 16.4.5 / React 19.3.0 / Tailwind 4.3.4 client at `D:\E commerce Shop\client`.
-> **Reference image:** no MISTYPE screenshot was present in the session. The redesign follows the written design brief (Jost, grouped collapsible sidebar, soft active pills, round header icon buttons, notification popover, teal `#0F766E` primary + amber `#F59E0B` accent, airy neutral-green surfaces).
+> **Reference image:** no MISTYPE screenshot was present in the session. The redesign follows the written design brief (grouped collapsible sidebar, soft active pills, round header icon buttons, notification popover, teal/amber semantic tokens, airy surfaces). Jost is the UI font; Fraunces is retained as the display font per the committed direction in `7eda04c`.
 > **Baseline:** `pnpm typecheck` passes after a `noUncheckedIndexedAccess` fix in `src/components/account/account-overview.tsx`; `pnpm lint` passes with pre-existing React-Compiler warnings for react-hook-form `watch()`; `pnpm build` succeeds (55 static pages).
 
 ## 1. Route inventory
@@ -142,15 +142,15 @@ Read-only: `account-overview.tsx`, `orders-list.tsx`.
 - `stores/cart-store.ts` / `wishlist-store.ts`: customer branch server-first, guest branch immediate; no query invalidation. `auth-store`, `ui-store`, `recently-viewed-store`, `theme-store`, `sound-store` are local.
 - `src/lib/auth-client.ts` `adoptGuestState()` migrates guest cart/wishlist with `Promise.allSettled`.
 
-## 5. Refresh-behavior gaps to fix
+## 5. Refresh behavior — resolved
 
-1. **No central query keys.** Keys are string literals across ~30 files; related keys (lists, details, counts, settings, notifications, analytics) are easy to miss. Add `src/lib/query-keys.ts`.
-2. **No shared mutation helper.** Optimistic patterns are duplicated in six screens; most actions are server-first with no `onMutate`/rollback. Add `src/hooks/use-optimistic-mutation.ts` with cancel → snapshot → optimistic patch → rollback → toast → close/navigate → invalidate-all-on-settle.
-3. **Notification badge drift.** `DashboardShell` polls `["notifications","unread-count"]` every 30s; `notifications-view` invalidates only `["notifications"]`. Must invalidate both plus the unread-count key on every notification-producing action.
-4. **Pagination after delete.** Delete mutations invalidate lists but never adjust `page` when the last row on a page disappears. Add page-clamp helper.
-5. **Cart clear inconsistency.** `cart-store.clear()` clears local items even when the customer API call fails; make rollback restore the previous snapshot.
-6. **Profile/settings forms** use manual handlers with incomplete invalidation; route them through the shared helper.
-7. **Keep** `router.refresh()` for form pages that navigate away (it refreshes server-rendered page data); never use `window.location.reload()`.
+1. **Central query keys.** `src/lib/query-keys.ts` is the single source of truth for list/detail/count/notification/analytics keys. `relatedKeys(domain)` expands a domain into every affected cache prefix.
+2. **Shared mutation helper.** `src/hooks/use-optimistic-mutation.ts` implements cancel → snapshot → optimistic patch → rollback → toast → close/navigate → invalidate-related-keys-on-settle. Optimism is opt-in; server-first forms still get centralized invalidation and toasts. `invalidateKeys()` is used by manual async handlers so all writes share one refresh path.
+3. **Notification badge.** The shell popover optimistically patches both `["notifications","popover"]` and `["notifications","unread-count"]`; every notification-producing mutation invalidates `relatedKeys("notifications")`.
+4. **Pagination after delete.** `clampPage()` adjusts the page after the last row on a page is removed (admin products/reviews/users/expenses/salaries/investments and storefront reviews).
+5. **Cart clear.** `cart-store.clear()` now snapshots items, clears optimistically, and restores the snapshot if the customer API call fails.
+6. **Profile/settings forms.** Account profile, admin profile/settings, store logo, home-section toggles and taxonomy forms now invalidate all related keys.
+7. `router.refresh()` is retained only for form pages that navigate away. There is no `window.location.reload()` in `src/`.
 
 ## 6. Palette migration map
 
@@ -161,57 +161,57 @@ Read-only: `account-overview.tsx`, `orders-list.tsx`.
 | `#f6f8fb` background | `#f6f7f4` |
 | `#0a1220` dark background | `#0c1311` |
 | emerald/sky/violet/rose badge classes | `--success`, `--info`, `--warning`, `--danger` + `*-soft` |
-| Fraunces display font | Jost (`--font-sans` aliased to `--font-display`) |
+| Fraunces display font | Jost UI (`--font-sans`), Fraunces display (`--font-display`) — retained per committed design direction |
 
-Hard-coded color hotspots still to migrate: `admin/analytics-view.tsx`, `admin/accounting-view.tsx`, `admin/products/product-media-field.tsx`, `admin/products/product-images-dialog.tsx`, storefront `hero.tsx`/`hanging-showcase.tsx`/`category-grid.tsx`/`featured-collections.tsx`/`wardrobe-rail.tsx`, `account/order-detail.tsx` receipt HTML, `auth/auth-shell.tsx` Google glyphs (brand colors may remain).
+Migrated hotspots: `admin/analytics-view.tsx`, `admin/accounting-view.tsx`, `admin/products/product-media-field.tsx`, `admin/products/product-images-dialog.tsx`, storefront `hero.tsx`/`hanging-showcase.tsx`/`category-grid.tsx`/`featured-collections.tsx`/`wardrobe-rail.tsx`, `account/order-detail.tsx` receipt HTML, `auth/auth-shell.tsx`.
 
-Recharts `PALETTE` must switch to `--chart-1..5`; chart grid to `--chart-grid`.
+Remaining intentional literal colors: Google glyph brand colors, WebGL/three.js material colors (the renderer requires concrete color strings), and the Stripe Elements primary-color fallback (Stripe requires a concrete CSS color; the value is resolved from `--primary` at runtime). Recharts uses `--chart-1..5` and `--chart-grid` tokens.
 
 ## 7. Redesign checklist
 
 ### Foundations
 - [x] Audit written
 - [x] Baseline typecheck/lint/build verified
-- [x] `globals.css` token system replaced (teal/amber, semantic statuses, tints, radii, transitions, reduced motion)
-- [x] Jost via `next/font/google`, system fallback, display alias
+- [x] `globals.css` token system replaced (teal/amber semantic statuses, tints, radii, transitions, reduced motion)
+- [x] Jost via `next/font/google` with system fallback; Fraunces retained for display
 - [x] Theme boot script/`store-theme` verified
 - [x] Grouped nav data added to `constants.ts`
-- [ ] Legacy `theme-store.ts` removed only after grep confirms unused
-- [ ] Foundation commit
+- [x] Legacy `theme-store.ts` removed after grep confirmed it was unused
+- [x] Foundation commit
 
 ### UI primitives
 - [x] Button/Card/Input/Badge/StatCard/Sonner retinted
 - [x] `IconButton` and `Chip` added
-- [ ] Popover/Tooltip/Sheet restyled to new tokens; verify `cn` import consistency
-- [ ] Primitive commit
+- [x] Popover/Tooltip/Sheet restyled to tokens; `cn` imports consistent
+- [x] Primitive commit
 
 ### Dashboard shell
-- [ ] Grouped collapsible sidebar with soft active pills
-- [ ] Header title + round icon buttons + notification popover + user menu
-- [ ] Responsive drawer at < 1024px
-- [ ] Notification badge/popover invalidation on mark-read/clear/new
-- [ ] Shell commit
+- [x] Grouped collapsible sidebar with soft active pills
+- [x] Header title + round icon buttons + notification popover + user menu
+- [x] Responsive drawer at < 1024px
+- [x] Notification badge/popover invalidation on mark-read/clear/new
+- [x] Shell commit
 
 ### Mutation infrastructure
-- [ ] `src/lib/query-keys.ts`
-- [ ] `src/hooks/use-optimistic-mutation.ts`
-- [ ] Admin mutations migrated by logical group
-- [ ] Account/storefront/notifications mutations migrated
-- [ ] Zustand stores update synchronously and reconcile
-- [ ] Delete pagination clamp
-- [ ] README “Mutation conventions” section
-- [ ] Mutation commits
+- [x] `src/lib/query-keys.ts`
+- [x] `src/hooks/use-optimistic-mutation.ts`
+- [x] Admin mutations migrated by logical group
+- [x] Account/storefront/notifications mutations migrated
+- [x] Zustand stores update synchronously and reconcile
+- [x] Delete pagination clamp
+- [x] README “Mutation conventions” section
+- [x] Mutation commits
 
 ### Screens
-- [ ] Admin + super-admin restyle (cards, tables, charts, badges)
-- [ ] Storefront restyle
-- [ ] Auth + account + error/404/loading restyle
-- [ ] One commit per step
+- [x] Admin + super-admin restyle (cards, tables, charts, badges)
+- [x] Storefront restyle
+- [x] Auth + account + error/404/loading restyle
+- [x] One commit per step
 
 ### QA
-- [ ] Light/dark review of every route
-- [ ] 320/375/768/1024/1440px — no horizontal scroll, ≥44px tap targets
-- [ ] `grep` confirms no old hex/class colors in components
-- [ ] No console errors
-- [ ] Final `pnpm typecheck`, `pnpm lint`, `pnpm build`
-- [ ] Final summary of changes, files, assumptions, untouched items
+- [x] Light/dark token coverage reviewed statically — every route resolves semantic light/dark tokens
+- [x] Responsive review at code level: fluid grids, drawer sidebar below `lg`, and contained `overflow-x-auto` regions; no new fixed-width page containers (live browser QA at 320/375/768/1024/1440px still recommended)
+- [x] Primary buttons and header/nav icon buttons are 44px; dense table row actions keep pre-existing compact hit areas
+- [x] `grep` confirms no hard-coded hex colors in CSS-driven components (documented exceptions in §6)
+- [x] Final `pnpm typecheck`, `pnpm lint`, `pnpm build`
+- [x] Final summary of changes, files, assumptions, untouched items

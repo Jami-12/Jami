@@ -45,7 +45,7 @@ export function TiltCard({
     stiffness: 200,
     damping: 30,
   });
-  const background = useMotionTemplate`radial-gradient(300px circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.35), transparent 62%)`;
+  const background = useMotionTemplate`radial-gradient(300px circle at ${glareX}% ${glareY}%, color-mix(in oklab, var(--color-primary-50) 35%, transparent), transparent 62%)`;
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (disabled || event.pointerType === "touch") return;

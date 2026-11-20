@@ -12,11 +12,11 @@ export function NewsletterSection() {
       <div className="surface-card relative overflow-hidden px-6 py-12 sm:px-10 sm:py-14">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgb(45_212_191_/_0.22),transparent_70%)]"
+          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_70%)]"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgb(13_148_136_/_0.14),transparent_70%)]"
+          className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_70%)]"
         />
         <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
