@@ -134,7 +134,7 @@ export function ProductFilters({
                 setParam("q", null);
               }}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              className="absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-none text-muted-foreground transition hover:bg-muted hover:text-foreground"
             >
               <X className="h-3 w-3" aria-hidden="true" />
             </button>
@@ -158,14 +158,14 @@ export function ProductFilters({
                 aria-pressed={active}
                 title={colour.name}
                 className={cn(
-                  "inline-flex h-9 w-9 items-center justify-center rounded-full border-2 transition",
+                  "inline-flex h-9 w-9 items-center justify-center border-2 transition-colors",
                   active
-                    ? "border-primary-700 dark:border-accent-300"
-                    : "border-transparent hover:border-border",
+                    ? "border-foreground"
+                    : "border-border hover:border-foreground",
                 )}
               >
                 <span
-                  className="h-6 w-6 rounded-full border border-black/10 shadow-sm"
+                  className="h-6 w-6 border border-foreground/20"
                   style={{ backgroundColor: colour.hex }}
                 />
               </button>
@@ -272,7 +272,12 @@ export function ProductFilters({
               className="h-10"
             />
           </div>
-          <Button type="submit" size="sm" variant="subtle" className="h-10">
+          <Button
+            type="submit"
+            size="sm"
+            variant="subtle"
+            className="h-10 border border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
+          >
             Apply
           </Button>
         </form>
@@ -291,7 +296,7 @@ export function ProductFilters({
               checked={current.rating === String(rating)}
               onChange={() =>
                 setParam(
-                  "rating",
+ "rating",
                   current.rating === String(rating) ? null : String(rating),
                 )
               }
@@ -334,17 +339,17 @@ export function ProductFilters({
   return (
     <div className="grid gap-6 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:items-start">
       <aside className="hidden lg:sticky lg:top-24 lg:block">
-        <Card className="p-5 shadow-soft">
+        <Card className="p-5">
           <div className="mb-5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SlidersHorizontal
-                className="h-4 w-4 text-primary-600 dark:text-accent-300"
+                className="h-4 w-4 text-foreground"
                 aria-hidden="true"
               />
               <h2 className="text-sm font-bold">Refine</h2>
             </div>
             {activeCount > 0 ? (
-              <Badge tone="accent" className="text-[10px]">
+              <Badge tone="accent" className="border border-border bg-background text-[10px] text-foreground ring-0">
                 {activeCount}
               </Badge>
             ) : null}
@@ -366,7 +371,7 @@ export function ProductFilters({
             <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
             Filters
             {activeCount > 0 ? (
-              <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-800 px-1 text-[10px] font-bold text-primary-50 dark:bg-accent-300 dark:text-primary-950">
+              <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center border border-foreground bg-foreground px-1 text-[10px] font-bold text-background">
                 {activeCount}
               </span>
             ) : null}
@@ -378,7 +383,7 @@ export function ProductFilters({
               value={current.sort}
               onChange={(event) =>
                 setParam(
-                  "sort",
+ "sort",
                   event.target.value === "featured" ? null : event.target.value,
                 )
               }
@@ -456,17 +461,17 @@ function FilterRadio({
   onChange: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition hover:bg-muted">
+    <label className="flex cursor-pointer items-center gap-2.5 border border-transparent px-2 py-2 text-sm transition-colors hover:border-border hover:bg-muted">
       <input
         type="radio"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 accent-[var(--color-primary-700)]"
+        className="h-4 w-4 shrink-0 appearance-none border border-border bg-background checked:border-foreground checked:bg-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
       />
       <span
         className={cn(
-          "flex-1",
+ "flex-1",
           checked ? "font-semibold text-foreground" : "text-muted-foreground",
         )}
       >
@@ -491,13 +496,13 @@ function Toggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-sm transition hover:bg-muted">
+    <label className="flex cursor-pointer items-center justify-between border border-transparent px-2 py-2 text-sm transition-colors hover:border-border hover:bg-muted">
       <span className="text-muted-foreground">{label}</span>
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 accent-[var(--color-primary-700)]"
+        className="h-4 w-4 shrink-0 appearance-none border border-border bg-background checked:border-foreground checked:bg-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
       />
     </label>
   );

@@ -53,18 +53,21 @@ export function Brand({
       href={href}
       onClick={onClick}
       className={cn(
-        "group inline-flex min-w-0 items-center gap-2.5 rounded-xl outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:opacity-90",
+        "group inline-flex min-w-0 items-center gap-3 rounded-none not-italic outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
       aria-label={`${name} home`}
     >
       <span
         className={cn(
-          "relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border shadow-soft transition-transform duration-300 group-hover:-rotate-3",
+          "relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-none border",
           inverse
-            ? "border-white/25 bg-white/10"
-            : "border-accent-300/50 bg-gradient-to-br from-primary-800 via-primary-700 to-accent-600 dark:border-accent-400/40 dark:from-accent-600 dark:via-primary-700 dark:to-primary-900",
-          logoUrl && (inverse ? "bg-white/15" : "bg-card"),
+            ? "border-white bg-white text-black"
+            : "border-foreground bg-foreground text-background",
+          logoUrl &&
+            (inverse
+              ? "border-white bg-white text-black"
+              : "border-border bg-card text-foreground"),
         )}
       >
         {logoUrl ? (
@@ -78,10 +81,7 @@ export function Brand({
           />
         ) : (
           <span
-            className={cn(
-              "font-display text-sm font-semibold tracking-tight",
-              inverse ? "text-white" : "text-white dark:text-accent-100",
-            )}
+            className="font-display text-sm font-bold uppercase tracking-[0.12em] not-italic"
             aria-hidden="true"
           >
             {initials}
@@ -90,23 +90,14 @@ export function Brand({
       </span>
 
       {showWordmark ? (
-        <span className={cn("flex min-w-0 flex-col leading-none", wordmarkClassName)}>
-          <span
-            className={cn(
-              "truncate font-display text-[1.05rem] font-semibold uppercase leading-tight tracking-[0.16em] sm:tracking-[0.22em]",
-              inverse ? "text-white" : "text-foreground",
-            )}
-          >
-            {name}
-          </span>
-          <span
-            className={cn(
-              "mt-1 text-[9px] font-semibold uppercase tracking-[0.28em]",
-              inverse ? "text-white/65" : "text-muted-foreground",
-            )}
-          >
-            considered living
-          </span>
+        <span
+          className={cn(
+            "min-w-0 truncate font-display text-[1.05rem] font-bold uppercase leading-none tracking-[0.18em] not-italic sm:tracking-[0.24em]",
+            inverse ? "text-white" : "text-foreground",
+            wordmarkClassName,
+          )}
+        >
+          {name}
         </span>
       ) : null}
     </Link>

@@ -38,11 +38,11 @@ export function AdminListCard<T>({
   pagination?: ReactNode;
 }) {
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <Card className="min-w-0 overflow-hidden bg-card transition-colors hover:border-foreground">
+      <CardHeader className="gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <CardTitle className="font-display text-base font-semibold tracking-tight">
+            <CardTitle className="font-display text-base font-semibold not-italic tracking-tight">
               {title}
             </CardTitle>
             {count !== undefined ? (
@@ -70,7 +70,7 @@ export function AdminListCard<T>({
       </CardContent>
 
       {pagination ? (
-        <CardFooter className="block border-t border-border bg-muted/20 p-4 sm:p-5">
+        <CardFooter className="block min-w-0 border-t border-border bg-muted p-4 sm:p-5">
           {pagination}
         </CardFooter>
       ) : null}

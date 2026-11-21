@@ -56,7 +56,7 @@ function Hanger({ className }: { className?: string }) {
         stroke="currentColor"
         strokeWidth="3.2"
         strokeLinecap="round"
-        className="text-muted-foreground dark:text-primary"
+        className="text-muted-foreground"
       />
       <path
         d="M90 37 16 67h148L90 37Z"
@@ -96,18 +96,9 @@ export function HangingShowcase({ products }: { products: Product[] }) {
       aria-labelledby="showcase-heading"
       className="relative overflow-hidden border-b border-border/70 bg-background text-foreground"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_78%_-10%,color-mix(in_srgb,var(--card)_92%,transparent),transparent_64%)] dark:bg-[radial-gradient(70%_60%_at_78%_-10%,color-mix(in_srgb,var(--primary)_12%,transparent),transparent_64%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(to_right,var(--primary)_1px,transparent_1px)] [background-size:96px_100%] dark:opacity-[0.06]"
-      />
-
       <div className="container-page relative grid gap-10 py-12 sm:py-16 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:gap-14 lg:py-20">
         <div className="relative z-10 max-w-xl">
-          <p className="eyebrow inline-flex items-center gap-2 text-primary">
+          <p className="eyebrow inline-flex items-center gap-2 text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             The autumn / winter edit
           </p>
@@ -117,7 +108,7 @@ export function HangingShowcase({ products }: { products: Product[] }) {
             className="mt-5 font-display text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.03em] sm:text-6xl lg:text-[4.4rem]"
           >
             Considered
-            <span className="block italic text-primary">
+            <span className="block not-italic text-foreground">
               from the hanger
             </span>
             outward.
@@ -130,7 +121,7 @@ export function HangingShowcase({ products }: { products: Product[] }) {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button asChild size="lg" className="border border-foreground hover:bg-foreground hover:text-background">
               <Link href="/products">
                 Shop the collection
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -140,7 +131,7 @@ export function HangingShowcase({ products }: { products: Product[] }) {
               asChild
               variant="outline"
               size="lg"
-              className="border-border bg-transparent text-foreground hover:bg-muted"
+              className="border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
             >
               <Link href="/#collections">View lookbook</Link>
             </Button>
@@ -165,10 +156,10 @@ export function HangingShowcase({ products }: { products: Product[] }) {
         <div className="relative min-w-0">
           <div
             aria-hidden="true"
-            className="rail-line absolute inset-x-0 top-[3.4rem] z-20 h-[6px] rounded-full sm:top-[4.1rem]"
+            className="rail-line absolute inset-x-0 top-[3.4rem] z-20 h-px rounded-none sm:top-[4.1rem]"
           >
-            <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-primary/40 bg-[linear-gradient(135deg,var(--card),var(--primary))]" />
-            <span className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-primary/40 bg-[linear-gradient(135deg,var(--card),var(--primary))]" />
+            <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-none border border-foreground bg-background" />
+            <span className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-none border border-foreground bg-background" />
           </div>
 
           <div className="hide-scrollbar -mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:gap-6 sm:px-0 lg:grid lg:grid-cols-3 lg:overflow-visible">
@@ -187,16 +178,16 @@ export function HangingShowcase({ products }: { products: Product[] }) {
                   onPointerEnter={() => setActive(index)}
                   onPointerLeave={() => setActive(null)}
                   className={cn(
-                    "group relative w-[72vw] max-w-[19rem] shrink-0 snap-center sm:w-[15rem] lg:w-auto lg:max-w-none",
+ "group relative w-[72vw] max-w-[19rem] shrink-0 snap-center sm:w-[15rem] lg:w-auto lg:max-w-none",
                     index === 1 && "lg:mt-8",
                     index === 2 && "lg:mt-16",
                   )}
                 >
                   <span
                     aria-hidden="true"
-                    className="absolute left-1/2 top-[3.4rem] z-10 h-[3.2rem] w-px -translate-x-1/2 bg-[linear-gradient(180deg,var(--muted-foreground),transparent)] sm:top-[4.1rem]"
+                    className="absolute left-1/2 top-[3.4rem] z-10 h-[3.2rem] w-px -translate-x-1/2 bg-foreground/40 sm:top-[4.1rem]"
                   />
-                  <Hanger className="pointer-events-none absolute left-1/2 top-[3.9rem] z-20 h-[74px] w-[168px] -translate-x-1/2 drop-shadow-md sm:top-[4.6rem]" />
+                  <Hanger className="pointer-events-none absolute left-1/2 top-[3.9rem] z-20 h-[74px] w-[168px] -translate-x-1/2 drop-shadow-none sm:top-[4.6rem]" />
 
                   <motion.div
                     animate={
@@ -210,7 +201,7 @@ export function HangingShowcase({ products }: { products: Product[] }) {
                     <Link
                       href={item.href}
                       aria-label={item.product ? `View ${item.name}` : "Browse the collection"}
-                      className="relative block aspect-[3/4] overflow-hidden bg-muted shadow-soft outline-none transition-shadow duration-500 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background group-hover:shadow-lift"
+                      className="relative block aspect-[3/4] overflow-hidden rounded-none border border-border bg-muted outline-none transition-colors duration-500 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:border-foreground"
                     >
                       <SmartImage
                         src={item.primary}
@@ -219,7 +210,7 @@ export function HangingShowcase({ products }: { products: Product[] }) {
                         priority={index < 2}
                         sizes="(max-width: 640px) 72vw, (max-width: 1024px) 15rem, 19rem"
                         className={cn(
-                          "object-cover transition-all duration-700 ease-out",
+ "object-cover transition-all duration-700 ease-out",
                           item.secondary && "group-hover:opacity-0",
                         )}
                       />
@@ -232,10 +223,6 @@ export function HangingShowcase({ products }: { products: Product[] }) {
                           className="object-cover opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.03] group-hover:opacity-100"
                         />
                       ) : null}
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-black/20 mix-blend-multiply"
-                      />
                     </Link>
 
                     <div className="mt-4 flex items-start justify-between gap-3">

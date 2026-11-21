@@ -137,9 +137,9 @@ export function AddressBook() {
     >
       {query.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <Skeleton className="h-44 w-full rounded-2xl" />
-          <Skeleton className="h-44 w-full rounded-2xl" />
-          <Skeleton className="hidden h-44 w-full rounded-2xl xl:block" />
+          <Skeleton className="h-44 w-full rounded-none" />
+          <Skeleton className="h-44 w-full rounded-none" />
+          <Skeleton className="hidden h-44 w-full rounded-none xl:block" />
         </div>
       ) : addresses.length === 0 ? (
         <EmptyState
@@ -198,7 +198,7 @@ export function AddressBook() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-auto text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+                  className="ml-auto text-muted-foreground transition hover:bg-muted hover:text-foreground"
                   onClick={() => setDeleting(address)}
                 >
                   <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

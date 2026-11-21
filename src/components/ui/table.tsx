@@ -11,7 +11,7 @@ const Table = React.forwardRef<
       <table
         ref={ref}
         className={cn(
-          "w-full min-w-full caption-bottom border-collapse text-sm text-[var(--foreground)]",
+ "w-full min-w-full caption-bottom border-collapse text-sm text-[var(--foreground)]",
           className,
         )}
         {...props}
@@ -54,7 +54,7 @@ const TableFooter = React.forwardRef<
     <tfoot
       ref={ref}
       className={cn(
-        "border-t border-[var(--border)] bg-[var(--muted)]/60 font-medium [&>tr]:last:border-b-0",
+ "border-t border-[var(--border)] bg-[var(--muted)]/60 font-medium [&>tr]:last:border-b-0",
         className,
       )}
       {...props}
@@ -70,9 +70,9 @@ const TableRow = React.forwardRef<
     <tr
       ref={ref}
       className={cn(
-        "border-b border-[var(--border)] transition-colors hover:bg-[var(--muted)]/50",
-        "data-[state=selected]:bg-[var(--muted)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
+ "border-b border-[var(--border)] transition-colors hover:bg-[var(--muted)]/50",
+ "data-[state=selected]:bg-[var(--muted)]",
+ "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
         className,
       )}
       {...props}
@@ -88,7 +88,7 @@ const TableHead = React.forwardRef<
     <th
       ref={ref}
       className={cn(
-        "h-11 whitespace-nowrap px-4 text-left align-middle text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]",
+ "h-11 whitespace-nowrap px-4 text-left align-middle text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--muted-foreground)]",
         className,
       )}
       {...props}

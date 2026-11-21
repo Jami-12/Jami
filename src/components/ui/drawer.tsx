@@ -44,7 +44,7 @@ export function Drawer({
           <motion.button
             type="button"
             aria-label="Close panel"
-            className="absolute inset-0 bg-[var(--color-primary-950)]/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-[var(--overlay)]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -64,7 +64,7 @@ export function Drawer({
             exit={{ x: side === "right" ? "100%" : "-100%" }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              "absolute inset-y-0 flex w-full max-w-[27rem] flex-col border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-lift)]",
+ "absolute inset-y-0 flex w-full max-w-[27rem] flex-col border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-none",
               side === "right" ? "right-0 border-l" : "left-0 border-r",
               className,
             )}
@@ -87,7 +87,7 @@ export function Drawer({
                 type="button"
                 onClick={onClose}
                 aria-label="Close panel"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
               >
                 <X className="h-4.5 w-4.5" aria-hidden="true" />
               </button>

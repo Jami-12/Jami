@@ -222,7 +222,7 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
             <Button
               variant="ghost"
               size="sm"
-              className="text-emerald-600"
+              className="text-muted-foreground"
               onClick={() => approve.mutate(expense.id)}
               loading={approve.isPending && approve.variables === expense.id}
             >
@@ -238,7 +238,7 @@ export function ExpensesAdmin({ canApprove = false }: { canApprove?: boolean }) 
               variant="ghost"
               size="icon"
               aria-label="Cancel expense"
-              className="text-muted-foreground hover:text-red-600"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => setCancelling(expense)}
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />

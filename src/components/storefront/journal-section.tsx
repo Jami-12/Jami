@@ -8,7 +8,7 @@ export function JournalSection() {
     <section id="journal" aria-labelledby="journal-heading" className="container-page scroll-mt-24 py-14 sm:py-16">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-primary">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
             <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
             The journal
           </p>
@@ -26,7 +26,7 @@ export function JournalSection() {
         {JOURNAL_POSTS.map((post) => (
           <article
             key={post.title}
-            className="group overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-shadow hover:shadow-lift"
+            className="group overflow-hidden rounded-none border border-border bg-card transition-colors hover:border-foreground"
           >
             <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
               <SmartImage
@@ -34,9 +34,9 @@ export function JournalSection() {
                 alt={post.title}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover"
               />
-              <span className="absolute left-3 top-3 rounded-full bg-card/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary backdrop-blur">
+              <span className="absolute left-3 top-3 border border-border bg-card px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-foreground">
                 {post.category}
               </span>
             </div>
@@ -50,7 +50,7 @@ export function JournalSection() {
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {post.excerpt}
               </p>
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary">
+              <span className="-mx-1 mt-4 inline-flex items-center gap-1 border-b border-foreground px-1 pb-0.5 text-xs font-bold text-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
                 Read the note
                 <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </span>

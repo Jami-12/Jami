@@ -38,8 +38,8 @@ export function RoleGuard({
   if (!hydrated) {
     return (
       <div className="container-page py-16">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="mt-4 h-40 w-full rounded-2xl" />
+        <Skeleton className="h-8 w-48 rounded-none border border-border" />
+        <Skeleton className="mt-4 h-40 w-full rounded-none border border-border" />
       </div>
     );
   }
@@ -47,7 +47,9 @@ export function RoleGuard({
   if (!accessToken || !user) {
     return (
       <div className="container-page py-16 text-center">
-        <p className="text-sm text-muted-foreground">Redirecting to sign in…</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Redirecting to sign in…
+        </p>
       </div>
     );
   }
@@ -61,11 +63,13 @@ export function RoleGuard({
           : "/account";
     return (
       <div className="container-page py-16">
-        <Card className="mx-auto max-w-md p-8 text-center">
+        <Card className="mx-auto max-w-md border-border bg-card p-8 text-center shadow-soft">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
             403 · Restricted
           </p>
-          <h1 className="mt-2 text-xl font-extrabold">This area isn&apos;t available to your role</h1>
+          <h1 className="mt-2 font-display text-xl font-semibold tracking-tight text-foreground not-italic">
+            This area isn&apos;t available to your role
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             You are signed in as {user.role.toLowerCase().replace("_", " ")}. Head
             to the dashboard that matches your account.

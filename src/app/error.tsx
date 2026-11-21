@@ -31,18 +31,18 @@ export default function GlobalError({
   return (
     <main
       id="main"
-      className="flex min-h-[70dvh] items-center justify-center px-4 py-16 sm:px-6"
+      className="flex min-h-[70dvh] items-center justify-center bg-background px-4 py-16 sm:px-6"
     >
-      <Card className="w-full max-w-lg overflow-hidden">
+      <Card className="w-full max-w-lg overflow-hidden rounded-none border-border bg-card shadow-soft">
         <CardHeader className="items-start gap-4 border-b border-border pb-6">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+          <span className="flex h-11 w-11 items-center justify-center rounded-none border border-border bg-muted text-foreground">
             <AlertTriangle className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="space-y-2">
-            <Badge tone="accent" className="w-fit">
+            <Badge tone="neutral" className="w-fit rounded-none border border-border bg-transparent text-foreground ring-0">
               Something interrupted
             </Badge>
-            <CardTitle className="font-display text-2xl sm:text-3xl">
+            <CardTitle className="font-display text-2xl font-semibold tracking-tight text-foreground not-italic sm:text-3xl">
               We couldn&apos;t finish that request.
             </CardTitle>
             <CardDescription className="text-sm leading-relaxed">
@@ -68,7 +68,7 @@ export default function GlobalError({
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Try again
           </Button>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="hover:bg-foreground hover:text-background">
             <Link href="/">Return home</Link>
           </Button>
         </CardFooter>

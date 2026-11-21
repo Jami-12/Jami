@@ -53,19 +53,19 @@ export const CATEGORY_VISUALS: Record<string, { image: string; blurb: string }> 
 export const TESTIMONIALS = [
   {
     quote:
-      "The alternate photo on every card is such a small thing, but it is the reason I finally bought the overshirt. I knew exactly how it hung.",
+ "The alternate photo on every card is such a small thing, but it is the reason I finally bought the overshirt. I knew exactly how it hung.",
     name: "Nadia Rahman",
     role: "Product designer, Dhaka",
   },
   {
     quote:
-      "The knit arrived softer than it looked online, and the colour was true. This store has become my default for pieces I keep for years.",
+ "The knit arrived softer than it looked online, and the colour was true. This store has become my default for pieces I keep for years.",
     name: "Imran Chowdhury",
     role: "Architect, Chattogram",
   },
   {
     quote:
-      "Ordered on Thursday, wearing it on Sunday. The packaging was beautiful and the fit notes were honest. Rare combination.",
+ "Ordered on Thursday, wearing it on Sunday. The packaging was beautiful and the fit notes were honest. Rare combination.",
     name: "Sara Ahmed",
     role: "Founder, Studio North",
   },
@@ -75,7 +75,7 @@ export const JOURNAL_POSTS = [
   {
     title: "The quiet geometry of a good desk",
     excerpt:
-      "Why the objects you touch every day deserve the same care as the ones you display.",
+ "Why the objects you touch every day deserve the same care as the ones you display.",
     image: VISUALS.journal,
     category: "Workspace",
     readTime: "6 min read",
@@ -83,7 +83,7 @@ export const JOURNAL_POSTS = [
   {
     title: "Light, measured in evenings",
     excerpt:
-      "A study of warm colour temperature and the rituals that help a room slow down.",
+ "A study of warm colour temperature and the rituals that help a room slow down.",
     image: VISUALS.journalThree,
     category: "Lighting",
     readTime: "4 min read",
@@ -91,7 +91,7 @@ export const JOURNAL_POSTS = [
   {
     title: "Materials that age well",
     excerpt:
-      "Anodised aluminium, vegetable-tanned leather and the beauty of visible wear.",
+ "Anodised aluminium, vegetable-tanned leather and the beauty of visible wear.",
     image: VISUALS.journalTwo,
     category: "Craft",
     readTime: "7 min read",

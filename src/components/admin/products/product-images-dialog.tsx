@@ -262,7 +262,7 @@ export function ProductImagesDialog({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-muted/30 p-4">
+          <div className="rounded-none border border-border bg-muted/30 p-4">
             <Input
               value={altText}
               onChange={(event) => setAltText(event.target.value)}
@@ -281,7 +281,7 @@ export function ProductImagesDialog({
                 startUpload("gallery", event.dataTransfer.files);
               }}
               className={cn(
-                "mt-3 rounded-xl border-2 border-dashed p-4 transition",
+                "mt-3 rounded-none border-2 border-dashed p-4 transition",
                 dragging
                   ? "border-primary bg-primary/5"
                   : "border-border",
@@ -325,12 +325,12 @@ export function ProductImagesDialog({
 
             {query.isLoading ? (
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <Skeleton className="aspect-square w-full rounded-xl" />
-                <Skeleton className="aspect-square w-full rounded-xl" />
-                <Skeleton className="aspect-square w-full rounded-xl" />
+                <Skeleton className="aspect-square w-full rounded-none" />
+                <Skeleton className="aspect-square w-full rounded-none" />
+                <Skeleton className="aspect-square w-full rounded-none" />
               </div>
             ) : extras.length === 0 ? (
-              <p className="mt-3 rounded-xl border border-dashed border-border px-4 py-5 text-center text-xs text-muted-foreground">
+              <p className="mt-3 rounded-none border border-dashed border-border px-4 py-5 text-center text-xs text-muted-foreground">
                 {images.length === 0
                   ? "No uploaded images yet. Add a primary image to get started."
                   : "Additional images will appear here once you upload more than two."}
@@ -340,7 +340,7 @@ export function ProductImagesDialog({
                 {extras.map((image) => (
                   <li
                     key={image.id}
-                    className="overflow-hidden rounded-xl border border-border bg-card"
+                    className="overflow-hidden rounded-none border border-border bg-card"
                   >
                     <div className="relative aspect-square bg-muted">
                       <SmartImage
@@ -425,7 +425,7 @@ function ImageSlot({
   const src = preview ?? image?.imageUrl ?? null;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="overflow-hidden rounded-none border border-border bg-card">
       <div className="relative aspect-[4/5] bg-muted">
         {src ? (
           <>
@@ -458,7 +458,7 @@ function ImageSlot({
         )}
 
         {src ? (
-          <span className="absolute left-2 top-2 rounded-full bg-foreground/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-background backdrop-blur">
+          <span className="absolute left-2 top-2 rounded-none bg-foreground/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-background ">
             {label}
           </span>
         ) : null}
@@ -469,7 +469,7 @@ function ImageSlot({
         <div className="flex shrink-0 items-center gap-1">
           <label
             className={cn(
-              "inline-flex h-8 cursor-pointer items-center rounded-full px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground",
+              "inline-flex h-8 cursor-pointer items-center rounded-none px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground",
               disabled && "pointer-events-none opacity-50",
             )}
           >

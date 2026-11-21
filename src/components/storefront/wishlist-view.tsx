@@ -62,13 +62,13 @@ export function WishlistView() {
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {products.length} saved piece{products.length === 1 ? "" : "s"}
         </p>
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-red-600"
+          className="border border-border text-muted-foreground hover:border-foreground hover:bg-foreground hover:text-background"
           onClick={() => setConfirmClear(true)}
         >
           <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

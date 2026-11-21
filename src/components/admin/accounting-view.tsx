@@ -54,9 +54,10 @@ const axisProps = {
 } as const;
 
 const tooltipStyle = {
-  borderRadius: 12,
+  borderRadius: 0,
   border: "1px solid var(--border)",
   background: "var(--card)",
+  boxShadow: "none",
   fontSize: 12,
   color: "var(--foreground)",
 } as const;
@@ -104,9 +105,7 @@ const reportColumns: DataColumn<ReportPoint>[] = [
   {
     header: "Net profit",
     cell: (point) => (
-      <span
-        className={point.netProfit >= 0 ? "text-success" : "text-danger"}
-      >
+      <span className="text-foreground tabular-nums">
         <Price amount={point.netProfit} size="xs" />
       </span>
     ),
@@ -273,7 +272,7 @@ export function AccountingView() {
       {summary.isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+            <Skeleton key={index} className="h-24 w-full rounded-none" />
           ))}
         </div>
       ) : (
@@ -319,7 +318,7 @@ export function AccountingView() {
         </CardHeader>
         <CardContent>
           {report.isLoading ? (
-            <Skeleton className="h-72 w-full rounded-2xl" />
+            <Skeleton className="h-72 w-full rounded-none" />
           ) : report.isError ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
               The report could not be loaded. Adjust the range and try again.
@@ -332,12 +331,6 @@ export function AccountingView() {
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="accounting-profit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="label" {...axisProps} />
                   <YAxis
@@ -346,14 +339,15 @@ export function AccountingView() {
                     width={48}
                   />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: "var(--muted-foreground)" }} />
                   <Area
                     type="monotone"
                     dataKey="income"
                     name="Income"
                     stroke="var(--chart-1)"
                     strokeWidth={2}
-                    fill="url(#accounting-profit)"
+                    fill="var(--chart-1)"
+                    fillOpacity={0.15}
                   />
                   <Area
                     type="monotone"
@@ -370,7 +364,7 @@ export function AccountingView() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[1.5fr_1fr]">
         <Card>
           <CardHeader>
             <CardTitle className="font-display text-base">Period breakdown</CardTitle>
@@ -406,7 +400,7 @@ export function AccountingView() {
           </CardHeader>
           <CardContent>
             {summary.isLoading ? (
-              <Skeleton className="h-56 w-full rounded-xl" />
+              <Skeleton className="h-56 w-full rounded-none" />
             ) : (financial?.expenseBreakdown ?? []).length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
                 No expenses recorded.
@@ -438,7 +432,7 @@ export function AccountingView() {
                       />
                       <YAxis type="category" dataKey="label" {...axisProps} width={104} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="total" fill="var(--chart-4)" radius={[0, 6, 6, 0]} />
+                      <Bar dataKey="total" fill="var(--chart-4)" radius={0} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

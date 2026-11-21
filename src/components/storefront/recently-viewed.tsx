@@ -40,7 +40,7 @@ export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   return (
     <section
       aria-labelledby="recently-viewed-heading"
-      className="mt-16 border-t border-border pt-10"
+      className="mt-16 border-t border-border bg-background pt-10"
     >
       <SectionHeading
         eyebrow="Recently viewed"
@@ -48,7 +48,7 @@ export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
         action={
           <Link
             href="/products"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline dark:text-accent-300"
+            className="-mx-1 inline-flex items-center gap-1 px-1 py-0.5 text-sm font-bold text-foreground transition-colors hover:bg-foreground hover:text-background"
           >
             Keep browsing
             <ChevronRight className="h-4 w-4" aria-hidden="true" />

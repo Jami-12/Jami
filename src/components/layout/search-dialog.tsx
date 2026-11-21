@@ -113,14 +113,14 @@ export function SearchDialog() {
             onKeyDown={onKeyDown}
             placeholder="Try “linen shirt”, “knit” or “overshirt”"
             aria-label="Search products"
-            className="h-12 rounded-xl pl-10"
+            className="h-12 rounded-none pl-10"
           />
         </div>
       </form>
 
       <div className="mt-4" aria-live="polite">
         {debounced.length > 1 && !isFetching && results.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
+          <div className="rounded-none border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
             <p className="text-sm font-semibold text-foreground">
               No matches for “{query}”
             </p>
@@ -144,13 +144,13 @@ export function SearchDialog() {
                   onClick={close}
                   onMouseEnter={() => setActiveIndex(index)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border border-transparent p-2.5 transition",
+                    "flex items-center gap-3 rounded-none border border-transparent p-2.5 transition",
                     activeIndex === index
                       ? "border-border bg-muted"
                       : "hover:bg-muted/70",
                   )}
                 >
-                  <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-none bg-muted">
                     <SmartImage
                       src={productImage(product)}
                       alt=""
@@ -186,7 +186,7 @@ export function SearchDialog() {
               <button
                 type="button"
                 onClick={goToResults}
-                className="mt-1 flex w-full items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
+                className="mt-1 flex w-full items-center justify-between rounded-none border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
               >
                 See all results for “{query.trim()}”
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -207,7 +207,7 @@ export function SearchDialog() {
                   key={category.value}
                   href={`/products?category=${category.value}`}
                   onClick={close}
-                  className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-accent-400/50 hover:text-foreground"
+                  className="rounded-none border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-accent-400/50 hover:text-foreground"
                 >
                   {category.label}
                 </Link>
@@ -223,7 +223,7 @@ export function SearchDialog() {
                   key={shortcut.label}
                   href={shortcut.href}
                   onClick={close}
-                  className="rounded-xl border border-border bg-card px-3 py-3 text-sm font-semibold transition hover:border-accent-400/40 hover:bg-muted"
+                  className="rounded-none border border-border bg-card px-3 py-3 text-sm font-semibold transition hover:border-accent-400/40 hover:bg-muted"
                 >
                   {shortcut.label}
                 </Link>

@@ -74,7 +74,7 @@ export function RegisterForm({ next }: { next?: string }) {
         noValidate
       >
         {formError ? (
-          <p className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-xs font-medium text-red-700 dark:bg-red-500/10 dark:text-red-300">
+          <p className="flex items-start gap-2 border border-border border-l-2 border-l-foreground bg-muted p-3 text-xs font-medium text-foreground">
             <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {formError}
           </p>
@@ -133,7 +133,7 @@ export function RegisterForm({ next }: { next?: string }) {
               type="button"
               onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-none border border-transparent text-muted-foreground transition hover:border-border hover:bg-foreground hover:text-background"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -164,16 +164,16 @@ export function RegisterForm({ next }: { next?: string }) {
           <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted-foreground">
             <input
               type="checkbox"
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-primary-700 focus:ring-primary-400"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded-none border border-input bg-card accent-foreground focus:ring-foreground"
               {...register("acceptTerms")}
             />
             <span>
               I agree to the{" "}
-              <Link href="/#terms" className="font-semibold text-primary-600 hover:underline dark:text-accent-300">
+              <Link href="/#terms" className="font-semibold text-foreground underline-offset-4 hover:underline">
                 terms of sale
               </Link>{" "}
               and{" "}
-              <Link href="/#privacy" className="font-semibold text-primary-600 hover:underline dark:text-accent-300">
+              <Link href="/#privacy" className="font-semibold text-foreground underline-offset-4 hover:underline">
                 privacy policy
               </Link>
               .
@@ -202,7 +202,7 @@ export function RegisterForm({ next }: { next?: string }) {
         Already have an account?{" "}
         <Link
           href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
-          className="font-semibold text-primary-600 hover:underline dark:text-accent-300"
+          className="font-semibold text-foreground underline-offset-4 hover:underline"
         >
           Sign in
         </Link>

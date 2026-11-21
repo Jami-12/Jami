@@ -24,9 +24,11 @@ export function DashboardRedirect() {
 
   return (
     <div className="container-page py-16">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="mt-4 h-40 w-full rounded-2xl" />
-      <p className="mt-4 text-sm text-muted-foreground">Taking you to your dashboard…</p>
+      <Skeleton className="h-8 w-48 rounded-none border border-border" />
+      <Skeleton className="mt-4 h-40 w-full rounded-none border border-border" />
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        Taking you to your dashboard…
+      </p>
     </div>
   );
 }

@@ -5,12 +5,10 @@ import {
   ArrowRight,
   PackageSearch,
   Search,
-  Sparkles,
   X,
 } from "lucide-react";
 
 import { ProductCard } from "@/components/storefront/product-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Label, Select } from "@/components/ui/input";
@@ -124,27 +122,26 @@ export function ProductFinder({ products }: { products: Product[] }) {
       aria-labelledby="product-finder-heading"
       className="container-page scroll-mt-24 py-14 sm:py-20"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow">Product finder</p>
+          <p className="eyebrow text-muted-foreground">Product finder</p>
           <h2
             id="product-finder-heading"
-            className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+            className="mt-3 font-display text-3xl font-semibold not-italic tracking-tight sm:text-4xl"
           >
             Find your next favourite.
           </h2>
-          <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             Search the edit, narrow it by category and arrange the results the
             way that suits you.
           </p>
         </div>
-        <Badge tone="accent" className="w-fit">
-          <Sparkles className="h-3 w-3" aria-hidden="true" />
+        <p className="border-l border-border pl-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-right">
           {products.length} pieces to explore
-        </Badge>
+        </p>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-border bg-card p-4 shadow-soft sm:p-5">
+      <div className="mt-8 border border-border bg-card p-4 sm:p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative w-full xl:max-w-sm">
             <Search
@@ -164,7 +161,7 @@ export function ProductFinder({ products }: { products: Product[] }) {
                 type="button"
                 onClick={() => setKeyword("")}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-none text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -211,7 +208,12 @@ export function ProductFinder({ products }: { products: Product[] }) {
 
           <div className="flex flex-wrap items-center gap-3">
             {hasFilters ? (
-              <Button variant="ghost" size="sm" onClick={resetFilters}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetFilters}
+                className="border border-border hover:border-foreground hover:bg-foreground hover:text-background"
+              >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
                 Reset filters
               </Button>
@@ -261,7 +263,7 @@ export function ProductFinder({ products }: { products: Product[] }) {
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {visibleProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -278,6 +280,7 @@ export function ProductFinder({ products }: { products: Product[] }) {
                 onClick={() =>
                   setVisibleCount((current) => current + PAGE_SIZE)
                 }
+                className="border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
               >
                 Load more
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />

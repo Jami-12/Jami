@@ -71,7 +71,7 @@ export function QuickViewDialog({
     if (outOfStock || selectionIncomplete) return;
     setAdding(true);
     try {
-      await addItem(product, quantity);
+      await addItem(product, quantity, { size, color });
       setAdded(true);
       window.setTimeout(() => setAdded(false), 2200);
     } finally {
@@ -105,11 +105,12 @@ export function QuickViewDialog({
           </Button>
           <div className="flex items-center gap-2">
             <Button
-              variant={saved ? "danger" : "outline"}
+              variant="outline"
               size="icon"
               onClick={() => void toggleWishlist(product.id, name)}
               aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
               aria-pressed={saved}
+              className="border-border hover:border-foreground hover:bg-foreground hover:text-background"
             >
               <Heart
                 className="h-4 w-4"
@@ -134,9 +135,9 @@ export function QuickViewDialog({
         </div>
       }
     >
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 rounded-none border border-border bg-card p-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] sm:p-5">
         <div className="min-w-0">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-muted">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-none border border-border bg-muted">
             <SmartImage
               src={images[activeImage] ?? null}
               alt={name}
@@ -146,9 +147,9 @@ export function QuickViewDialog({
             />
             <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
               {discounted && percent > 0 ? (
-                <Badge tone="danger">−{percent}%</Badge>
+                <Badge tone="success">−{percent}%</Badge>
               ) : null}
-              {outOfStock ? <Badge tone="neutral">Sold out</Badge> : null}
+              {outOfStock ? <Badge tone="danger">Sold out</Badge> : null}
             </div>
           </div>
 
@@ -162,10 +163,10 @@ export function QuickViewDialog({
                   aria-label={`Show image ${index + 1}`}
                   aria-current={activeImage === index}
                   className={cn(
-                    "relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted transition",
+ "relative h-16 w-16 shrink-0 overflow-hidden rounded-none border-2 bg-muted transition",
                     activeImage === index
-                      ? "border-primary-600 dark:border-accent-300"
-                      : "border-transparent opacity-65 hover:opacity-100",
+                      ? "border-foreground"
+                      : "border-border opacity-65 hover:border-foreground hover:opacity-100",
                   )}
                 >
                   <SmartImage
@@ -204,13 +205,13 @@ export function QuickViewDialog({
           <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold">
             <Package className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
             {outOfStock ? (
-              <span className="text-red-600 dark:text-red-400">Out of stock</span>
+              <span className="text-danger">Out of stock</span>
             ) : product.stock <= product.minimumStockLevel ? (
-              <span className="text-amber-600 dark:text-amber-400">
+              <span className="text-warning">
                 Only {product.stock} left
               </span>
             ) : (
-              <span className="text-emerald-600 dark:text-emerald-400">
+              <span className="text-success">
                 In stock · ships in 48 hours
               </span>
             )}
@@ -236,14 +237,14 @@ export function QuickViewDialog({
                       aria-pressed={active}
                       title={option.name}
                       className={cn(
-                        "inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition",
+ "inline-flex h-8 w-8 items-center justify-center rounded-none border-2 transition",
                         active
-                          ? "border-primary-700 dark:border-accent-300"
-                          : "border-border hover:border-accent-400/60",
+                          ? "border-foreground bg-secondary"
+                          : "border-border hover:border-foreground",
                       )}
                     >
                       <span
-                        className="h-5 w-5 rounded-full border border-black/10"
+                        className="h-5 w-5 rounded-none border border-border"
                         style={{ backgroundColor: option.hex }}
                       />
                     </button>
@@ -271,10 +272,10 @@ export function QuickViewDialog({
                       onClick={() => setSize(option)}
                       aria-pressed={active}
                       className={cn(
-                        "inline-flex h-9 min-w-10 items-center justify-center rounded-lg border px-2.5 text-xs font-semibold transition",
+ "inline-flex h-9 min-w-10 items-center justify-center rounded-none border px-2.5 text-xs font-semibold transition",
                         active
-                          ? "border-primary-700 bg-primary-700 text-primary-50 dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950"
-                          : "border-border text-muted-foreground hover:border-accent-400/60 hover:text-foreground",
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
                       )}
                     >
                       {option}
@@ -302,10 +303,10 @@ export function QuickViewDialog({
           {(colors.length > 0 || (sizes && sizes.length > 0)) ? (
             <p
               className={cn(
-                "mt-3 rounded-lg px-3 py-2 text-xs font-medium",
+ "mt-3 rounded-none px-3 py-2 text-xs font-medium",
                 selectionIncomplete
-                  ? "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200"
-                  : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+                  ? "border border-foreground bg-secondary text-foreground"
+                  : "border border-border bg-secondary text-foreground",
               )}
               aria-live="polite"
             >

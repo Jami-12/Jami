@@ -62,6 +62,40 @@ export const changePasswordSchema = z.object({
 
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 
+/* -------------------- Email verification flows --------------------------- */
+
+export const VERIFICATION_CODE_LENGTH = 6;
+export const DATA_RESET_CONFIRMATION = "DELETE ALL DATA";
+
+const verificationCode = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Verification code must be exactly 6 digits");
+
+export const forgotPasswordEmailSchema = z.object({ email });
+
+export const verificationCodeSchema = z.object({ code: verificationCode });
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: password,
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export const dataResetConfirmSchema = z.object({
+  confirmation: z.string().refine((value) => value === DATA_RESET_CONFIRMATION, {
+    message: `Type "${DATA_RESET_CONFIRMATION}" exactly to continue`,
+  }),
+});
+
+export type ForgotPasswordEmailValues = z.infer<typeof forgotPasswordEmailSchema>;
+export type VerificationCodeValues = z.infer<typeof verificationCodeSchema>;
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+
 export const profileSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name").max(120),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
@@ -129,12 +163,12 @@ const booleanFlag = z.preprocess(
 );
 
 export const PRODUCT_SORTS = [
-  "featured",
-  "newest",
-  "popular",
-  "price-asc",
-  "price-desc",
-  "title-asc",
+ "featured",
+ "newest",
+ "popular",
+ "price-asc",
+ "price-desc",
+ "title-asc",
 ] as const;
 
 export type ProductSortValue = (typeof PRODUCT_SORTS)[number];
@@ -178,6 +212,18 @@ export const productFormSchema = z
     modelUrl: z.string().trim().max(2000).nullable().optional().or(z.literal("")),
     thumbnail: z.string().trim().max(2000).optional().or(z.literal("")),
     slug: z.string().trim().max(220).optional().or(z.literal("")),
+    sizes: z.array(z.string().trim().min(1).max(24)).max(30, "At most 30 sizes"),
+    colors: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1, "Colour name is required").max(40),
+          hex: z
+            .string()
+            .trim()
+            .regex(/^#[0-9a-fA-F]{6}$/, "Choose a valid colour"),
+        }),
+      )
+      .max(30, "At most 30 colours"),
   })
   .refine(
     (values) =>

@@ -45,8 +45,8 @@ export function ReviewForm({ productId }: { productId: string }) {
   };
 
   return (
-    <form onSubmit={submit} className="rounded-xl border border-border bg-card p-4">
-      <h3 className="text-sm font-bold">Write a review</h3>
+    <form onSubmit={submit} className="rounded-none border border-border bg-card p-4 sm:p-5">
+      <h3 className="text-sm font-bold uppercase tracking-[0.16em]">Write a review</h3>
       <p className="mt-1 text-xs text-muted-foreground">
         Reviews are moderated before they appear in the storefront.
       </p>
@@ -64,7 +64,11 @@ export function ReviewForm({ productId }: { productId: string }) {
               onMouseEnter={() => setHover(value)}
               onMouseLeave={() => setHover(0)}
               onClick={() => setRating(value)}
-              className="rounded p-1 text-amber-400 transition hover:scale-110"
+              className={`rounded-none border p-1 transition-colors ${
+                (hover || rating) >= value
+                  ? "border-foreground text-foreground"
+                  : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+              }`}
             >
               <Star
                 className="h-6 w-6"
@@ -92,7 +96,7 @@ export function ReviewForm({ productId }: { productId: string }) {
         />
       </div>
 
-      <Button type="submit" className="mt-4" loading={mutation.isPending} disabled={rating === 0}>
+      <Button type="submit" className="mt-4 w-full sm:w-auto" loading={mutation.isPending} disabled={rating === 0}>
         Submit review
       </Button>
     </form>

@@ -213,7 +213,7 @@ export function UsersView() {
       header: "User",
       cell: (user) => (
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-[11px] font-bold text-muted-foreground">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-none bg-muted text-[11px] font-bold text-muted-foreground">
             {user.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={user.image} alt="" className="h-full w-full object-cover" />
@@ -247,7 +247,7 @@ export function UsersView() {
             {humanizeEnum(user.status)}
           </Badge>
           {user.deletedAt ? (
-            <span className="text-[10px] font-semibold text-red-600 dark:text-red-400">Deleted</span>
+            <span className="text-[10px] font-semibold text-muted-foreground">Deleted</span>
           ) : null}
         </div>
       ),
@@ -284,7 +284,7 @@ export function UsersView() {
             variant="ghost"
             size="icon"
             aria-label={`Delete ${userLabel(user)}`}
-            className="text-muted-foreground hover:text-red-600"
+            className="text-muted-foreground hover:text-foreground"
             disabled={isProtected(user) || Boolean(user.deletedAt)}
             onClick={() => setDeleting(user)}
           >

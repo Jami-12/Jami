@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   animate,
   motion,
+  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useSpring,
@@ -46,28 +47,28 @@ const SHAPES: GarmentShape[] = ["shirt", "hoodie", "jacket", "trouser", "dress"]
 
 const GARMENT_PATHS: Record<Exclude<GarmentShape, "card">, string> = {
   shirt:
-    "M .28 .07 L .38 .02 L .50 .09 L .62 .02 L .72 .07 L .94 .23 L .86 .40 L .78 .35 L .80 .97 L .20 .97 L .22 .35 L .14 .40 L .06 .23 Z",
+ "M .28 .07 L .38 .02 L .50 .09 L .62 .02 L .72 .07 L .94 .23 L .86 .40 L .78 .35 L .80 .97 L .20 .97 L .22 .35 L .14 .40 L .06 .23 Z",
   hoodie:
-    "M .32 .04 C .36 0 .64 0 .68 .04 L .74 .09 L .95 .25 L .87 .42 L .79 .36 L .81 .97 L .19 .97 L .21 .36 L .13 .42 L .05 .25 L .26 .09 Z",
+ "M .32 .04 C .36 0 .64 0 .68 .04 L .74 .09 L .95 .25 L .87 .42 L .79 .36 L .81 .97 L .19 .97 L .21 .36 L .13 .42 L .05 .25 L .26 .09 Z",
   jacket:
-    "M .30 .05 L .40 .01 L .50 .07 L .60 .01 L .70 .05 L .94 .22 L .86 .40 L .78 .34 L .80 .97 L .20 .97 L .22 .34 L .14 .40 L .06 .22 Z",
+ "M .30 .05 L .40 .01 L .50 .07 L .60 .01 L .70 .05 L .94 .22 L .86 .40 L .78 .34 L .80 .97 L .20 .97 L .22 .34 L .14 .40 L .06 .22 Z",
   trouser:
-    "M .29 .04 L .71 .04 L .73 .97 L .55 .97 L .50 .44 L .45 .97 L .27 .97 Z",
+ "M .29 .04 L .71 .04 L .73 .97 L .55 .97 L .50 .44 L .45 .97 L .27 .97 Z",
   dress:
-    "M .34 .04 L .44 .01 L .50 .07 L .56 .01 L .66 .04 L .74 .30 L .84 .97 L .16 .97 L .26 .30 Z",
+ "M .34 .04 L .44 .01 L .50 .07 L .56 .01 L .66 .04 L .74 .30 L .84 .97 L .16 .97 L .26 .30 Z",
 };
 
 const DEMO_IMAGES: Record<Exclude<GarmentShape, "card">, string> = {
   shirt:
-    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+ "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
   hoodie:
-    "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=80",
+ "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=80",
   jacket:
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80",
+ "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80",
   trouser:
-    "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+ "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
   dress:
-    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80",
+ "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80",
 };
 
 function isUsableImage(src: string | null | undefined): src is string {
@@ -121,7 +122,7 @@ function Hanger({ className }: { className?: string }) {
         strokeWidth="3.4"
         strokeLinecap="round"
       />
-      <path d="M90 32 18 61h144L90 32Z" className="fill-border stroke-primary" strokeWidth="2" />
+      <path d="M90 32 18 61h144L90 32Z" className="fill-border stroke-foreground" strokeWidth="2" />
       <path d="M90 32 44 55h92L90 32Z" className="fill-background" />
     </svg>
   );
@@ -143,8 +144,8 @@ function GarmentVisual({
   const frame = (
     <div
       className={cn(
-        "relative h-full w-full overflow-hidden",
-        shape === "card" && "rounded-[1.75rem] border border-border bg-card",
+ "relative h-full w-full overflow-hidden",
+        shape === "card" && "rounded-none border border-border bg-card",
         className,
       )}
       style={clipStyle(shape)}
@@ -157,27 +158,12 @@ function GarmentVisual({
         sizes="(max-width: 640px) 76vw, 340px"
         className="object-cover"
       />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/30 via-transparent to-black/25 mix-blend-multiply"
-      />
-      {shape !== "card" ? (
-        <>
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-[18%] top-[6%] h-[16%] rounded-[50%] bg-gradient-to-b from-black/20 to-transparent blur-md"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-[8%] bottom-0 h-[16%] bg-gradient-to-t from-black/20 to-transparent"
-          />
-        </>
-      ) : null}
+
     </div>
   );
 
   return (
-    <div className="relative h-full w-full drop-shadow-lg">
+    <div className="relative h-full w-full drop-shadow-none">
       {frame}
     </div>
   );
@@ -309,7 +295,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
 
   return (
     <section
-      className="relative mt-4 overflow-hidden rounded-[2rem] border border-border bg-card text-card-foreground shadow-soft"
+      className="relative mt-4 overflow-hidden rounded-none border border-border bg-card text-card-foreground"
       aria-roledescription="carousel"
       aria-label="Interactive clothing rail"
     >
@@ -329,19 +315,14 @@ export function WardrobeRail({ products }: { products: Product[] }) {
         </defs>
       </svg>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_60%_at_50%_-10%,color-mix(in_srgb,var(--card)_95%,transparent),transparent_65%)] dark:bg-[radial-gradient(75%_60%_at_50%_-10%,color-mix(in_srgb,var(--primary)_12%,transparent),transparent_65%)]"
-      />
-
       <div className="relative flex flex-col gap-4 px-5 pb-5 pt-5 sm:px-7 sm:pb-7 sm:pt-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-primary">
+            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
               The rail edit
             </p>
-            <h2 className="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">
+            <h2 className="mt-1 text-xl font-bold tracking-tight not-italic sm:text-2xl">
               Hanging pieces, ready to explore.
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -350,7 +331,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card/65 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:inline-flex">
+            <span className="hidden items-center gap-1.5 rounded-none border border-border bg-card px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground sm:inline-flex">
               <MoveHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
               Drag to browse
             </span>
@@ -361,7 +342,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
               onClick={() => scrollBy(-1)}
               disabled={atStart}
               aria-label="Scroll the rail left"
-              className="border-border bg-card/70 text-foreground hover:bg-card"
+              className="border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -372,7 +353,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
               onClick={() => scrollBy(1)}
               disabled={atEnd}
               aria-label="Scroll the rail right"
-              className="border-border bg-card/70 text-foreground hover:bg-card"
+              className="border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
             >
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -385,10 +366,10 @@ export function WardrobeRail({ products }: { products: Product[] }) {
         >
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-[3.2rem] z-10 h-[7px] rounded-full bg-gradient-to-b from-border via-muted-foreground to-primary shadow-soft"
+            className="pointer-events-none absolute inset-x-0 top-[3.2rem] z-10 h-px rounded-none bg-foreground"
           >
-            <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-primary/40 bg-[linear-gradient(135deg,var(--card),var(--primary))]" />
-            <span className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-primary/40 bg-[linear-gradient(135deg,var(--card),var(--primary))]" />
+            <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-none border border-foreground bg-background" />
+            <span className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-none border border-foreground bg-background" />
           </div>
 
           <motion.div
@@ -450,7 +431,7 @@ export function WardrobeRail({ products }: { products: Product[] }) {
                   />
 
                   {discounted && percent > 0 ? (
-                    <span className="absolute right-1 top-[4.1rem] z-30 rounded-full bg-warning-soft px-2.5 py-1 text-[10px] font-bold text-warning shadow-soft">
+                    <span className="absolute right-1 top-[4.1rem] z-30 rounded-none border border-foreground bg-foreground px-2.5 py-1 text-[10px] font-bold text-background">
                       −{percent}%
                     </span>
                   ) : null}
@@ -459,20 +440,13 @@ export function WardrobeRail({ products }: { products: Product[] }) {
             })}
           </motion.div>
 
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 z-30 w-10 bg-gradient-to-r from-card to-transparent"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 z-30 w-10 bg-gradient-to-l from-card to-transparent"
-          />
+
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+          <div className="h-[2px] flex-1 overflow-hidden rounded-none bg-border">
             <motion.span
-              className="block h-full origin-left rounded-full bg-primary"
+              className="block h-full origin-left rounded-none bg-foreground"
               style={{ scaleX: progress }}
             />
           </div>
@@ -515,6 +489,8 @@ function WardrobeItem({
   const rotateY = useSpring(useMotionValue(0), { stiffness: 170, damping: 18 });
   const spotlightX = useSpring(useMotionValue(50), { stiffness: 160, damping: 22 });
   const spotlightY = useSpring(useMotionValue(50), { stiffness: 160, damping: 22 });
+  const markerLeft = useMotionTemplate`${spotlightX}%`;
+  const markerTop = useMotionTemplate`${spotlightY}%`;
 
   const onPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (!finePointer || reducedMotion) return;
@@ -547,7 +523,7 @@ function WardrobeItem({
       onPointerLeave={resetTilt}
       onPointerCancel={resetTilt}
       aria-label={`Preview ${productName(product)}`}
-      className="group block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+      className="group block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card"
     >
       <motion.div
         style={{
@@ -558,7 +534,7 @@ function WardrobeItem({
         }}
         className="relative"
       >
-        <Hanger className="pointer-events-none absolute left-1/2 top-0 z-20 h-[76px] w-[180px] -translate-x-1/2 drop-shadow-md" />
+        <Hanger className="pointer-events-none absolute left-1/2 top-0 z-20 h-[76px] w-[180px] -translate-x-1/2 drop-shadow-none" />
 
         <div className="relative mx-auto h-[340px] w-[88%] pt-[62px] sm:h-[390px]">
           <GarmentVisual
@@ -567,32 +543,25 @@ function WardrobeItem({
             image={image}
             priority={priority}
           />
-
           <motion.span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-10 opacity-0 mix-blend-soft-light transition-opacity duration-300 group-hover:opacity-70"
-            style={{
-              background: useTransform(
-                [spotlightX, spotlightY],
-                ([sx, sy]) =>
-                  `radial-gradient(220px circle at ${sx}% ${sy}%, color-mix(in srgb, var(--color-primary-100) 80%, transparent), transparent 62%)`,
-              ),
-            }}
+            className="pointer-events-none absolute z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-none border border-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{ left: markerLeft, top: markerTop }}
           />
         </div>
 
         <div className="relative z-20 -mt-5 px-3">
-          <div className="rotate-[-1.2deg] rounded-lg border border-border bg-card px-3 py-2.5 shadow-soft transition duration-300 group-hover:rotate-0 group-hover:-translate-y-1">
+          <div className="rounded-none border border-border bg-card px-3 py-2.5 transition-colors duration-300 group-hover:border-foreground">
             <div className="flex items-center justify-between gap-2">
               <span className="truncate text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {product.category?.name ?? "The collection"}
               </span>
               {outOfStock ? (
-                <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.12em] text-danger">
+                <span className="shrink-0 border border-border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground">
                   Sold out
                 </span>
               ) : active ? (
-                <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.12em] text-success">
+                <span className="shrink-0 border border-foreground bg-foreground px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-background">
                   Selected
                 </span>
               ) : null}
@@ -670,11 +639,8 @@ function WardrobePreviewBody({ product }: { product: Product }) {
   return (
     <div className="grid gap-6 sm:grid-cols-[1.02fr_1fr] sm:gap-7">
       <div>
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-border bg-muted p-5">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_0%,color-mix(in_srgb,var(--card)_95%,transparent),transparent_68%)] dark:bg-[radial-gradient(70%_55%_at_50%_0%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_68%)]"
-          />
+        <div className="relative aspect-[4/5] overflow-hidden rounded-none border border-border bg-muted p-5">
+
           <Hanger className="absolute left-1/2 top-2 z-20 h-[76px] w-[180px] -translate-x-1/2" />
           <div className="relative mx-auto h-full w-[84%] pt-[58px]">
             <GarmentVisual
@@ -696,9 +662,9 @@ function WardrobePreviewBody({ product }: { product: Product }) {
                 aria-label={`Show image ${index + 1}`}
                 aria-current={activeImage === index}
                 className={cn(
-                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-card transition",
+ "relative h-16 w-16 shrink-0 overflow-hidden rounded-none border-2 bg-card transition",
                   activeImage === index
-                    ? "border-primary"
+                    ? "border-foreground"
                     : "border-transparent opacity-65 hover:opacity-100",
                 )}
               >
@@ -713,10 +679,10 @@ function WardrobePreviewBody({ product }: { product: Product }) {
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="accent">{product.category?.name ?? "The collection"}</Badge>
           {product.brand ? <Badge tone="neutral">{product.brand.name}</Badge> : null}
-          {discounted && percent > 0 ? <Badge tone="danger">−{percent}%</Badge> : null}
+          {discounted && percent > 0 ? <Badge tone="success">−{percent}%</Badge> : null}
         </div>
 
-        <h3 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
+        <h3 className="mt-3 text-2xl font-bold tracking-tight not-italic sm:text-3xl">
           {productName(product)}
         </h3>
 
@@ -756,9 +722,9 @@ function WardrobePreviewBody({ product }: { product: Product }) {
                     aria-label={`Choose colourway ${index + 1}`}
                     aria-pressed={activeImage === index}
                     className={cn(
-                      "relative h-8 w-8 overflow-hidden rounded-full border-2 transition",
+ "relative h-8 w-8 overflow-hidden rounded-none border-2 transition",
                       activeImage === index
-                        ? "border-primary"
+                        ? "border-foreground"
                         : "border-transparent opacity-70 hover:opacity-100",
                     )}
                   >
@@ -770,8 +736,8 @@ function WardrobePreviewBody({ product }: { product: Product }) {
                 </span>
               </div>
             ) : (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold">
-                <span className="h-3 w-3 rounded-full bg-primary/40" aria-hidden="true" />
+              <div className="mt-2 inline-flex items-center gap-2 rounded-none border border-border bg-card px-3 py-1.5 text-[11px] font-semibold">
+                <span className="h-3 w-3 rounded-none border border-border bg-muted" aria-hidden="true" />
                 As shown
               </div>
             )}
@@ -785,7 +751,7 @@ function WardrobePreviewBody({ product }: { product: Product }) {
               <span className="text-[10px] text-muted-foreground">Set by the studio</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              <span className="inline-flex min-w-11 items-center justify-center rounded-lg border border-primary bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
+              <span className="inline-flex min-w-11 items-center justify-center rounded-none border border-foreground bg-foreground px-3 py-1.5 text-[11px] font-bold text-background">
                 One size
               </span>
             </div>
@@ -804,7 +770,16 @@ function WardrobePreviewBody({ product }: { product: Product }) {
                 disabled={outOfStock}
                 label={`Quantity of ${productName(product)}`}
               />
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 text-[11px] font-semibold",
+                  outOfStock
+                    ? "text-danger"
+                    : product.stock <= product.minimumStockLevel
+                      ? "text-warning"
+                      : "text-success",
+                )}
+              >
                 <Package className="h-3.5 w-3.5" aria-hidden="true" />
                 {outOfStock
                   ? "Out of stock"
@@ -829,11 +804,11 @@ function WardrobePreviewBody({ product }: { product: Product }) {
           </Button>
           <Button
             size="icon"
-            variant={saved ? "danger" : "outline"}
+            variant="outline"
             onClick={() => void toggleWishlist(product.id, productName(product))}
             aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
             aria-pressed={saved}
-            className="h-11 w-11 justify-self-start sm:justify-self-auto"
+            className="h-11 w-11 justify-self-start border-border sm:justify-self-auto hover:border-foreground hover:bg-foreground hover:text-background"
           >
             <Heart className="h-4 w-4" fill={saved ? "currentColor" : "none"} aria-hidden="true" />
           </Button>

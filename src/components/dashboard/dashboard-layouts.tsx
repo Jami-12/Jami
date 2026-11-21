@@ -27,6 +27,7 @@ export const ACCOUNT_TITLES: TitleEntry[] = [
   { path: "/account/addresses", title: "Delivery addresses", subtitle: "Manage where orders arrive." },
   { path: "/account/wishlist", title: "Wishlist", subtitle: "Pieces saved for later." },
   { path: "/account/notifications", title: "Notifications", subtitle: "Order, payment and account updates." },
+  { path: "/account/notepad", title: "Notepad", subtitle: "Your private, cloud-synced notes." },
   { path: "/account/security", title: "Security", subtitle: "Password and account access." },
   { path: "/account", title: "Account overview", subtitle: "Orders, saved pieces and recent activity." },
 ];
@@ -44,7 +45,9 @@ export const ADMIN_TITLES: TitleEntry[] = [
   { path: "/admin/coupons", title: "Coupons", subtitle: "Discount codes and usage limits." },
   { path: "/admin/reviews", title: "Reviews", subtitle: "Moderate customer feedback." },
   { path: "/admin/expenses", title: "Expenses", subtitle: "Operating spend and bills." },
+  { path: "/admin/cash-collection", title: "Cash collection", subtitle: "Record and review cash-on-delivery collections." },
   { path: "/admin/notifications", title: "Notifications", subtitle: "Order, payment and account updates." },
+  { path: "/admin/notepad", title: "Notepad", subtitle: "Your private, cloud-synced notes." },
   { path: "/admin", title: "Admin overview", subtitle: "Today's commerce at a glance." },
 ];
 
@@ -59,6 +62,7 @@ export const SUPER_TITLES: TitleEntry[] = [
   { path: "/super-admin/employees", title: "Employees", subtitle: "Team roster and payroll base." },
   { path: "/super-admin/salaries", title: "Salaries", subtitle: "Monthly payroll and payment status." },
   { path: "/super-admin/notifications", title: "Notifications", subtitle: "Order, payment and account updates." },
+  { path: "/super-admin/notepad", title: "Notepad", subtitle: "Your private, cloud-synced notes." },
   { path: "/super-admin/audit", title: "Audit logs", subtitle: "Immutable record of privileged actions." },
   { path: "/super-admin/settings", title: "Settings", subtitle: "Super admin profile and storefront identity." },
   { path: "/super-admin", title: "Super admin", subtitle: "Full business and access overview." },

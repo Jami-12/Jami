@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -55,6 +55,8 @@ const EMPTY: ProductFormValues = {
   modelUrl: "",
   thumbnail: "",
   slug: "",
+  sizes: [],
+  colors: [],
 };
 
 export function ProductForm({ productId }: { productId?: string }) {
@@ -71,6 +73,9 @@ export function ProductForm({ productId }: { productId?: string }) {
   } | null>(null);
   const [slugTouched, setSlugTouched] = React.useState(isEdit);
   const [skuTouched, setSkuTouched] = React.useState(isEdit);
+  const [sizeInput, setSizeInput] = React.useState("");
+  const [colorName, setColorName] = React.useState("");
+  const [colorHex, setColorHex] = React.useState("#facc15");
   const pendingRef = React.useRef<PendingImage[]>([]);
 
   React.useEffect(() => {
@@ -122,6 +127,30 @@ export function ProductForm({ productId }: { productId?: string }) {
   });
 
   const title = watch("title");
+  const sizes = watch("sizes");
+  const colors = watch("colors");
+
+  const addSize = () => {
+    const value = sizeInput.trim();
+    if (!value) return;
+    setValue(
+      "sizes",
+      Array.from(new Set([...(sizes ?? []), value])).slice(0, 30),
+      { shouldDirty: true },
+    );
+    setSizeInput("");
+  };
+
+  const addColor = () => {
+    const name = colorName.trim();
+    if (!name || !/^#[0-9a-fA-F]{6}$/.test(colorHex)) return;
+    setValue(
+      "colors",
+      [...(colors ?? []), { name, hex: colorHex.toLowerCase() }].slice(0, 30),
+      { shouldDirty: true },
+    );
+    setColorName("");
+  };
 
   React.useEffect(() => {
     if (!slugTouched) {
@@ -162,6 +191,8 @@ export function ProductForm({ productId }: { productId?: string }) {
       modelUrl: item.modelUrl ?? "",
       thumbnail: item.thumbnail ?? "",
       slug: item.slug,
+      sizes: item.sizes ?? [],
+      colors: item.colors ?? [],
     });
   }, [product.data, reset]);
 
@@ -283,6 +314,8 @@ export function ProductForm({ productId }: { productId?: string }) {
         status: values.status as Product["status"],
         isFeatured: Boolean(values.isFeatured),
         categoryId: values.categoryId,
+        sizes: values.sizes,
+        colors: values.colors,
       };
 
       const slug = blankToUndefined(values.slug);
@@ -445,10 +478,10 @@ export function ProductForm({ productId }: { productId?: string }) {
       >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="space-y-4">
-            <Skeleton className="h-72 w-full rounded-2xl" />
-            <Skeleton className="h-64 w-full rounded-2xl" />
+            <Skeleton className="h-72 w-full rounded-none" />
+            <Skeleton className="h-64 w-full rounded-none" />
           </div>
-          <Skeleton className="h-64 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-none" />
         </div>
       </AdminFormPage>
     );
@@ -683,6 +716,129 @@ export function ProductForm({ productId }: { productId?: string }) {
 
           <Card>
             <CardHeader>
+              <CardTitle>Variants</CardTitle>
+              <CardDescription>
+                Optional sizes and colours shown on the product page. Leave empty
+                for one-size, single-colour items.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <p className="mb-2 text-xs font-semibold">Sizes</p>
+                <div className="flex gap-2">
+                  <Input
+                    aria-label="Add a size"
+                    placeholder="e.g. M, 42, XL"
+                    maxLength={24}
+                    value={sizeInput}
+                    onChange={(event) => setSizeInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addSize();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addSize}
+                    disabled={!sizeInput.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(sizes ?? []).map((size) => (
+                    <button
+                      type="button"
+                      key={size}
+                      onClick={() =>
+                        setValue(
+                          "sizes",
+                          (sizes ?? []).filter((value) => value !== size),
+                          { shouldDirty: true },
+                        )
+                      }
+                      className="inline-flex items-center gap-1 border border-border bg-muted px-2 py-1 text-xs hover:border-foreground"
+                    >
+                      {size}
+                      <X className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                  ))}
+                  {!sizes?.length ? (
+                    <p className="text-xs text-muted-foreground">No sizes added.</p>
+                  ) : null}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold">Colours</p>
+                <div className="flex flex-wrap gap-2">
+                  <Input
+                    aria-label="Colour name"
+                    placeholder="Colour name"
+                    maxLength={40}
+                    className="w-auto min-w-32 flex-1"
+                    value={colorName}
+                    onChange={(event) => setColorName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addColor();
+                      }
+                    }}
+                  />
+                  <input
+                    aria-label="Colour value"
+                    type="color"
+                    value={colorHex}
+                    onChange={(event) => setColorHex(event.target.value)}
+                    className="h-9 w-12 cursor-pointer border border-border bg-background p-0.5"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addColor}
+                    disabled={!colorName.trim()}
+                  >
+                    Add colour
+                  </Button>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(colors ?? []).map((color, index) => (
+                    <button
+                      type="button"
+                      key={`${color.name}-${color.hex}-${index}`}
+                      onClick={() =>
+                        setValue(
+                          "colors",
+                          (colors ?? []).filter((_, position) => position !== index),
+                          { shouldDirty: true },
+                        )
+                      }
+                      className="inline-flex items-center gap-1.5 border border-border bg-muted px-2 py-1 text-xs hover:border-foreground"
+                    >
+                      <span
+                        className="inline-block h-3 w-3 rounded-full border border-foreground/20"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      {color.name}
+                      <X className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                  ))}
+                  {!colors?.length ? (
+                    <p className="text-xs text-muted-foreground">No colours added.</p>
+                  ) : null}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Media and 3D</CardTitle>
               <CardDescription>
                 Upload straight from this device. The first image becomes the card
@@ -775,7 +931,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                 control={control}
                 name="isFeatured"
                 render={({ field }) => (
-                  <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-muted/30 p-3">
+                  <div className="flex items-start justify-between gap-3 rounded-none border border-border bg-muted/30 p-3">
                     <div>
                       <p className="text-xs font-semibold">Featured piece</p>
                       <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">

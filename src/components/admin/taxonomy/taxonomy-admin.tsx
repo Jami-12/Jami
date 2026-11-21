@@ -118,7 +118,7 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
       header: labelTitle.slice(0, -1),
       cell: (item) => (
         <div className="flex items-center gap-3">
-          <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
+          <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-none bg-muted">
             <SmartImage
               src={isCategory(item) ? (item.image ?? null) : ((item as Brand).logo ?? null)}
               alt={item.name}
@@ -181,7 +181,7 @@ export function TaxonomyAdmin({ mode }: { mode: Mode }) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                className="text-muted-foreground focus:text-foreground"
                 onClick={() => setDeleting(item)}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

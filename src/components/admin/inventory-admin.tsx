@@ -29,7 +29,7 @@ import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { inventoryApi } from "@/lib/api/services";
 import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { INVENTORY_MOVEMENTS, INVENTORY_MOVEMENT_LABEL } from "@/lib/constants";
-import { formatDate, formatNumber, getErrorMessage, humanizeEnum } from "@/lib/utils";
+import { cn, formatDate, formatNumber, getErrorMessage, humanizeEnum } from "@/lib/utils";
 import type { InventoryItem, InventoryLog } from "@/types";
 
 export function InventoryAdmin() {
@@ -124,16 +124,22 @@ export function InventoryAdmin() {
           <span
             className={
               item.isOutOfStock
-                ? "font-extrabold text-red-600 dark:text-red-400"
+                ? "font-extrabold text-danger"
                 : item.isLowStock
-                  ? "font-extrabold text-amber-600 dark:text-amber-400"
-                  : "font-bold"
+                  ? "font-extrabold text-warning"
+                  : "font-semibold text-success"
             }
           >
             {item.stock}
           </span>
           {item.isLowStock || item.isOutOfStock ? (
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" aria-label="Needs restocking" />
+            <AlertTriangle
+              className={cn(
+                "h-3.5 w-3.5",
+                item.isOutOfStock ? "text-danger" : "text-warning",
+              )}
+              aria-label="Needs restocking"
+            />
           ) : null}
         </div>
       ),
@@ -218,7 +224,7 @@ export function InventoryAdmin() {
               className="pl-9"
             />
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2">
+          <div className="flex items-center gap-3 rounded-none border border-border bg-muted/30 px-3 py-2">
             <div>
               <p className="text-xs font-semibold">Low stock only</p>
               <p className="text-[11px] text-muted-foreground">
@@ -349,7 +355,7 @@ export function InventoryAdmin() {
           </div>
         ) : (
           <div className="space-y-3">
-            <ul className="divide-y divide-border rounded-xl border border-border">
+            <ul className="divide-y divide-border rounded-none border border-border">
               {logs.data?.items.map((log: InventoryLog) => (
                 <li key={log.id} className="flex items-start justify-between gap-3 px-3 py-3">
                   <div>

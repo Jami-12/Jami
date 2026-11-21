@@ -125,6 +125,56 @@ export interface AuthResult {
   expiresIn: string;
 }
 
+/** Short-lived tokens issued after an email verification code is accepted. */
+export interface PasswordResetVerification {
+  resetToken: string;
+  expiresIn: string;
+}
+
+export interface DataResetVerification {
+  verificationToken: string;
+  expiresIn: string;
+}
+
+export interface SendPasswordResetCodeInput {
+  email: string;
+}
+
+export interface VerifyPasswordResetCodeInput {
+  email: string;
+  code: string;
+}
+
+export interface ResetPasswordInput {
+  resetToken: string;
+  newPassword: string;
+}
+
+export interface ExecuteDataResetInput {
+  verificationToken: string;
+  confirmation: string;
+}
+
+/** Deletion counts returned after a SUPER_ADMIN store data wipe. */
+export interface DataResetSummary {
+  products: number;
+  categories: number;
+  brands: number;
+  banners: number;
+  coupons: number;
+  orders: number;
+  payments: number;
+  reviews: number;
+  carts: number;
+  wishlists: number;
+  notifications: number;
+  addresses: number;
+  financeRecords: number;
+  employees: number;
+  inventoryLogs: number;
+  totalRecords: number;
+}
+
 export interface UserResponse extends UserPublic {
   provider: AuthProvider;
   isActive: boolean;
@@ -272,6 +322,11 @@ export interface ProductDiscount {
   endDate: string | null;
 }
 
+export interface ProductColorOption {
+  name: string;
+  hex: string;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -299,6 +354,8 @@ export interface Product {
   images: ProductImage[];
   thumbnail: string | null;
   modelUrl: string | null;
+  sizes: string[];
+  colors: ProductColorOption[];
   positionX: number;
   positionY: number;
   positionZ: number;
@@ -357,6 +414,8 @@ export interface ProductInput {
   brandId?: string | null;
   brandName?: string | null;
   modelUrl?: string | null;
+  sizes?: string[];
+  colors?: ProductColorOption[];
   positionX?: number;
   positionY?: number;
   positionZ?: number;
@@ -450,6 +509,8 @@ export interface CartItem {
   id: string;
   productId: string;
   quantity: number;
+  selectedSize: string | null;
+  selectedColor: string | null;
   unitPrice: number;
   originalPrice: number;
   discountAmount: number;
@@ -467,6 +528,13 @@ export interface Cart {
   subtotal: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AddCartItemInput {
+  productId: string;
+  quantity: number;
+  selectedSize?: string | null;
+  selectedColor?: string | null;
 }
 
 export interface WishlistProductSummary {
@@ -552,6 +620,9 @@ export interface OrderItem {
   productName: string;
   productImage: string | null;
   sku: string | null;
+  /** Nullable for historical orders placed before variants were stored. */
+  size: string | null;
+  color: string | null;
   unitPrice: number;
   originalPrice: number;
   discountAmount: number;
@@ -625,6 +696,36 @@ export interface OrderListParams {
   userId?: string;
   search?: string;
   sortOrder?: "asc" | "desc";
+}
+
+export interface OrderTrackingEvent {
+  label: string;
+  description: string;
+  completed: boolean;
+  current: boolean;
+  timestamp: string | null;
+}
+
+export interface OrderTrackingItem {
+  productName: string;
+  productImage: string | null;
+  size: string | null;
+  color: string | null;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface OrderTrackingResult {
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  placedAt: string;
+  updatedAt: string;
+  itemCount: number;
+  totalAmount: number;
+  items: OrderTrackingItem[];
+  timeline: OrderTrackingEvent[];
 }
 
 export interface PaymentProviderStatus {
@@ -711,12 +812,35 @@ export interface Notification {
   title: string;
   message: string;
   type: NotificationType;
+  /** Links an order notification directly to its order. */
+  orderId: string | null;
+  eventType: string | null;
   isRead: boolean;
   createdAt: string;
 }
 
 export interface PaginatedNotifications extends Paginated<Notification> {
   unreadCount: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Notes                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface Note {
+  id: string;
+  userId: string;
+  title: string | null;
+  content: string;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NoteInput {
+  title?: string | null;
+  content: string;
+  color?: string;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -861,22 +985,68 @@ export interface OrderAnalytics {
   recentOrders: RecentOrderSummary[];
 }
 
+export interface ReceiptDisplayOptions {
+  showLogo: boolean;
+  showSize: boolean;
+  showColor: boolean;
+  showPaymentMethod: boolean;
+  showTransactionId: boolean;
+  showCustomer: boolean;
+  showShippingAddress: boolean;
+}
+
+/** Persisted shop/admin receipt branding singleton. */
+export interface ReceiptSettings extends ReceiptDisplayOptions {
+  id: string;
+  storeName: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  footerNote: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contactAddress: string | null;
+  updatedAt: string;
+}
+
+export interface UpdateReceiptSettingsInput {
+  storeName?: string | null;
+  tagline?: string | null;
+  logoUrl?: string | null;
+  footerNote?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  contactAddress?: string | null;
+  showLogo?: boolean;
+  showSize?: boolean;
+  showColor?: boolean;
+  showPaymentMethod?: boolean;
+  showTransactionId?: boolean;
+  showCustomer?: boolean;
+  showShippingAddress?: boolean;
+}
+
 export interface ReceiptData {
   receiptNumber: string;
   orderNumber: string;
   issuedAt: string;
   store: {
     name: string;
+    tagline: string | null;
+    logoUrl: string | null;
+    footerNote: string;
     address: string;
     phone: string;
     email: string;
     currency: string;
   };
+  display: ReceiptDisplayOptions;
   customer: OrderCustomer;
   shippingAddress: OrderAddress | null;
   items: {
     productName: string;
     productImage: string | null;
+    size: string | null;
+    color: string | null;
     quantity: number;
     unitPrice: number;
     totalPrice: number;

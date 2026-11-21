@@ -102,12 +102,8 @@ export function AccountOverview() {
 
   return (
     <div className="space-y-5">
-      <Card className="relative overflow-hidden">
-        <div
-          className="pointer-events-none absolute -right-16 -top-20 h-60 w-60 rounded-full bg-accent-300/20 blur-3xl dark:bg-accent-300/10"
-          aria-hidden="true"
-        />
-        <CardContent className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <Card className="overflow-hidden">
+        <CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="flex min-w-0 items-center gap-4">
             <Avatar name={user?.name ?? "Account"} src={user?.image} size="lg" />
             <div className="min-w-0">
@@ -214,8 +210,8 @@ export function AccountOverview() {
 
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-14 w-full rounded-xl" />
-              <Skeleton className="h-14 w-full rounded-xl" />
+              <Skeleton className="h-14 w-full rounded-none" />
+              <Skeleton className="h-14 w-full rounded-none" />
             </div>
           ) : visibleAlerts.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">

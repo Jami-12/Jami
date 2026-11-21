@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { SmartImage } from "@/components/ui/smart-image";
-import { cn } from "@/lib/utils";
 import type { Category } from "@/types";
 
 const EDITORIAL = [
@@ -49,7 +48,7 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="eyebrow text-primary-500 dark:text-primary">
+          <p className="eyebrow text-muted-foreground">
             Featured collections
           </p>
           <h2
@@ -65,7 +64,7 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
         </div>
         <Link
           href="/products"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700 hover:underline dark:text-primary"
+          className="-mx-1 inline-flex items-center gap-1.5 px-1 py-0.5 text-sm font-bold text-foreground transition-colors hover:bg-foreground hover:text-background"
         >
           All collections
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -73,38 +72,30 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
-        {items.map((item, index) => (
+        {items.map((item) => (
           <Link
             key={item.title}
             href={item.href}
-            className={cn(
-              "group relative flex min-h-[22rem] flex-col justify-end overflow-hidden rounded-2xl border border-border bg-muted shadow-soft transition-shadow hover:shadow-lift sm:min-h-[26rem]",
-              index === 1 && "md:mt-8",
-              index === 2 && "md:mt-4",
-            )}
+            className="group relative flex min-h-[22rem] flex-col justify-end overflow-hidden rounded-none border border-border bg-muted transition-colors hover:border-foreground sm:min-h-[26rem]"
           >
             <SmartImage
               src={item.image}
               alt={item.title}
               fill
               sizes="(max-width: 768px) 100vw, 33vw"
-              className="object-cover transition-transform duration-[1100ms] ease-out group-hover:scale-105"
+              className="object-cover"
             />
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-transparent"
-            />
-            <div className="relative p-5 text-white sm:p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary-200">
+            <div className="relative border-t border-background/30 bg-foreground p-5 text-background transition-colors group-hover:bg-background group-hover:text-foreground sm:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-background/60 group-hover:text-foreground/60">
                 {item.label}
               </p>
-              <h3 className="mt-2 font-display text-2xl font-semibold leading-tight">
+              <h3 className="mt-2 font-display text-2xl font-semibold leading-tight not-italic">
                 {item.title}
               </h3>
-              <p className="mt-2 max-w-xs text-xs leading-relaxed text-white/75">
+              <p className="mt-2 max-w-xs text-xs leading-relaxed text-background/75 group-hover:text-foreground/75">
                 {item.copy}
               </p>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+              <span className="mt-4 inline-flex items-center gap-1.5 border border-current px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] transition-colors group-hover:bg-foreground group-hover:text-background">
                 Explore the edit
                 <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </span>

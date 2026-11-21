@@ -182,7 +182,7 @@ export function InvestmentsView() {
             variant="ghost"
             size="icon"
             aria-label="Delete investment"
-            className="text-muted-foreground hover:text-red-600"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setDeleting(investment)}
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />

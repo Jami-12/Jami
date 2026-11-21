@@ -19,10 +19,10 @@ export function AdminListHeader({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0 space-y-1.5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+        <p className="text-[11px] font-bold uppercase not-italic tracking-[0.22em] text-muted-foreground">
           {eyebrow}
         </p>
-        <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+        <h1 className="font-display text-2xl font-semibold not-italic tracking-tight sm:text-3xl">{title}</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">

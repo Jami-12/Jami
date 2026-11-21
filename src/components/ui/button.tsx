@@ -32,32 +32,32 @@ export type ButtonSize =
   | "icon-lg";
 
 const base =
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none active:translate-y-px motion-reduce:active:translate-y-0";
+ "inline-flex shrink-0 items-center justify-center gap-2 rounded-none border border-transparent font-semibold whitespace-nowrap transition-[color,background-color,border-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90 hover:shadow-[var(--shadow-lift)]",
+ "border-primary bg-primary text-primary-foreground hover:border-foreground hover:bg-background hover:text-foreground",
   default:
-    "bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90",
+ "border-primary bg-primary text-primary-foreground hover:border-foreground hover:bg-background hover:text-foreground",
   secondary:
-    "bg-secondary text-secondary-foreground shadow-[var(--shadow-soft)] hover:bg-secondary/70",
+ "border-border bg-secondary text-secondary-foreground hover:border-foreground hover:bg-background hover:text-foreground",
   outline:
-    "border border-[var(--border)] bg-[var(--card)]/80 text-[var(--foreground)] hover:border-primary/40 hover:bg-[var(--secondary)]",
+ "border-border bg-card text-foreground hover:border-foreground hover:bg-foreground hover:text-background",
   ghost:
-    "bg-transparent text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
+ "border-transparent bg-transparent text-[var(--muted-foreground)] hover:border-border hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
   danger:
-    "bg-[var(--danger)] text-white shadow-[var(--shadow-soft)] hover:brightness-110",
+ "border-danger/40 bg-danger-soft text-danger hover:border-danger hover:bg-danger hover:text-destructive-foreground",
   destructive:
-    "bg-[var(--destructive)] text-[var(--destructive-foreground)] shadow-[var(--shadow-soft)] hover:brightness-110",
+ "border-danger/40 bg-danger-soft text-danger hover:border-danger hover:bg-danger hover:text-destructive-foreground",
   subtle:
-    "bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--border)]",
-  link: "rounded-none bg-transparent px-0 text-primary underline-offset-4 hover:underline",
+ "border-transparent bg-[var(--muted)] text-[var(--foreground)] hover:border-foreground hover:bg-background",
+  link: "rounded-none border-transparent bg-transparent px-0 text-foreground underline-offset-4 hover:no-underline hover:opacity-70",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  "icon-xs": "h-8 w-8 p-0",
-  "icon-sm": "h-9 w-9 p-0",
-  "icon-lg": "h-12 w-12 p-0",
+ "icon-xs": "h-8 w-8 p-0",
+ "icon-sm": "h-9 w-9 p-0",
+ "icon-lg": "h-12 w-12 p-0",
   sm: "h-9 px-4 text-xs",
   default: "h-11 px-5 text-sm",
   md: "h-11 px-5 text-sm",
@@ -124,7 +124,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? (
         <span
-          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          className="h-4 w-4 animate-spin rounded-none border-2 border-current border-t-transparent"
           aria-hidden="true"
         />
       ) : null}

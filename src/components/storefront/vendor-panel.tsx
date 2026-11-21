@@ -13,10 +13,10 @@ const FEATURES = [
 export function VendorPanel() {
   return (
     <section aria-labelledby="studio-heading" className="container-page py-14 sm:py-16">
-      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
+      <div className="overflow-hidden rounded-none border border-border bg-card">
         <div className="grid gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
               For the studio
             </p>
             <h2 id="studio-heading" className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -36,7 +36,7 @@ export function VendorPanel() {
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="border-border hover:border-foreground hover:bg-foreground hover:text-background">
                 <Link href="/super-admin">Accounting overview</Link>
               </Button>
             </div>
@@ -46,12 +46,12 @@ export function VendorPanel() {
             {FEATURES.map((feature) => (
               <div
                 key={feature.label}
-                className="rounded-2xl border border-border bg-background/60 p-4"
+                className="rounded-none border border-border bg-background p-4"
               >
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-accent-200">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-none border border-border bg-secondary text-foreground">
                   <feature.icon className="h-4 w-4" aria-hidden="true" />
                 </span>
-                <h3 className="mt-3 text-sm font-bold">{feature.label}</h3>
+                <h3 className="mt-3 text-sm font-bold uppercase tracking-[0.12em]">{feature.label}</h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   {feature.copy}
                 </p>

@@ -36,7 +36,7 @@ export function AdminFormPage({
           <Separator />
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-500 dark:text-accent-300">
+              <p className="eyebrow text-muted-foreground">
                 {eyebrow}
               </p>
               <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">

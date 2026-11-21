@@ -10,12 +10,12 @@ import { cn } from "@/lib/utils";
 
 export const MAX_ENTITY_IMAGE_BYTES = 5 * 1024 * 1024;
 export const ACCEPTED_ENTITY_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/avif",
+ "image/jpeg",
+ "image/jpg",
+ "image/png",
+ "image/webp",
+ "image/gif",
+ "image/avif",
 ] as const;
 
 export interface ImageUploadFieldProps {
@@ -107,7 +107,7 @@ export function ImageUploadField({
     <div className="space-y-3">
       <div>
         <p className="text-sm font-semibold">
-          {label} {required ? <span className="text-red-600">*</span> : null}
+          {label} {required ? <span className="text-muted-foreground">*</span> : null}
         </p>
         {description ? (
           <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
@@ -128,7 +128,7 @@ export function ImageUploadField({
           if (!disabled) accept(event.dataTransfer.files);
         }}
         className={cn(
-          "rounded-2xl border-2 border-dashed transition",
+          "rounded-none border-2 border-dashed transition",
           dragging
             ? "border-primary-400 bg-accent-100/50 p-2 dark:bg-accent-300/5"
             : "border-border bg-muted/20 p-2",
@@ -138,7 +138,7 @@ export function ImageUploadField({
         {preview ? (
           <div
             className={cn(
-              "relative w-full overflow-hidden rounded-xl border border-border bg-muted",
+              "relative w-full overflow-hidden rounded-none border border-border bg-muted",
               aspect === "square" ? "aspect-square" : "aspect-[16/8]",
             )}
           >
@@ -149,7 +149,7 @@ export function ImageUploadField({
               sizes="(max-width: 1024px) 100vw, 60vw"
               className="object-cover"
             />
-            <span className="absolute left-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
+            <span className="absolute left-2 top-2 rounded-none bg-black/65 px-2 py-0.5 text-[10px] font-semibold text-white ">
               {file ? "New image · uploads on save" : "Saved image"}
             </span>
             {!disabled ? (
@@ -157,7 +157,7 @@ export function ImageUploadField({
                 type="button"
                 onClick={remove}
                 aria-label={`Remove ${label.toLowerCase()}`}
-                className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition hover:bg-black/90"
+                className="absolute right-2 top-2 rounded-none bg-black/60 p-1.5 text-white transition hover:bg-black/90"
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -168,9 +168,9 @@ export function ImageUploadField({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={disabled}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl px-4 py-10 text-center transition hover:bg-muted/40 disabled:cursor-not-allowed"
+            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-none px-4 py-10 text-center transition hover:bg-muted/40 disabled:cursor-not-allowed"
           >
-            <span className="rounded-full border border-border bg-card p-3 text-muted-foreground">
+            <span className="rounded-none border border-border bg-card p-3 text-muted-foreground">
               {disabled ? (
                 <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
               ) : (
@@ -216,7 +216,7 @@ export function ImageUploadField({
             size="sm"
             onClick={remove}
             disabled={disabled}
-            className="text-muted-foreground hover:text-red-600"
+            className="text-muted-foreground hover:text-foreground"
           >
             Remove
           </Button>
@@ -224,7 +224,7 @@ export function ImageUploadField({
       </div>
 
       {error ? (
-        <p className="text-[11px] font-medium text-red-600" role="alert">
+        <p className="text-[11px] font-medium text-muted-foreground" role="alert">
           {error}
         </p>
       ) : (

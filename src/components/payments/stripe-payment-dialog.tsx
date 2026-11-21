@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
-import { AlertCircle, ShieldCheck } from "lucide-react";
+import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { useTheme } from "@/components/providers/theme-provider";
@@ -12,6 +12,22 @@ import { Dialog } from "@/components/ui/dialog";
 import { paymentsApi } from "@/lib/api/services";
 import { getErrorMessage } from "@/lib/utils";
 import type { PaymentStatus } from "@/types";
+
+/**
+ * Stripe.js takes a moment to download and initialise. Cache the loader per
+ * publishable key so it starts as soon as the checkout knows the key (see
+ * `preloadStripe`) instead of only when the payment dialog opens.
+ */
+const stripeLoaders = new Map<string, Promise<Stripe | null>>();
+
+export function preloadStripe(publishableKey: string): Promise<Stripe | null> {
+  let loader = stripeLoaders.get(publishableKey);
+  if (!loader) {
+    loader = loadStripe(publishableKey);
+    stripeLoaders.set(publishableKey, loader);
+  }
+  return loader;
+}
 
 function CardForm({
   orderId,
@@ -48,7 +64,7 @@ function CardForm({
       setError(
         getErrorMessage(
           confirmError,
-          "The card payment could not be submitted. Check your connection and try again.",
+ "The card payment could not be submitted. Check your connection and try again.",
         ),
       );
       submittingRef.current = false;
@@ -90,7 +106,7 @@ function CardForm({
       toast.error(
         getErrorMessage(
           reconcileError,
-          "Payment was submitted but we could not confirm it yet. Your order page will show the latest status.",
+ "Payment was submitted but we could not confirm it yet. Your order page will show the latest status.",
         ),
       );
       onResolved("PROCESSING");
@@ -100,16 +116,28 @@ function CardForm({
     }
   };
 
+  const ready = Boolean(stripe && elements);
+
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <PaymentElement />
+    <form onSubmit={submit} className="space-y-4 rounded-none border border-border bg-card p-4">
+      {ready ? (
+        <PaymentElement />
+      ) : (
+        <div
+          className="flex min-h-24 items-center justify-center gap-2 text-xs text-muted-foreground"
+          role="status"
+        >
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          Loading secure card form…
+        </div>
+      )}
       {error ? (
-        <p className="flex items-start gap-2 rounded-xl bg-danger-soft p-3 text-xs font-medium text-danger">
+        <p className="flex items-start gap-2 rounded-none border border-foreground bg-secondary p-3 text-xs font-medium text-foreground">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : null}
-      <Button type="submit" className="w-full" loading={submitting} disabled={!stripe}>
+      <Button type="submit" className="w-full rounded-none border border-foreground hover:bg-foreground hover:text-background" loading={submitting} disabled={!ready}>
         <ShieldCheck className="h-4 w-4" aria-hidden="true" />
         Pay securely
       </Button>
@@ -141,14 +169,14 @@ export function StripePaymentDialog({
 }) {
   const { theme } = useTheme();
   const stripePromise = React.useMemo<Promise<Stripe | null>>(
-    () => loadStripe(publishableKey),
+    () => preloadStripe(publishableKey),
     [publishableKey],
   );
 
   // Stripe Elements needs a concrete color, so resolve the active theme token.
   const isDark = theme === "dark";
   const primaryColor = React.useMemo(() => {
-    const fallback = isDark ? "#2dd4bf" : "#0d9488";
+    const fallback = isDark ? "#ffffff" : "#000000";
     if (typeof window === "undefined") return fallback;
     const value = getComputedStyle(document.documentElement)
       .getPropertyValue("--primary")
@@ -165,7 +193,7 @@ export function StripePaymentDialog({
           appearance: {
             theme: theme === "dark" ? "night" : "stripe",
             variables: {
-              borderRadius: "12px",
+              borderRadius: "0px",
               colorPrimary: primaryColor,
             },
           },

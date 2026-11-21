@@ -1,4 +1,5 @@
 export { HeroBanner, HeroBanner as HeroSection } from "./hero-banner";
+export { OrderTracking } from "./order-tracking";
 export { ProductFinder } from "./product-finder";
 export {
   MiddleCategories,

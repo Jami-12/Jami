@@ -33,7 +33,7 @@ export function Price({
   const price = (
     <span
       className={cn(
-        "tabular-nums tracking-tight text-[var(--foreground)]",
+ "tabular-nums tracking-tight text-[var(--foreground)]",
         SIZES[size],
         className,
       )}

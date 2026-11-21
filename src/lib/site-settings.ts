@@ -2,14 +2,14 @@ import { SITE } from "@/lib/constants";
 import type { SiteSettings } from "@/types";
 
 export const HOME_SECTION_KEYS = [
-  "showHero",
-  "showProductFinder",
-  "showMiddleCategories",
-  "showCategorySections",
-  "showNewArrivals",
-  "showBrands",
-  "showPromoBanners",
-  "showNewsletter",
+ "showHero",
+ "showProductFinder",
+ "showMiddleCategories",
+ "showCategorySections",
+ "showNewArrivals",
+ "showBrands",
+ "showPromoBanners",
+ "showNewsletter",
 ] as const;
 
 export type HomeSectionKey = (typeof HOME_SECTION_KEYS)[number];

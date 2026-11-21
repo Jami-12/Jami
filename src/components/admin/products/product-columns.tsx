@@ -42,7 +42,7 @@ export function productColumns({
       header: "Product",
       cell: (product) => (
         <div className="flex items-center gap-3">
-          <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
+          <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-none bg-muted">
             <SmartImage
               src={productImage(product)}
               alt={productName(product)}
@@ -71,9 +71,11 @@ export function productColumns({
       cell: (product) => (
         <span
           className={
-            product.stock <= product.minimumStockLevel
-              ? "font-bold text-amber-600 dark:text-amber-400"
-              : "font-semibold"
+            product.stock === 0
+              ? "font-bold text-danger"
+              : product.stock <= product.minimumStockLevel
+                ? "font-bold text-warning"
+                : "font-semibold text-success"
           }
         >
           {product.stock}
@@ -114,7 +116,7 @@ export function productColumns({
           disabled={featuredPendingId === product.id}
         >
           {product.isFeatured ? (
-            <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
+            <Star className="h-4 w-4 fill-muted-foreground text-muted-foreground" aria-hidden="true" />
           ) : (
             <StarOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           )}
@@ -148,7 +150,7 @@ export function productColumns({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                className="text-muted-foreground focus:text-foreground"
                 onClick={() => onDelete(product)}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

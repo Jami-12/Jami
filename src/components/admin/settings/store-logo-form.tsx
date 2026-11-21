@@ -132,7 +132,7 @@ export function StoreLogoForm() {
               The site name appears in the header, page titles and storefront messaging.
             </CardDescription>
           </div>
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-accent-200">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-accent-200">
             <Store className="h-4 w-4" aria-hidden="true" />
           </span>
         </CardHeader>
@@ -159,14 +159,14 @@ export function StoreLogoForm() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Live preview
             </p>
-            <div className="overflow-hidden rounded-2xl border border-border bg-[var(--background)] shadow-soft">
+            <div className="overflow-hidden rounded-none border border-border bg-[var(--background)]">
               <div className="flex h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-5">
                 <div className="flex min-w-0 items-center gap-2.5">
                   {liveLogo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={liveLogo} alt="" className="h-9 w-9 rounded-xl object-contain" />
+                    <img src={liveLogo} alt="" className="h-9 w-9 rounded-none object-contain" />
                   ) : (
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-700 text-xs font-bold text-white dark:bg-accent-300 dark:text-primary-950">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none bg-primary-700 text-xs font-bold text-white dark:bg-accent-300 dark:text-primary-950">
                       {liveName.slice(0, 1).toUpperCase()}
                     </span>
                   )}
@@ -183,11 +183,11 @@ export function StoreLogoForm() {
               </div>
               <div className="flex items-center justify-between gap-3 px-4 py-5 sm:px-5">
                 <div className="space-y-1.5">
-                  <div className="h-2.5 w-32 rounded-full bg-muted" />
-                  <div className="h-2.5 w-48 rounded-full bg-muted/70" />
-                  <div className="h-2.5 w-24 rounded-full bg-muted/50" />
+                  <div className="h-2.5 w-32 rounded-none bg-muted" />
+                  <div className="h-2.5 w-48 rounded-none bg-muted/70" />
+                  <div className="h-2.5 w-24 rounded-none bg-muted/50" />
                 </div>
-                <span className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                <span className="rounded-none border border-border px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
                   Storefront
                 </span>
               </div>

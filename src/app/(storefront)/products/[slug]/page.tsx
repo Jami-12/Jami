@@ -79,8 +79,8 @@ export default async function ProductPage({
   const available = product.stock > 0 && product.status !== "OUT_OF_STOCK";
 
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+ "@context": "https://schema.org",
+ "@type": "Product",
     name: productName(product),
     description: product.description,
     sku: product.sku,
@@ -90,13 +90,13 @@ export default async function ProductPage({
     aggregateRating:
       product.reviewCount > 0
         ? {
-            "@type": "AggregateRating",
+ "@type": "AggregateRating",
             ratingValue: product.averageRating,
             reviewCount: product.reviewCount,
           }
         : undefined,
     offers: {
-      "@type": "Offer",
+ "@type": "Offer",
       priceCurrency: "BDT",
       price: product.finalPrice,
       availability: available

@@ -30,9 +30,9 @@ export function NewsletterForm() {
 
   if (status === "success") {
     return (
-      <div className="flex items-start gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-3">
-        <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-        <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+      <div className="flex items-start gap-2.5 rounded-none border border-border bg-secondary px-3.5 py-3">
+        <Check className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden="true" />
+        <p className="text-sm font-medium text-foreground">
           You&apos;re on the list. Look out for studio notes on Sunday.
         </p>
       </div>
@@ -41,7 +41,7 @@ export function NewsletterForm() {
 
   return (
     <form onSubmit={submit} noValidate>
-      <label htmlFor={`${id}-email`} className="text-xs font-semibold text-muted-foreground">
+      <label htmlFor={`${id}-email`} className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
         Email address
       </label>
       <div className="mt-1.5 flex gap-2">
@@ -57,12 +57,12 @@ export function NewsletterForm() {
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
           autoComplete="email"
-          className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-card px-3 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-ring/25 aria-[invalid=true]:border-red-500"
+          className="h-11 min-w-0 flex-1 rounded-none border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-foreground focus:ring-1 focus:ring-foreground aria-[invalid=true]:border-foreground"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:bg-primary-800 disabled:opacity-60"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-none border border-foreground bg-primary text-primary-foreground transition-colors hover:bg-foreground hover:text-background disabled:opacity-60"
           aria-label="Subscribe to the newsletter"
         >
           {status === "loading" ? (
@@ -73,7 +73,7 @@ export function NewsletterForm() {
         </button>
       </div>
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+        <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-foreground">
           {error}
         </p>
       ) : (

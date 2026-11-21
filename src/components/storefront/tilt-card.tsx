@@ -13,7 +13,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
 /**
- * A pointer-following 3D tilt with a soft glare highlight. Disabled on touch
+ * A pointer-following 3D tilt with a crisp hairline edge. Disabled on touch
  * devices and when the visitor prefers reduced motion.
  */
 export function TiltCard({
@@ -45,7 +45,7 @@ export function TiltCard({
     stiffness: 200,
     damping: 30,
   });
-  const background = useMotionTemplate`radial-gradient(300px circle at ${glareX}% ${glareY}%, color-mix(in oklab, var(--color-primary-50) 35%, transparent), transparent 62%)`;
+  const background = useMotionTemplate`var(--foreground)`;
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (disabled || event.pointerType === "touch") return;
@@ -82,8 +82,8 @@ export function TiltCard({
         {glare && !disabled ? (
           <motion.span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] mix-blend-overlay"
-            style={{ background, opacity: glareOpacity }}
+            className="pointer-events-none absolute inset-0 z-20 rounded-none border"
+            style={{ borderColor: background, opacity: glareOpacity }}
           />
         ) : null}
       </motion.div>

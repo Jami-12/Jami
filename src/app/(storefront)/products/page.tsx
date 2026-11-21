@@ -18,7 +18,7 @@ import { mapSort } from "@/types/ui";
 export const metadata: Metadata = {
   title: "Shop the collection",
   description:
-    "Browse the full collection: elevated essentials, considered details and pieces made to be worn for years, not seasons.",
+ "Browse the full collection: elevated essentials, considered details and pieces made to be worn for years, not seasons.",
   alternates: { canonical: "/products" },
 };
 
@@ -160,12 +160,12 @@ export default async function ProductsPage({
   const activeCategory = categories.find((category) => category.slug === query.category);
 
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
+ "@context": "https://schema.org",
+ "@type": "ItemList",
     name: `${SITE.name} collection`,
     numberOfItems: total,
     itemListElement: items.map((product, index) => ({
-      "@type": "ListItem",
+ "@type": "ListItem",
       position: index + 1,
       url: `/products/${product.slug}`,
       name: product.title,
@@ -244,7 +244,7 @@ export default async function ProductsPage({
       </div>
 
       {query.q ? (
-        <p className="mt-8 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+        <p className="mt-8 rounded-none border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">Search:</span> “{query.q}”
           — {total} result{total === 1 ? "" : "s"}.
         </p>

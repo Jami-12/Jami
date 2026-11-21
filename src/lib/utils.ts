@@ -232,11 +232,11 @@ export function isoDate(date: Date): string {
 }
 
 const OPTIMIZABLE_HOSTS = new Set([
-  "images.unsplash.com",
-  "res.cloudinary.com",
-  "lh3.googleusercontent.com",
-  "localhost",
-  "127.0.0.1",
+ "images.unsplash.com",
+ "res.cloudinary.com",
+ "lh3.googleusercontent.com",
+ "localhost",
+ "127.0.0.1",
 ]);
 
 export function canOptimizeImage(src: string | null | undefined): boolean {

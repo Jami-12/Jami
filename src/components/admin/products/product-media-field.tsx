@@ -15,10 +15,10 @@ import { cn } from "@/lib/utils";
 import type { ProductImage } from "@/types";
 
 export const ACCEPTED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
+ "image/jpeg",
+ "image/jpg",
+ "image/png",
+ "image/webp",
 ] as const;
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -109,7 +109,7 @@ export function ProductMediaField({
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          "rounded-2xl border-2 border-dashed p-3 transition sm:p-4",
+          "rounded-none border-2 border-dashed p-3 transition sm:p-4",
           dragging
             ? "border-primary bg-primary/5"
             : "border-border bg-muted/20",
@@ -174,14 +174,14 @@ export function ProductMediaField({
 
         <label
           className={cn(
-            "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl px-4 py-6 text-center transition hover:bg-muted/40",
+            "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-none px-4 py-6 text-center transition hover:bg-muted/40",
             disabled && "pointer-events-none",
           )}
         >
           {uploading ? (
             <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
           ) : (
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-none border border-border bg-card text-primary">
               <UploadCloud className="h-5 w-5" aria-hidden="true" />
             </span>
           )}
@@ -211,14 +211,14 @@ export function ProductMediaField({
 
         {uploading ? (
           <div
-            className="mt-3 h-1.5 overflow-hidden rounded-full bg-border"
+            className="mt-3 h-1.5 overflow-hidden rounded-none bg-border"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={uploadProgress?.total ?? 1}
             aria-valuenow={uploadProgress?.done ?? 0}
           >
             <div
-              className="h-full rounded-full bg-primary transition-all duration-300"
+              className="h-full rounded-none bg-primary transition-all duration-300"
               style={{
                 width: uploadProgress
                   ? `${Math.round((uploadProgress.done / Math.max(uploadProgress.total, 1)) * 100)}%`
@@ -267,13 +267,13 @@ function ImageTile({
   onRemove?: () => void;
 }) {
   return (
-    <li className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
+    <li className="overflow-hidden rounded-none border border-border bg-card">
       <div className="relative aspect-square bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className="h-full w-full object-cover" />
         <span
           className={cn(
-            "absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] backdrop-blur",
+            "absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-none px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ",
             primary
               ? "bg-primary text-primary-foreground"
               : secondary
@@ -287,7 +287,7 @@ function ImageTile({
           {label}
         </span>
         {badge ? (
-          <span className="absolute inset-x-1.5 bottom-1.5 rounded-full bg-foreground/70 px-1.5 py-0.5 text-center text-[9px] font-semibold text-background backdrop-blur">
+          <span className="absolute inset-x-1.5 bottom-1.5 rounded-none bg-foreground/70 px-1.5 py-0.5 text-center text-[9px] font-semibold text-background ">
             {badge}
           </span>
         ) : null}

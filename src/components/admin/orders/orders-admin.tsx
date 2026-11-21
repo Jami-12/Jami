@@ -45,6 +45,14 @@ export function OrdersAdmin() {
     [debounced, status, paymentStatus, limit],
   );
 
+  // Notification links arrive as /admin/orders?orderId=... so the exact order
+  // opens immediately and can be confirmed from the detail dialog.
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const orderId = new URLSearchParams(window.location.search).get("orderId");
+    if (orderId) setViewingId(orderId);
+  }, []);
+
   const query = useQuery({
     queryKey: queryKeys.orders.admin.list({ page, limit, search: debounced, status, paymentStatus }),
     queryFn: () =>
@@ -238,7 +246,12 @@ export function OrdersAdmin() {
       <OrderDetailDialog
         order={order}
         open={Boolean(viewingId)}
-        onClose={() => setViewingId(null)}
+        onClose={() => {
+          setViewingId(null);
+          if (typeof window !== "undefined" && window.location.search.includes("orderId=")) {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        }}
         loading={detail.isLoading}
         cashDue={cashDue}
         onCollectCash={() => setCollectOpen(true)}

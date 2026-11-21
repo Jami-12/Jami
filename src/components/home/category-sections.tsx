@@ -31,8 +31,13 @@ export function CategorySections({
         eyebrow="Collection"
         title={title}
         description={description ?? undefined}
+        className="border-b border-border pb-6"
         action={
-          <Button asChild variant="outline">
+          <Button
+            asChild
+            variant="outline"
+            className="border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
+          >
             <Link href={`/products?category=${encodeURIComponent(slug)}`}>
               View all in category
               <ArrowRight className="h-4 w-4" aria-hidden="true" />

@@ -27,7 +27,7 @@ import {
 } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-import { cartSubtotal, useCartStore } from "@/stores/cart-store";
+import { cartLineKey, cartSubtotal, useCartStore } from "@/stores/cart-store";
 
 export function CartView() {
   const hydrated = useHydrated();
@@ -53,10 +53,10 @@ export function CartView() {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-3">
           {[0, 1, 2].map((index) => (
-            <Skeleton key={index} className="h-32 w-full rounded-2xl" />
+            <Skeleton key={index} className="h-32 w-full rounded-none" />
           ))}
         </div>
-        <Skeleton className="h-72 w-full rounded-2xl" />
+        <Skeleton className="h-72 w-full rounded-none" />
       </div>
     );
   }
@@ -94,9 +94,9 @@ export function CartView() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
       <div>
-        <Card className="mb-4 p-4 shadow-soft sm:p-5">
+        <Card className="mb-4 p-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-primary-600 dark:text-accent-300">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-none border border-border bg-secondary text-foreground">
               <Truck className="h-4 w-4" aria-hidden="true" />
             </span>
             {remaining > 0 ? (
@@ -105,7 +105,7 @@ export function CartView() {
                 shipping.
               </span>
             ) : (
-              <span className="text-emerald-600 dark:text-emerald-400">
+              <span className="text-muted-foreground">
                 Free standard shipping unlocked.
               </span>
             )}
@@ -117,7 +117,7 @@ export function CartView() {
             ) : null}
           </div>
           <div
-            className="mt-3 h-1.5 overflow-hidden rounded-full bg-border"
+            className="mt-3 h-1.5 overflow-hidden rounded-none bg-border"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -125,22 +125,22 @@ export function CartView() {
             aria-label="Progress toward free shipping"
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary-600 to-accent-400 transition-all duration-500"
+              className="h-full rounded-none bg-foreground transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
         </Card>
 
-        <Card className="overflow-hidden shadow-soft">
+        <Card className="overflow-hidden">
           <ul className="divide-y divide-border">
             {items.map((item) => (
               <li
-                key={item.productId}
+                key={item.cartItemId ?? cartLineKey(item)}
                 className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5"
               >
                 <Link
                   href={`/products/${item.slug}`}
-                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-muted"
+                  className="relative h-28 w-28 shrink-0 overflow-hidden rounded-none border border-border bg-muted"
                 >
                   <SmartImage
                     src={item.image}
@@ -156,16 +156,22 @@ export function CartView() {
                     <div className="min-w-0">
                       <Link
                         href={`/products/${item.slug}`}
-                        className="line-clamp-2 text-sm font-bold leading-snug hover:underline sm:text-base"
+                        className="line-clamp-2 text-sm font-bold leading-snug underline-offset-4 hover:underline sm:text-base"
                       >
                         {item.name}
                       </Link>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>Selected piece</span>
+                        {item.selectedSize ? (
+                          <Badge tone="neutral">Size: {item.selectedSize}</Badge>
+                        ) : null}
+                        {item.selectedColor ? (
+                          <Badge tone="neutral">Color: {item.selectedColor}</Badge>
+                        ) : null}
                         {item.stock <= 5 ? (
                           <Badge tone="warning">Only {item.stock} left</Badge>
                         ) : (
-                          <Badge tone="success" dot>
+                          <Badge dot tone="neutral">
                             In stock
                           </Badge>
                         )}
@@ -173,9 +179,9 @@ export function CartView() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => void removeItem(item.productId)}
+                      onClick={() => void removeItem(item.cartItemId ?? cartLineKey(item))}
                       aria-label={`Remove ${item.name} from bag`}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-red-500/10 hover:text-red-600"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-border text-muted-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -186,7 +192,7 @@ export function CartView() {
                       value={item.quantity}
                       max={Math.max(1, Math.min(item.stock, 99))}
                       onChange={(quantity) =>
-                        void updateQuantity(item.productId, quantity)
+                        void updateQuantity(item.cartItemId ?? cartLineKey(item), quantity)
                       }
                       label={`Quantity of ${item.name}`}
                     />
@@ -206,7 +212,7 @@ export function CartView() {
         </Card>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="border border-border hover:border-foreground hover:bg-foreground hover:text-background">
             <Link href="/products">
               Continue shopping
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -215,7 +221,7 @@ export function CartView() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-red-600"
+            className="border border-border text-muted-foreground hover:border-foreground hover:bg-foreground hover:text-background"
             onClick={() => setConfirmClear(true)}
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -225,7 +231,7 @@ export function CartView() {
       </div>
 
       <aside className="lg:sticky lg:top-24">
-        <Card className="p-5 shadow-soft sm:p-6">
+        <Card className="p-5 sm:p-6">
           <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Order summary
           </h2>

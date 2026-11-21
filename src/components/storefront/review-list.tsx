@@ -99,7 +99,7 @@ export function ReviewList({
     return (
       <div className="space-y-3">
         {[0, 1].map((index) => (
-          <Skeleton key={index} className="h-24 w-full" />
+          <Skeleton key={index} className="h-24 w-full rounded-none" />
         ))}
       </div>
     );
@@ -107,7 +107,7 @@ export function ReviewList({
 
   if (reviewCount === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card/60 px-4 py-8 text-center">
+      <div className="rounded-none border border-border bg-secondary px-4 py-8 text-center">
         <Star className="mx-auto h-5 w-5 text-muted-foreground" aria-hidden="true" />
         <p className="mt-2 text-sm font-semibold">No reviews yet</p>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -119,7 +119,7 @@ export function ReviewList({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card px-4 py-3">
+      <div className="flex flex-wrap items-center gap-4 rounded-none border border-border bg-secondary px-4 py-3">
         <div className="text-center">
           <p className="text-3xl font-extrabold tabular-nums">{averageRating.toFixed(1)}</p>
           <RatingStars rating={averageRating} size={12} className="mt-1" />
@@ -135,7 +135,7 @@ export function ReviewList({
         {items.map((review) => {
           const isOwner = user?.id === review.userId;
           return (
-            <li key={review.id} className="rounded-xl border border-border bg-card p-4">
+            <li key={review.id} className="rounded-none border border-border bg-card p-4">
               <div className="flex items-start gap-3">
                 <Avatar name={review.user.name} size="sm" />
                 <div className="min-w-0 flex-1">
@@ -160,7 +160,7 @@ export function ReviewList({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-7 w-7 rounded-none border border-border hover:border-foreground hover:bg-foreground hover:text-background"
                             aria-label="Edit your review"
                             onClick={() => openEdit(review)}
                           >
@@ -169,7 +169,7 @@ export function ReviewList({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-red-600"
+                            className="h-7 w-7 rounded-none border border-border text-muted-foreground hover:border-foreground hover:bg-foreground hover:text-background"
                             aria-label="Delete your review"
                             onClick={() => setDeleting(review)}
                           >
@@ -196,6 +196,7 @@ export function ReviewList({
           <Button
             variant="outline"
             size="sm"
+            className="rounded-none border-border hover:border-foreground hover:bg-foreground hover:text-background"
             onClick={() => setPage((current) => Math.max(1, current - 1))}
             disabled={page <= 1}
           >
@@ -207,6 +208,7 @@ export function ReviewList({
           <Button
             variant="outline"
             size="sm"
+            className="rounded-none border-border hover:border-foreground hover:bg-foreground hover:text-background"
             onClick={() => setPage((current) => current + 1)}
             disabled={!data?.meta.hasNextPage}
           >
@@ -243,7 +245,11 @@ export function ReviewList({
                   aria-checked={editRating === value}
                   aria-label={`${value} star${value === 1 ? "" : "s"}`}
                   onClick={() => setEditRating(value)}
-                  className="rounded p-1 text-amber-400 transition hover:scale-110"
+                  className={`rounded-none border p-1 transition-colors ${
+                    editRating >= value
+                      ? "border-foreground text-foreground"
+                      : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                  }`}
                 >
                   <Star
                     className="h-6 w-6"

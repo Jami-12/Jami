@@ -48,7 +48,7 @@ export function ListPagination({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between",
+ "flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between",
         className,
       )}
     >
@@ -66,7 +66,7 @@ export function ListPagination({
               aria-label="Rows per page"
               value={size}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="h-8 rounded-lg border border-input bg-card px-2 text-xs font-semibold text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20"
+              className="h-8 rounded-none border border-border bg-card px-2 text-xs font-semibold text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-foreground focus-visible:ring-1 focus-visible:ring-foreground"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>

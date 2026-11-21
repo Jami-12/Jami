@@ -114,7 +114,7 @@ export function CouponForm({ couponId }: { couponId?: string }) {
         title="Edit coupon"
         description="Loading…"
       >
-        <Skeleton className="h-72 w-full max-w-3xl rounded-2xl" />
+        <Skeleton className="h-72 w-full max-w-3xl rounded-none" />
       </AdminFormPage>
     );
   }
@@ -290,7 +290,7 @@ export function CouponForm({ couponId }: { couponId?: string }) {
                 control={control}
                 name="isActive"
                 render={({ field }) => (
-                  <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-muted/30 p-3">
+                  <div className="flex items-start justify-between gap-3 rounded-none border border-border bg-muted/30 p-3">
                     <div>
                       <p className="text-xs font-semibold">Active</p>
                       <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">

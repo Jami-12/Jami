@@ -30,12 +30,12 @@ export function PageSection({
   const hasHeader = Boolean(title || description || actions);
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("min-w-0 overflow-hidden bg-card transition-colors hover:border-foreground", className)}>
       {hasHeader ? (
         <CardHeader className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="min-w-0 space-y-1">
             {title ? (
-              <CardTitle className="font-display text-base leading-tight">
+              <CardTitle className="font-display text-base not-italic leading-tight">
                 {title}
               </CardTitle>
             ) : null}
@@ -51,7 +51,7 @@ export function PageSection({
         </CardHeader>
       ) : null}
 
-      <CardContent className="p-4 sm:p-5">{children}</CardContent>
+      <CardContent className="min-w-0 p-4 sm:p-5">{children}</CardContent>
 
       {footer ? (
         <>

@@ -93,8 +93,8 @@ export function ProfileSettingsForm() {
   if (profile.isLoading && !user) {
     return (
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <Skeleton className="h-80 w-full rounded-2xl" />
-        <Skeleton className="h-80 w-full rounded-2xl" />
+        <Skeleton className="h-80 w-full rounded-none" />
+        <Skeleton className="h-80 w-full rounded-none" />
       </div>
     );
   }

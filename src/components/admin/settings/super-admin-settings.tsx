@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ShieldCheck, UserRound, Store } from "lucide-react";
+import { Database, ShieldCheck, UserRound, Store } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 
+import { DataManagementSettings } from "./data-management-settings";
 import { ProfileSettingsForm } from "./profile-settings-form";
 import { StoreLogoForm } from "./store-logo-form";
 
 const TABS = [
   { value: "profile", label: "Profile", icon: UserRound },
   { value: "store", label: "Store & logo", icon: Store },
+  { value: "data", label: "Data management", icon: Database },
 ] as const;
 
 export function SuperAdminSettings() {
@@ -33,7 +35,7 @@ export function SuperAdminSettings() {
       <Card className="overflow-hidden">
         <CardHeader className="gap-4 border-b border-border bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-700 text-white shadow-sm dark:bg-accent-300 dark:text-primary-950">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-none bg-primary-700 text-white shadow-none dark:bg-accent-300 dark:text-primary-950">
               <ShieldCheck className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="space-y-1">
@@ -42,8 +44,8 @@ export function SuperAdminSettings() {
               </p>
               <CardTitle className="font-display text-xl sm:text-2xl">Settings</CardTitle>
               <CardDescription className="max-w-xl">
-                Keep your super admin profile current and control the identity shown across the
-                storefront.
+                Keep your super admin profile current, control storefront identity and manage
+                sensitive store data.
               </CardDescription>
             </div>
           </div>
@@ -63,7 +65,9 @@ export function SuperAdminSettings() {
             <ActiveIcon className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{active.label}</span>
             <Separator orientation="vertical" className="h-4" />
-            <span>Changes apply instantly</span>
+            <span>
+              {tab === "data" ? "Verification required" : "Changes apply instantly"}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -75,19 +79,38 @@ export function SuperAdminSettings() {
             <CardTitle className="font-display text-base">{active.label}</CardTitle>
           </div>
           <CardDescription>
-            {tab === "store"
-              ? "Update the storefront name and logo seen by every visitor and admin."
-              : "Update the contact details attached to your super admin account."}
+            {tab === "data"
+              ? "Verify your Gmail and explicitly confirm before permanently wiping store data."
+              : tab === "store"
+                ? "Update the storefront name and logo seen by every visitor and admin."
+                : "Update the contact details attached to your super admin account."}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
-          {tab === "store" ? <StoreLogoForm /> : <ProfileSettingsForm />}
+          {tab === "data" ? (
+            <DataManagementSettings />
+          ) : tab === "store" ? (
+            <StoreLogoForm />
+          ) : (
+            <ProfileSettingsForm />
+          )}
         </CardContent>
       </Card>
 
       <div className="flex justify-end">
-        <Button variant="link" size="sm" onClick={() => setTab(tab === "store" ? "profile" : "store")}>
-          Switch to {tab === "store" ? "profile" : "store settings"}
+        <Button
+          variant="link"
+          size="sm"
+          onClick={() =>
+            setTab(tab === "profile" ? "store" : tab === "store" ? "data" : "profile")
+          }
+        >
+          Switch to{" "}
+          {tab === "profile"
+            ? "store settings"
+            : tab === "store"
+              ? "data management"
+              : "profile"}
         </Button>
       </div>
     </div>

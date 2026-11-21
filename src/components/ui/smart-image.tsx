@@ -39,7 +39,7 @@ export function SmartImage({
       return (
         <span
           className={cn(
-            "absolute inset-0 block overflow-hidden bg-[var(--muted)]",
+ "absolute inset-0 block overflow-hidden bg-[var(--muted)]",
             wrapperClassName,
           )}
         >

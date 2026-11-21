@@ -89,7 +89,7 @@ export function DataTable<T>({
       </div>
 
       {/* Desktop table keeps the dense scanning experience with horizontal scroll. */}
-      <div className="hidden md:block">
+      <div className="hidden min-w-0 overflow-x-auto md:block">
         <Table className={cn("min-w-[42rem]", className)}>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -122,7 +122,7 @@ export function DataTable<T>({
               </TableRow>
             ) : (
               rows.map((row) => (
-                <TableRow key={getKey(row)}>
+                <TableRow key={getKey(row)} className="hover:bg-muted">
                   {columns.map((column, index) => (
                     <TableCell key={`${column.header}-${index}`} className={column.className}>
                       {column.cell(row)}

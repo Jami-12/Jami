@@ -56,8 +56,8 @@ export function ProductsAdmin() {
   const listKey = React.useMemo(
     () =>
       [
-        "admin",
-        "products",
+ "admin",
+ "products",
         { page, limit, search: debouncedSearch, status, categoryId },
       ] as const,
     [page, limit, debouncedSearch, status, categoryId],

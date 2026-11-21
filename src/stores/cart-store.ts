@@ -19,6 +19,8 @@ export interface CartLine {
   originalPrice: number;
   quantity: number;
   stock: number;
+  selectedSize: string | null;
+  selectedColor: string | null;
 }
 
 export interface CartLineInput {
@@ -30,15 +32,26 @@ export interface CartLineInput {
   originalPrice?: number;
   quantity?: number;
   stock?: number;
+  selectedSize?: string | null;
+  selectedColor?: string | null;
+}
+
+export interface CartVariantSelection {
+  size?: string | null;
+  color?: string | null;
 }
 
 interface CartState {
   items: CartLine[];
   syncing: boolean;
   hydrated: boolean;
-  addItem: (product: Product | CartLineInput, quantity?: number) => Promise<void>;
-  updateQuantity: (productId: string, quantity: number) => Promise<void>;
-  removeItem: (productId: string) => Promise<void>;
+  addItem: (
+    product: Product | CartLineInput,
+    quantity?: number,
+    variants?: CartVariantSelection,
+  ) => Promise<void>;
+  updateQuantity: (itemKey: string, quantity: number) => Promise<void>;
+  removeItem: (itemKey: string) => Promise<void>;
   clear: () => Promise<void>;
   syncFromServer: () => Promise<void>;
   reset: () => void;
@@ -51,7 +64,27 @@ function isCustomer(): boolean {
   return useAuthStore.getState().user?.role === "CUSTOMER";
 }
 
-function mapProduct(product: Product): CartLine {
+function normaliseVariant(value?: string | null): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+/** Stable local identity that matches the server's composite cart-item key. */
+export function cartLineKey(line: Pick<CartLine, "productId" | "selectedSize" | "selectedColor">): string {
+  return [
+    line.productId,
+    normaliseVariant(line.selectedSize) ?? "",
+    normaliseVariant(line.selectedColor) ?? "",
+  ].join("::");
+}
+
+function findLine(items: CartLine[], key: string): CartLine | undefined {
+  return items.find(
+    (item) => item.cartItemId === key || cartLineKey(item) === key || item.productId === key,
+  );
+}
+
+function mapProduct(product: Product, variants: CartVariantSelection = {}): CartLine {
   const image =
     product.images.find((item) => item.isPrimary)?.url ??
     product.images[0]?.url ??
@@ -67,6 +100,8 @@ function mapProduct(product: Product): CartLine {
     originalPrice: product.originalPrice,
     quantity: 1,
     stock: product.stock,
+    selectedSize: normaliseVariant(variants.size),
+    selectedColor: normaliseVariant(variants.color),
   };
 }
 
@@ -80,6 +115,8 @@ function toLine(input: CartLineInput): CartLine {
     originalPrice: input.originalPrice ?? input.price,
     quantity: input.quantity ?? 1,
     stock: input.stock ?? MAX_QUANTITY,
+    selectedSize: normaliseVariant(input.selectedSize),
+    selectedColor: normaliseVariant(input.selectedColor),
   };
 }
 
@@ -94,6 +131,8 @@ function mapServerCart(cart: Cart): CartLine[] {
     originalPrice: item.originalPrice,
     quantity: item.quantity,
     stock: item.product.stock,
+    selectedSize: normaliseVariant(item.selectedSize),
+    selectedColor: normaliseVariant(item.selectedColor),
   }));
 }
 
@@ -108,10 +147,16 @@ export const useCartStore = create<CartState>()(
       syncing: false,
       hydrated: false,
 
-      addItem: async (product, quantity = 1) => {
-        const line = "id" in product ? mapProduct(product) : toLine(product);
+      addItem: async (product, quantity = 1, variants = {}) => {
+        const line = "id" in product
+          ? mapProduct(product, variants)
+          : toLine({ ...product,
+              selectedSize: product.selectedSize ?? variants.size,
+              selectedColor: product.selectedColor ?? variants.color,
+            });
         const requested = clampQuantity(quantity, line.stock);
-        const existing = get().items.find((item) => item.productId === line.productId);
+        const key = cartLineKey(line);
+        const existing = findLine(get().items, key);
 
         if (isCustomer()) {
           set({ syncing: true });
@@ -119,6 +164,8 @@ export const useCartStore = create<CartState>()(
             const cart = await cartApi.add({
               productId: line.productId,
               quantity: requested,
+              selectedSize: line.selectedSize ?? "",
+              selectedColor: line.selectedColor ?? "",
             });
             set({ items: mapServerCart(cart), syncing: false });
             toast.success(`${line.name} added to your bag`);
@@ -133,7 +180,7 @@ export const useCartStore = create<CartState>()(
         set({
           items: existing
             ? get().items.map((item) =>
-                item.productId === line.productId
+                cartLineKey(item) === key
                   ? {
                       ...item,
                       quantity: clampQuantity(item.quantity + requested, item.stock),
@@ -145,15 +192,15 @@ export const useCartStore = create<CartState>()(
         toast.success(`${line.name} added to your bag`);
       },
 
-      updateQuantity: async (productId, quantity) => {
-        const line = get().items.find((item) => item.productId === productId);
+      updateQuantity: async (itemKey, quantity) => {
+        const line = findLine(get().items, itemKey);
         if (!line) return;
         const next = clampQuantity(quantity, line.stock);
 
         if (isCustomer()) {
           set({ syncing: true });
           try {
-            const cart = await cartApi.update(line.cartItemId ?? productId, next);
+            const cart = await cartApi.update(line.cartItemId ?? cartLineKey(line), next);
             set({ items: mapServerCart(cart), syncing: false });
           } catch (error) {
             set({ syncing: false });
@@ -164,18 +211,18 @@ export const useCartStore = create<CartState>()(
 
         set({
           items: get().items.map((item) =>
-            item.productId === productId ? { ...item, quantity: next } : item,
+            cartLineKey(item) === cartLineKey(line) ? { ...item, quantity: next } : item,
           ),
         });
       },
 
-      removeItem: async (productId) => {
-        const line = get().items.find((item) => item.productId === productId);
+      removeItem: async (itemKey) => {
+        const line = findLine(get().items, itemKey);
 
         if (isCustomer()) {
           set({ syncing: true });
           try {
-            const cart = await cartApi.remove(line?.cartItemId ?? productId);
+            const cart = await cartApi.remove(line?.cartItemId ?? itemKey);
             set({ items: mapServerCart(cart), syncing: false });
           } catch (error) {
             set({ syncing: false });
@@ -184,7 +231,7 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        set({ items: get().items.filter((item) => item.productId !== productId) });
+        set({ items: get().items.filter((item) => cartLineKey(item) !== cartLineKey(line ?? { productId: itemKey, selectedSize: null, selectedColor: null })) });
         if (line) toast.success(`${line.name} removed from your bag`);
       },
 

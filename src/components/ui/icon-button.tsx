@@ -19,9 +19,9 @@ const tones = {
 } as const;
 
 const sizes = {
-  sm: "h-9 w-9 rounded-xl",
-  md: "h-11 w-11 rounded-full",
-  lg: "h-12 w-12 rounded-full",
+  sm: "h-9 w-9 rounded-none",
+  md: "h-11 w-11 rounded-none",
+  lg: "h-12 w-12 rounded-none",
 } as const;
 
 /** Accessible round icon control with a mandatory label and 44px default hit area. */
@@ -37,7 +37,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         aria-label={label}
         title={label}
         className={cn(
-          "inline-flex shrink-0 items-center justify-center border text-sm font-semibold shadow-[var(--shadow-soft)] outline-none transition-[color,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-50",
+ "inline-flex shrink-0 items-center justify-center border text-sm font-semibold shadow-none outline-none transition-[color,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-50",
           tones[tone],
           sizes[size],
           className,

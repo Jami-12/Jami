@@ -69,21 +69,21 @@ export function Pagination({
   };
 
   const controlClass =
-    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] shadow-[var(--shadow-soft)] transition-colors hover:border-[var(--color-accent-400)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40";
+ "flex h-9 w-9 shrink-0 items-center justify-center rounded-none border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] shadow-none transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40";
 
   const pageClass = (active: boolean) =>
     cn(
-      "flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-xs font-semibold tabular-nums transition-colors",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+ "flex h-9 min-w-9 items-center justify-center rounded-none px-3 text-xs font-semibold tabular-nums transition-colors",
+ "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
       active
-        ? "bg-[var(--color-primary-800)] text-[var(--color-primary-50)] shadow-[var(--shadow-soft)] dark:bg-[var(--color-accent-300)] dark:text-[var(--color-primary-950)]"
-        : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--color-accent-400)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
+        ? "border border-foreground bg-primary text-primary-foreground shadow-none"
+        : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-foreground hover:bg-foreground hover:text-background",
     );
 
   return (
     <nav
       className={cn(
-        "flex flex-wrap items-center justify-center gap-1.5 sm:gap-2",
+ "flex flex-wrap items-center justify-center gap-1.5 sm:gap-2",
         className,
       )}
       aria-label="Pagination"

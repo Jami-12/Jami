@@ -39,6 +39,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { notificationHref } from "@/lib/notification-links";
+
 import { Brand } from "@/components/layout/brand";
 import { CurrencyToggle } from "@/components/layout/currency-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -156,12 +158,12 @@ function NavigationList({
                   [group.label]: !previous[group.label],
                 }))
               }
-              className="flex min-h-9 w-full items-center justify-between rounded-xl px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="flex min-h-9 w-full items-center justify-between rounded-none px-3 text-[10px] font-bold uppercase not-italic tracking-[0.18em] text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <span>{group.label}</span>
               <ChevronDown
                 className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-200",
+ "h-3.5 w-3.5 transition-transform duration-200",
                   open ? "rotate-0" : "-rotate-90",
                 )}
                 aria-hidden="true"
@@ -180,16 +182,16 @@ function NavigationList({
                         onClick={onNavigate}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "group flex min-h-11 items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-[color,background-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+ "group flex min-h-11 items-center gap-3 rounded-none border-l-2 border-transparent px-3.5 py-2 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           active
-                            ? "bg-[var(--secondary)] text-[var(--primary)] shadow-[var(--shadow-soft)]"
-                            : "text-muted-foreground hover:bg-[var(--muted)] hover:text-foreground",
+                            ? "border-foreground bg-foreground text-background hover:bg-foreground hover:text-background"
+                            : "text-muted-foreground hover:border-foreground hover:bg-muted hover:text-foreground",
                         )}
                       >
                         {Icon ? (
                           <Icon
                             className={cn(
-                              "h-4 w-4 shrink-0 transition-opacity duration-200",
+ "h-4 w-4 shrink-0 transition-opacity duration-200",
                               active ? "opacity-100" : "opacity-70 group-hover:opacity-100",
                             )}
                             aria-hidden="true"
@@ -197,13 +199,13 @@ function NavigationList({
                         ) : null}
                         <span className="min-w-0 flex-1 truncate">{item.label}</span>
                         {item.superOnly ? (
-                          <span className="rounded-full border border-current/20 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest opacity-70">
+                          <span className="rounded-none border border-current px-1 py-0.5 text-[8px] font-bold uppercase not-italic tracking-widest">
                             SA
                           </span>
                         ) : null}
                         {active ? (
                           <span
-                            className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]"
+                            className="h-1.5 w-1.5 shrink-0 rounded-none bg-current"
                             aria-hidden="true"
                           />
                         ) : null}
@@ -275,7 +277,7 @@ function UserMenu({
           type="button"
           aria-label="Open account menu"
           className={cn(
-            "inline-flex min-h-11 items-center gap-2 rounded-full p-1.5 text-left transition-colors duration-200 hover:bg-[var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+ "inline-flex min-h-11 items-center gap-2 rounded-none border border-border bg-card p-1.5 text-left transition-colors duration-200 hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             triggerClassName,
           )}
         >
@@ -346,7 +348,7 @@ function UserMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={signOut}
-          className="text-[var(--danger)] focus:bg-[var(--danger-soft)] focus:text-[var(--danger)]"
+          className="text-foreground focus:bg-foreground focus:text-background"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
           Sign out
@@ -365,6 +367,8 @@ function NotificationsPopover({
 }) {
   const [open, setOpen] = React.useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
 
   const popoverKey = queryKeys.notifications.popover();
   const unreadKey = queryKeys.notifications.unreadCount();
@@ -439,12 +443,12 @@ function NotificationsPopover({
         <Button
           variant="outline"
           size="icon"
-          className="relative h-11 w-11 rounded-full"
+          className="relative h-11 w-11 rounded-none"
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         >
           <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
           {unreadCount > 0 ? (
-            <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[9px] font-bold leading-5 text-[var(--primary-950)] ring-2 ring-[var(--background)]">
+            <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold not-italic leading-5 text-white ring-2 ring-background">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           ) : null}
@@ -475,7 +479,7 @@ function NotificationsPopover({
           {list.isLoading ? (
             <ul className="space-y-2 p-3" aria-label="Loading notifications">
               {[0, 1, 2].map((key) => (
-                <li key={key} className="h-14 animate-pulse rounded-2xl bg-[var(--muted)]" />
+                <li key={key} className="h-14 animate-pulse rounded-none bg-[var(--muted)]" />
               ))}
             </ul>
           ) : items.length === 0 ? (
@@ -486,20 +490,30 @@ function NotificationsPopover({
             <ul className="divide-y divide-[var(--border)]">
               {items.map((notification) => {
                 const meta = NOTIFICATION_META[notification.type];
+                const target = notificationHref(notification, user?.role);
                 return (
                   <li key={notification.id}>
                     <button
                       type="button"
-                      disabled={notification.isRead || markOne.isPending}
-                      onClick={() =>
-                        notification.isRead ? undefined : markOne.mutate(notification.id)
-                      }
+                      disabled={markOne.isPending}
+                      onClick={() => {
+                        if (!notification.isRead) markOne.mutate(notification.id);
+                        if (target) {
+                          setOpen(false);
+                          router.push(target);
+                        }
+                      }}
                       className={cn(
-                        "flex w-full min-h-16 items-start gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-[var(--muted)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-default",
-                        !notification.isRead && "bg-[var(--secondary)]/50",
+ "flex w-full min-h-16 items-start gap-3 border-l-2 border-transparent px-4 py-3 text-left transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-default",
+                        !notification.isRead && "border-foreground bg-muted",
                       )}
                     >
-                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-current opacity-70" />
+                      <span
+                        className={cn(
+                          "mt-1 h-2 w-2 shrink-0 rounded-full",
+                          notification.isRead ? "bg-muted-foreground/40" : "bg-red-500",
+                        )}
+                      />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2">
                           <span className="truncate text-xs font-semibold">
@@ -525,7 +539,7 @@ function NotificationsPopover({
         </div>
 
         <div className="border-t border-[var(--border)] p-2">
-          <Button asChild variant="ghost" className="w-full justify-center rounded-full">
+          <Button asChild variant="ghost" className="w-full justify-center rounded-none">
             <Link href={href} onClick={() => setOpen(false)}>
               View all notifications
               <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -589,13 +603,13 @@ export function DashboardShell({
   };
 
   return (
-    <div className="min-h-dvh bg-[var(--background)] text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
 
       <div className="mx-auto flex w-full max-w-[112rem]">
-        <aside className="sticky top-0 hidden h-dvh w-[17.5rem] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)]/70 backdrop-blur-xl lg:flex">
+        <aside className="sticky top-0 hidden h-dvh w-[17.5rem] shrink-0 flex-col border-r border-border bg-[var(--sidebar)] lg:flex">
           <div className="flex h-[var(--header-height)] shrink-0 items-center border-b border-[var(--border)] px-6">
             <Brand href="/" />
           </div>
@@ -631,7 +645,7 @@ export function DashboardShell({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--background)]/85 backdrop-blur-xl">
+          <header className="sticky top-0 z-30 border-b border-border bg-background">
             <div className="flex h-[var(--header-height)] items-center gap-3 px-4 sm:px-6 lg:px-8">
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
@@ -668,7 +682,7 @@ export function DashboardShell({
                   </nav>
 
                   <div className="shrink-0 border-t border-[var(--border)] p-4">
-                    <div className="flex items-center gap-3 rounded-2xl bg-[var(--muted)]/60 p-3">
+                    <div className="flex items-center gap-3 rounded-none border border-border bg-muted p-3">
                       <Avatar name={user?.name ?? "Account"} src={user?.image} size="sm" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-semibold">
@@ -682,8 +696,8 @@ export function DashboardShell({
                     </div>
                     <Separator className="my-3" />
                     <div className="flex items-center gap-2">
-                      <ThemeToggle className="h-11 w-11 shrink-0 rounded-full border border-[var(--border)] bg-[var(--card)]" />
-                      <CurrencyToggle className="h-11 flex-1 justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-xs" />
+                      <ThemeToggle className="h-11 w-11 shrink-0 rounded-none border border-border bg-card hover:border-foreground" />
+                      <CurrencyToggle className="h-11 flex-1 justify-center rounded-none border border-border bg-card text-xs hover:border-foreground" />
                       <Button
                         variant="outline"
                         size="icon"
@@ -705,7 +719,7 @@ export function DashboardShell({
                 <div className="hidden items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:flex">
                   <span>{meta?.label ?? "Workspace"}</span>
                   <ChevronRight className="h-3 w-3" aria-hidden="true" />
-                  <span className="truncate text-foreground/70">{title}</span>
+                  <span className="truncate text-foreground">{title}</span>
                 </div>
                 <h1 className="truncate font-display text-lg font-semibold leading-tight sm:text-xl">
                   {title}
@@ -724,10 +738,10 @@ export function DashboardShell({
                   </Badge>
                 ) : null}
 
-                <div className="hidden items-center rounded-full border border-[var(--border)] bg-[var(--card)]/70 p-0.5 sm:flex">
-                  <ThemeToggle className="h-9 w-9 rounded-full" />
+                <div className="hidden items-center rounded-none border border-border bg-card p-0.5 sm:flex">
+                  <ThemeToggle className="h-9 w-9 rounded-none" />
                   <Separator orientation="vertical" className="mx-0.5 h-4" />
-                  <CurrencyToggle className="h-9 rounded-full px-2 text-[11px]" />
+                  <CurrencyToggle className="h-9 rounded-none px-2 text-[11px]" />
                 </div>
 
                 {user ? (

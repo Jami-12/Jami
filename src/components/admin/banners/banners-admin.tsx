@@ -95,7 +95,7 @@ export function BannersAdmin() {
       header: "Banner",
       cell: (banner) => (
         <div className="flex items-center gap-3">
-          <span className="relative h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
+          <span className="relative h-12 w-20 shrink-0 overflow-hidden rounded-none bg-muted">
             <SmartImage
               src={banner.imageUrl}
               alt={banner.title}
@@ -162,7 +162,7 @@ export function BannersAdmin() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                className="text-muted-foreground focus:text-foreground"
                 onClick={() => setDeleting(banner)}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

@@ -16,6 +16,7 @@ import {
   isNewProduct,
   productColors,
   productDetailLine,
+  productSizes,
 } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
@@ -53,12 +54,19 @@ export function ProductCard({
   const primary = productPrimaryImage(product);
   const secondary = productSecondaryImage(product);
   const colors = productColors(product);
+  const sizes = productSizes(product);
   const isNew = isNewProduct(product);
 
   const handleAdd = async (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     if (outOfStock) return;
+    // Size and colour are order-level data, so a quick add must not silently
+    // skip the selection step when the product offers variants.
+    if (colors.length > 0 || (sizes?.length ?? 0) > 0) {
+      setQuickOpen(true);
+      return;
+    }
     setAdding(true);
     try {
       await addItem(product, 1);
@@ -77,7 +85,7 @@ export function ProductCard({
     <>
       <Card
         className={cn(
-          "group/card relative flex h-full min-w-0 flex-col overflow-hidden border-border/80 bg-card/95",
+          "group/card relative flex h-full min-w-0 flex-col overflow-hidden border border-border bg-background transition-all duration-300 ease-out hover:-translate-y-1 hover:border-foreground hover:shadow-lift motion-reduce:hover:translate-y-0",
           className,
         )}
       >
@@ -85,7 +93,7 @@ export function ProductCard({
           <div className="relative overflow-hidden bg-muted">
             <Link
               href={`/products/${product.slug}`}
-              className="relative block aspect-[4/5] overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              className="relative block aspect-square overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-inset"
               aria-label={name}
             >
               <SmartImage
@@ -95,9 +103,8 @@ export function ProductCard({
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 priority={priority}
                 className={cn(
-                  "object-cover transition-all duration-[900ms] ease-out",
-                  secondary &&
-                    "group-hover/card:scale-[1.03] group-hover/card:opacity-0",
+                  "object-cover transition-[opacity,transform] duration-500 ease-out group-hover/card:scale-105 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100",
+                  secondary && "group-hover/card:opacity-0",
                 )}
               />
               {secondary ? (
@@ -106,27 +113,32 @@ export function ProductCard({
                   alt=""
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="scale-[1.03] object-cover opacity-0 transition-all duration-[900ms] ease-out group-hover/card:scale-100 group-hover/card:opacity-100"
+                  className="object-cover opacity-0 transition-[opacity,transform] duration-500 ease-out group-hover/card:scale-105 group-hover/card:opacity-100 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100"
                 />
               ) : null}
 
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary-950/25 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
-              />
-
               <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                 {discounted && percent > 0 ? (
-                  <Badge tone="danger">−{percent}%</Badge>
+                  <Badge tone="danger" className="bg-foreground text-background ring-0">
+                    −{percent}%
+                  </Badge>
                 ) : null}
-                {isNew && !discounted ? <Badge tone="accent">New</Badge> : null}
+                {isNew && !discounted ? (
+                  <Badge tone="accent" className="bg-foreground text-background ring-0">
+                    New
+                  </Badge>
+                ) : null}
                 {product.isFeatured ? (
-                  <Badge tone="accent">
+                  <Badge tone="accent" className="bg-foreground text-background ring-0">
                     <Sparkles className="h-3 w-3" aria-hidden="true" />
                     Edit
                   </Badge>
                 ) : null}
-                {outOfStock ? <Badge tone="neutral">Sold out</Badge> : null}
+                {outOfStock ? (
+                  <Badge tone="danger" className="ring-0">
+                    Sold out
+                  </Badge>
+                ) : null}
               </div>
             </Link>
 
@@ -138,10 +150,10 @@ export function ProductCard({
               }
               aria-pressed={saved}
               className={cn(
-                "absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur transition",
+                "absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center border transition-colors",
                 saved
-                  ? "border-red-200 bg-red-50 text-red-600 dark:border-red-500/30 dark:bg-red-500/15 dark:text-red-300"
-                  : "border-white/60 bg-white/80 text-primary-800 hover:bg-white dark:border-white/10 dark:bg-primary-950/55 dark:text-accent-200",
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background",
               )}
             >
               <Heart
@@ -151,23 +163,23 @@ export function ProductCard({
               />
             </button>
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden translate-y-3 p-3 opacity-0 transition-all duration-500 ease-out group-hover/card:translate-y-0 group-hover/card:opacity-100 lg:block">
-              <div className="pointer-events-auto rounded-xl border border-white/50 bg-white/92 p-3 shadow-lift backdrop-blur-md dark:border-white/10 dark:bg-card/95">
-                <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden border-t border-border bg-foreground p-3 text-background opacity-0 transition-opacity duration-200 group-hover/card:opacity-100 lg:block">
+              <div className="pointer-events-auto flex items-center justify-between gap-3">
+                <p className="line-clamp-2 text-xs leading-relaxed text-background/70">
                   {productDetailLine(product)}
                 </p>
-                <div className="mt-2.5 flex items-center justify-between gap-2">
+                <div className="flex shrink-0 items-center gap-1.5">
                   <div className="flex items-center gap-1.5">
                     {colors.slice(0, 4).map((colour) => (
                       <span
                         key={colour.name}
                         title={colour.name}
-                        className="h-4 w-4 rounded-full border border-black/10 shadow-sm dark:border-white/20"
+                        className="h-4 w-4 border border-background/30"
                         style={{ backgroundColor: colour.hex }}
                       />
                     ))}
                     {colors.length > 4 ? (
-                      <span className="text-[10px] font-semibold text-muted-foreground">
+                      <span className="text-[10px] font-semibold text-background/70">
                         +{colors.length - 4}
                       </span>
                     ) : null}
@@ -177,7 +189,7 @@ export function ProductCard({
                       type="button"
                       onClick={() => setQuickOpen(true)}
                       aria-label={`Quick view ${name}`}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-[11px] font-semibold text-foreground transition hover:border-accent-400/50"
+                      className="inline-flex h-8 items-center gap-1.5 border border-background/40 px-2.5 text-[11px] font-semibold text-background transition-colors hover:bg-background hover:text-foreground"
                     >
                       <Eye className="h-3.5 w-3.5" aria-hidden="true" />
                       Quick view
@@ -187,7 +199,7 @@ export function ProductCard({
                       onClick={handleAdd}
                       disabled={outOfStock || adding}
                       aria-label={`Add ${name} to bag`}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-800 text-primary-50 transition hover:bg-primary-900 disabled:opacity-40 dark:bg-accent-300 dark:text-primary-950 dark:hover:bg-accent-200"
+                      className="inline-flex h-8 w-8 items-center justify-center border border-background/40 text-background transition-colors hover:bg-background hover:text-foreground disabled:opacity-40"
                     >
                       <Plus className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -212,10 +224,10 @@ export function ProductCard({
               ) : null}
             </div>
 
-            <h3 className="mt-1 line-clamp-2 font-display text-[0.98rem] font-semibold leading-snug tracking-tight">
+            <h3 className="mt-1 line-clamp-2 font-display text-[0.98rem] font-semibold leading-snug not-italic tracking-tight text-foreground/80 transition-colors duration-300 ease-out group-hover/card:text-foreground">
               <Link
                 href={`/products/${product.slug}`}
-                className="transition hover:text-primary-700 dark:hover:text-accent-300"
+                className="underline-offset-4 hover:underline"
               >
                 {name}
               </Link>
@@ -224,6 +236,27 @@ export function ProductCard({
             <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground lg:hidden">
               {productDetailLine(product)}
             </p>
+
+            {sizes?.length ? (
+              <div
+                className="mt-2 flex flex-wrap items-center gap-1"
+                aria-label={`Available sizes: ${sizes.join(", ")}`}
+              >
+                {sizes.slice(0, 5).map((size) => (
+                  <span
+                    key={size}
+                    className="border border-border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
+                    {size}
+                  </span>
+                ))}
+                {sizes.length > 5 ? (
+                  <span className="text-[9px] text-muted-foreground">
+                    +{sizes.length - 5}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="mt-3 flex items-end justify-between gap-2">
               <Price
@@ -236,7 +269,7 @@ export function ProductCard({
                   <span
                     key={colour.name}
                     title={colour.name}
-                    className="h-3.5 w-3.5 rounded-full border border-black/10 shadow-sm dark:border-white/20"
+                    className="h-3.5 w-3.5 border border-border"
                     style={{ backgroundColor: colour.hex }}
                   />
                 ))}
@@ -248,7 +281,7 @@ export function ProductCard({
                 type="button"
                 onClick={() => setQuickOpen(true)}
                 aria-label={`Quick view ${name}`}
-                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-card text-[11px] font-semibold transition hover:border-accent-400/50"
+                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 border border-border bg-background text-[11px] font-semibold text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
               >
                 <Eye className="h-3.5 w-3.5" aria-hidden="true" />
                 Quick view
@@ -258,7 +291,7 @@ export function ProductCard({
                 onClick={handleAdd}
                 disabled={outOfStock || adding}
                 aria-label={`Add ${name} to bag`}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-800 text-primary-50 transition hover:bg-primary-900 disabled:opacity-40 dark:bg-accent-300 dark:text-primary-950 dark:hover:bg-accent-200"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-foreground bg-foreground text-background transition-colors hover:bg-background hover:text-foreground disabled:opacity-40"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
               </button>

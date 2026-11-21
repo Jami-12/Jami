@@ -18,7 +18,7 @@ export function SoundProvider() {
       if (!(target instanceof Element)) return;
 
       const control = target.closest<HTMLElement>(
-        "button, [role='switch'], [data-sound]",
+ "button, [role='switch'], [data-sound]",
       );
       if (!control) return;
       if (control.hasAttribute("data-sound-off")) return;

@@ -96,13 +96,13 @@ export function SuperOverview() {
 
   return (
     <div className="space-y-5">
-      <Card className="bg-muted/30">
+      <Card className="bg-muted">
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
               Business pulse
             </p>
-            <CardTitle className="font-display text-xl sm:text-2xl">
+            <CardTitle className="font-display text-xl not-italic sm:text-2xl">
               Profit, capital and operations
             </CardTitle>
             <CardDescription>
@@ -148,7 +148,7 @@ export function SuperOverview() {
         />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
@@ -215,7 +215,7 @@ export function SuperOverview() {
                         <Price amount={dashboard?.today.expenses.operating ?? 0} size="sm" />
                       </TableCell>
                     </TableRow>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableRow className="bg-muted hover:bg-muted">
                       <TableCell className="font-bold">Net profit</TableCell>
                       <TableCell className="text-right font-extrabold">
                         <Price amount={dashboard?.today.netProfit ?? 0} size="sm" />

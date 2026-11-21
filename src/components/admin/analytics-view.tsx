@@ -43,11 +43,11 @@ import { analyticsApi } from "@/lib/api/services";
 import { formatCompact, formatCurrency, formatDate, formatNumber, humanizeEnum } from "@/lib/utils";
 
 const PALETTE = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+ "var(--chart-1)",
+ "var(--chart-2)",
+ "var(--chart-3)",
+ "var(--chart-4)",
+ "var(--chart-5)",
 ];
 
 const axisProps = {
@@ -58,9 +58,10 @@ const axisProps = {
 } as const;
 
 const tooltipStyle = {
-  borderRadius: 12,
+  borderRadius: 0,
   border: "1px solid var(--border)",
   background: "var(--card)",
+  boxShadow: "none",
   fontSize: 12,
   color: "var(--foreground)",
 } as const;
@@ -80,13 +81,13 @@ export function AnalyticsView() {
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+            <Skeleton key={index} className="h-24 w-full rounded-none" />
           ))}
         </div>
-        <Skeleton className="h-72 w-full rounded-2xl" />
+        <Skeleton className="h-72 w-full rounded-none" />
         <div className="grid gap-5 xl:grid-cols-2">
-          <Skeleton className="h-72 w-full rounded-2xl" />
-          <Skeleton className="h-72 w-full rounded-2xl" />
+          <Skeleton className="h-72 w-full rounded-none" />
+          <Skeleton className="h-72 w-full rounded-none" />
         </div>
       </div>
     );
@@ -122,13 +123,13 @@ export function AnalyticsView() {
 
   return (
     <div className="space-y-5">
-      <Card className="bg-muted/30">
+      <Card className="bg-muted">
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
               Insights
             </p>
-            <CardTitle className="font-display text-xl sm:text-2xl">Analytics overview</CardTitle>
+            <CardTitle className="font-display text-xl not-italic sm:text-2xl">Analytics overview</CardTitle>
             <CardDescription>Generated {formatDate(data.generatedAt, "long")}.</CardDescription>
           </div>
           <Badge tone="success" dot>
@@ -178,12 +179,6 @@ export function AnalyticsView() {
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revenue-fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="label" {...axisProps} />
                 <YAxis
@@ -200,7 +195,8 @@ export function AnalyticsView() {
                   dataKey="revenue"
                   stroke="var(--chart-1)"
                   strokeWidth={2}
-                  fill="url(#revenue-fill)"
+                  fill="var(--chart-1)"
+                  fillOpacity={0.15}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -248,7 +244,7 @@ export function AnalyticsView() {
                   <Bar
                     dataKey={monthlyMetric}
                     fill={monthlyMetric === "revenue" ? "var(--chart-1)" : "var(--chart-3)"}
-                    radius={[6, 6, 0, 0]}
+                    radius={0}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -272,6 +268,8 @@ export function AnalyticsView() {
                     innerRadius={48}
                     outerRadius={82}
                     paddingAngle={2}
+                    stroke="var(--border)"
+                    strokeWidth={1}
                   >
                     {payments.map((entry, index) => (
                       <Cell key={entry.method} fill={PALETTE[index % PALETTE.length]} />
@@ -281,7 +279,7 @@ export function AnalyticsView() {
                     contentStyle={tooltipStyle}
                     formatter={(value) => formatCurrency(Number(value))}
                   />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: "var(--muted-foreground)" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -310,7 +308,7 @@ export function AnalyticsView() {
                   <XAxis type="number" {...axisProps} allowDecimals={false} />
                   <YAxis type="category" dataKey="label" {...axisProps} width={82} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill="var(--chart-3)" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="count" fill="var(--chart-3)" radius={0} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -380,7 +378,7 @@ export function AnalyticsView() {
               {data.lowStockProducts.map((product) => (
                 <li
                   key={product.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 p-3"
+                  className="flex items-center justify-between gap-3 rounded-none border border-border bg-muted p-3 transition-colors hover:border-foreground"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-xs font-bold">{product.title}</p>

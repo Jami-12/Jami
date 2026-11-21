@@ -43,15 +43,15 @@ import {
   isRedirectPaymentMethod,
 } from "@/lib/payments";
 import { cn, formatDate, getErrorMessage, humanizeEnum } from "@/lib/utils";
-import type { Order, PaymentStatus } from "@/types";
+import type { Order, PaymentStatus, ReceiptData } from "@/types";
 
 const KNOWN_PAYMENT_STATUSES = new Set<PaymentStatus>([
-  "PENDING",
-  "PROCESSING",
-  "PAID",
-  "FAILED",
-  "CANCELLED",
-  "REFUNDED",
+ "PENDING",
+ "PROCESSING",
+ "PAID",
+ "FAILED",
+ "CANCELLED",
+ "REFUNDED",
 ]);
 
 function normalizePaymentStatus(value: string | null | undefined): PaymentStatus | null {
@@ -66,7 +66,7 @@ function PaymentBanner({ status }: { status: PaymentStatus }) {
       tone: "border-success/25 bg-success-soft text-success",
       icon: CheckCircle2,
       title: "Payment received",
-      copy: "Thank you — your payment is confirmed and the order is being prepared.",
+      copy: "Thank you â€” your payment is confirmed and the order is being prepared.",
     },
     PENDING: {
       tone: "border-warning/25 bg-warning-soft text-warning",
@@ -104,7 +104,7 @@ function PaymentBanner({ status }: { status: PaymentStatus }) {
   const Icon = meta.icon;
 
   return (
-    <div className={cn("flex items-start gap-3 rounded-2xl border p-4", meta.tone)} role="status">
+    <div className={cn("flex items-start gap-3 rounded-none border p-4", meta.tone)} role="status">
       <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
       <div>
         <p className="text-sm font-bold">{meta.title}</p>
@@ -123,6 +123,17 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function receiptVariantLabel(item: {
+  size?: string | null;
+  color?: string | null;
+}): string | null {
+  const parts = [
+    item.size ? `Size: ${item.size}` : null,
+    item.color ? `Color: ${item.color}` : null,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" Â· ") : null;
+}
+
 export function ReceiptDialog({
   orderId,
   open,
@@ -138,25 +149,27 @@ export function ReceiptDialog({
     enabled: open,
   });
 
-  const downloadReceipt = () => {
-    const data = receipt.data;
-    if (!data) return;
+  const money = (value: number, currency?: string) =>
+    `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(value)}${currency ? ` ${currency}` : ""}`;
 
-    const money = (value: number) =>
-      new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(value);
-    const rows = data.items
-      .map(
-        (item) => `
+  const buildPrintableHtml = (data: ReceiptData): string => {
+    const display = data.display;
+    const itemRows = data.items
+      .map((item) => {
+        const variant = receiptVariantLabel(item);
+        return `
           <tr>
-            <td>${escapeHtml(item.productName)}</td>
+            <td>
+              ${escapeHtml(item.productName)}
+              ${variant ? `<div class="variant">${escapeHtml(variant)}</div>` : ""}
+            </td>
             <td class="num">${item.quantity}</td>
             <td class="num">${money(item.unitPrice)}</td>
             <td class="num">${money(item.totalPrice)}</td>
-          </tr>`,
-      )
+          </tr>`;
+      })
       .join("");
 
-    // Carry the active theme's semantic tokens into the standalone print document.
     const printStyles = getComputedStyle(document.documentElement);
     const printTokens = [
       "background",
@@ -169,7 +182,18 @@ export function ReceiptDialog({
       .map((token) => `--${token}: ${printStyles.getPropertyValue(`--${token}`).trim()};`)
       .join("\n  ");
 
-    const html = `<!doctype html>
+    const details = [
+      display.showPaymentMethod && data.payment
+        ? `<p class="muted">Payment method: <strong>${escapeHtml(humanizeEnum(data.payment.method))}</strong></p>`
+        : "",
+      display.showTransactionId && data.payment?.transactionId
+        ? `<p class="muted">Transaction ID: <strong>${escapeHtml(data.payment.transactionId)}</strong></p>`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("");
+
+    return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -181,13 +205,16 @@ export function ReceiptDialog({
   .sheet { max-width: 760px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); padding: 40px; }
   .head { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid var(--primary); padding-bottom: 20px; }
   .brand { font-size: 24px; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); margin: 0 0 6px; }
-  .muted { color: var(--muted-foreground); font-size: 12px; line-height: 1.6; margin: 0; }
+  .logo { max-height: 64px; max-width: 180px; object-fit: contain; margin-bottom: 12px; }
+  .tagline { font-style: italic; }
+  .muted { color: var(--muted-foreground); font-size: 12px; line-height: 1.6; margin: 0 0 3px; }
   .meta { text-align: right; font-size: 12px; color: var(--muted-foreground); }
   .meta strong { display: block; color: var(--foreground); font-size: 14px; margin-bottom: 4px; }
   h2 { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted-foreground); margin: 28px 0 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-foreground); border-bottom: 1px solid var(--border); padding: 8px 6px; }
   td { border-bottom: 1px solid var(--border); padding: 9px 6px; }
+  .variant { color: var(--muted-foreground); font-size: 10px; margin-top: 3px; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .totals { margin-left: auto; width: 280px; margin-top: 18px; font-size: 13px; }
   .totals div { display: flex; justify-content: space-between; padding: 5px 0; }
@@ -200,9 +227,11 @@ export function ReceiptDialog({
   <main class="sheet">
     <div class="head">
       <div>
+        ${display.showLogo && data.store.logoUrl ? `<img class="logo" src="${escapeHtml(data.store.logoUrl)}" alt="${escapeHtml(data.store.name)} logo" />` : ""}
         <p class="brand">${escapeHtml(data.store.name)}</p>
-        <p class="muted">${escapeHtml(data.store.address)}</p>
-        <p class="muted">${escapeHtml(data.store.phone)} · ${escapeHtml(data.store.email)}</p>
+        ${data.store.tagline ? `<p class="muted tagline">${escapeHtml(data.store.tagline)}</p>` : ""}
+        ${data.store.address ? `<p class="muted">${escapeHtml(data.store.address)}</p>` : ""}
+        <p class="muted">${[data.store.phone, data.store.email].filter(Boolean).map(escapeHtml).join(" Â· ")}</p>
       </div>
       <div class="meta">
         <strong>${escapeHtml(data.receiptNumber)}</strong>
@@ -210,28 +239,51 @@ export function ReceiptDialog({
         <p class="muted">${escapeHtml(formatDate(data.issuedAt, "long"))}</p>
       </div>
     </div>
+
+    ${display.showCustomer ? `
     <h2>Billed to</h2>
     <p class="muted">
       <strong style="color:var(--foreground)">${escapeHtml(data.customer.name)}</strong><br />
       ${escapeHtml(data.customer.email)}${data.customer.phone ? `<br />${escapeHtml(data.customer.phone)}` : ""}
-    </p>
+    </p>` : ""}
+
+    ${display.showShippingAddress && data.shippingAddress ? `
+    <h2>Ship to</h2>
+    <p class="muted">
+      ${escapeHtml(data.shippingAddress.fullName)}<br />
+      ${escapeHtml(data.shippingAddress.addressLine)}<br />
+      ${[data.shippingAddress.area, data.shippingAddress.district, data.shippingAddress.division, data.shippingAddress.postalCode]
+        .filter((value): value is string => Boolean(value))
+        .map(escapeHtml)
+        .join(", ")}
+    </p>` : ""}
+
+    ${details ? `<h2>Payment</h2>${details}` : ""}
+
     <h2>Items</h2>
     <table>
       <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Total</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <tbody>${itemRows}</tbody>
     </table>
     <div class="totals">
       <div><span>Subtotal</span><span>${money(data.totals.subtotal)}</span></div>
-      <div><span>Discount</span><span>−${money(data.totals.discountAmount)}</span></div>
+      <div><span>Discount</span><span>âˆ’${money(data.totals.discountAmount)}</span></div>
       <div><span>Shipping</span><span>${money(data.totals.shippingCost)}</span></div>
-      <div class="total"><span>Total</span><span>${money(data.totals.totalAmount)} ${escapeHtml(data.totals.currency)}</span></div>
+      <div class="total"><span>Total</span><span>${money(data.totals.totalAmount, data.totals.currency)}</span></div>
     </div>
-    <p class="foot">Thank you for shopping with ${escapeHtml(data.store.name)}. This document was generated on ${escapeHtml(formatDate(new Date().toISOString(), "long"))}.</p>
+    <p class="foot">${escapeHtml(data.store.footerNote)}</p>
   </main>
 </body>
 </html>`;
+  };
 
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const downloadReceipt = () => {
+    const data = receipt.data;
+    if (!data) return;
+
+    const blob = new Blob([buildPrintableHtml(data)], {
+      type: "text/html;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -240,6 +292,21 @@ export function ReceiptDialog({
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const printReceipt = () => {
+    const data = receipt.data;
+    if (!data) return;
+
+    const printWindow = window.open("", "_blank", "width=860,height=1000");
+    if (!printWindow) {
+      toast.error("Allow pop-ups to print this receipt");
+      return;
+    }
+    printWindow.document.write(buildPrintableHtml(data));
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   return (
@@ -263,7 +330,7 @@ export function ReceiptDialog({
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
             Download
           </Button>
-          <Button size="sm" onClick={() => window.print()} disabled={!receipt.data}>
+          <Button size="sm" onClick={printReceipt} disabled={!receipt.data}>
             <Printer className="h-3.5 w-3.5" aria-hidden="true" />
             Print
           </Button>
@@ -277,11 +344,28 @@ export function ReceiptDialog({
       ) : receipt.data ? (
         <div className="space-y-4 text-sm">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-            <div>
-              <p className="font-display text-lg font-semibold">{receipt.data.store.name}</p>
-              <p className="text-xs text-muted-foreground">{receipt.data.store.address}</p>
-              <p className="text-xs text-muted-foreground">
-                {receipt.data.store.phone} · {receipt.data.store.email}
+            <div className="min-w-0">
+              {receipt.data.display.showLogo && receipt.data.store.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={receipt.data.store.logoUrl}
+                  alt={`${receipt.data.store.name} logo`}
+                  className="mb-3 max-h-14 max-w-40 object-contain"
+                />
+              ) : null}
+              <p className="break-words font-display text-lg font-semibold">{receipt.data.store.name}</p>
+              {receipt.data.store.tagline ? (
+                <p className="break-words text-xs italic text-muted-foreground">
+                  {receipt.data.store.tagline}
+                </p>
+              ) : null}
+              {receipt.data.store.address ? (
+                <p className="break-words text-xs text-muted-foreground">{receipt.data.store.address}</p>
+              ) : null}
+              <p className="break-words text-xs text-muted-foreground">
+                {[receipt.data.store.phone, receipt.data.store.email]
+                  .filter(Boolean)
+                  .join(" Â· ")}
               </p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
@@ -291,52 +375,91 @@ export function ReceiptDialog({
             </div>
           </div>
 
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Customer</p>
-            <p className="mt-1 font-semibold">{receipt.data.customer.name}</p>
-            <p className="text-xs text-muted-foreground">{receipt.data.customer.email}</p>
-            {receipt.data.customer.phone ? (
-              <p className="text-xs text-muted-foreground">{receipt.data.customer.phone}</p>
-            ) : null}
-          </div>
+          {receipt.data.display.showCustomer ? (
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Customer</p>
+              <p className="break-words font-semibold">{receipt.data.customer.name}</p>
+              <p className="break-words text-xs text-muted-foreground">{receipt.data.customer.email}</p>
+              {receipt.data.customer.phone ? (
+                <p className="break-words text-xs text-muted-foreground">{receipt.data.customer.phone}</p>
+              ) : null}
+            </div>
+          ) : null}
 
-          <ul className="divide-y divide-border rounded-xl border border-border">
-            {receipt.data.items.map((item) => (
-              <li key={`${item.productName}-${item.quantity}`} className="flex items-center justify-between gap-3 px-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold">{item.productName}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {item.quantity} × {new Intl.NumberFormat("en-US").format(item.unitPrice)}
+          {receipt.data.display.showShippingAddress && receipt.data.shippingAddress ? (
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Ship to</p>
+              <p className="break-words text-xs text-muted-foreground">
+                {[
+                  receipt.data.shippingAddress.addressLine,
+                  receipt.data.shippingAddress.area,
+                  receipt.data.shippingAddress.district,
+                  receipt.data.shippingAddress.division,
+                  receipt.data.shippingAddress.postalCode,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+          ) : null}
+
+          {receipt.data.display.showPaymentMethod && receipt.data.payment ? (
+            <p className="break-words text-xs text-muted-foreground">
+              Payment method: <span className="font-semibold text-foreground">{humanizeEnum(receipt.data.payment.method)}</span>
+            </p>
+          ) : null}
+          {receipt.data.display.showTransactionId && receipt.data.payment?.transactionId ? (
+            <p className="break-words text-xs text-muted-foreground">
+              Transaction ID: <span className="font-semibold text-foreground">{receipt.data.payment.transactionId}</span>
+            </p>
+          ) : null}
+
+          <ul className="divide-y divide-border rounded-none border border-border">
+            {receipt.data.items.map((item) => {
+              const variant = receiptVariantLabel(item);
+              return (
+                <li key={`${item.productName}-${item.quantity}`} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="break-words text-xs font-semibold">{item.productName}</p>
+                    {variant ? (
+                      <p className="break-words text-[11px] text-muted-foreground">{variant}</p>
+                    ) : null}
+                    <p className="text-[11px] text-muted-foreground">
+                      {item.quantity} Ã— {money(item.unitPrice)}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-xs font-bold tabular-nums">
+                    {money(item.totalPrice)}
                   </p>
-                </div>
-                <p className="shrink-0 text-xs font-bold tabular-nums">
-                  {new Intl.NumberFormat("en-US").format(item.totalPrice)}
-                </p>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
 
           <dl className="space-y-1.5 text-xs">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums">{new Intl.NumberFormat("en-US").format(receipt.data.totals.subtotal)}</dd>
+              <dd className="tabular-nums">{money(receipt.data.totals.subtotal)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Discount</dt>
-              <dd className="tabular-nums">−{new Intl.NumberFormat("en-US").format(receipt.data.totals.discountAmount)}</dd>
+              <dd className="tabular-nums">âˆ’{money(receipt.data.totals.discountAmount)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Shipping</dt>
-              <dd className="tabular-nums">{new Intl.NumberFormat("en-US").format(receipt.data.totals.shippingCost)}</dd>
+              <dd className="tabular-nums">{money(receipt.data.totals.shippingCost)}</dd>
             </div>
             <div className="flex justify-between border-t border-border pt-1.5 text-sm font-bold">
               <dt>Total</dt>
               <dd className="tabular-nums">
-                {new Intl.NumberFormat("en-US").format(receipt.data.totals.totalAmount)}{" "}
-                {receipt.data.totals.currency}
+                {money(receipt.data.totals.totalAmount, receipt.data.totals.currency)}
               </dd>
             </div>
           </dl>
+
+          <p className="break-words border-t border-border pt-3 text-xs italic text-muted-foreground">
+            {receipt.data.store.footerNote}
+          </p>
         </div>
       ) : null}
     </Dialog>
@@ -450,7 +573,7 @@ export function OrderDetailView({
           });
         } else if (initiation.clientSecret) {
           toast.error(
-            "Card payments are configured on the server but no publishable key is available to the browser.",
+ "Card payments are configured on the server but no publishable key is available to the browser.",
           );
         } else {
           toast.info(initiation.message || "Card payment is already processing.");
@@ -492,9 +615,9 @@ export function OrderDetailView({
   if (orderQuery.isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-28 w-full rounded-2xl" />
-        <Skeleton className="h-72 w-full rounded-2xl" />
-        <Skeleton className="h-44 w-full rounded-2xl" />
+        <Skeleton className="h-28 w-full rounded-none" />
+        <Skeleton className="h-72 w-full rounded-none" />
+        <Skeleton className="h-44 w-full rounded-none" />
       </div>
     );
   }
@@ -540,7 +663,7 @@ export function OrderDetailView({
                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
                 Orders
               </Link>
-              <span className="text-muted-foreground" aria-hidden="true">·</span>
+              <span className="text-muted-foreground" aria-hidden="true">Â·</span>
               <span className="text-xs text-muted-foreground">{formatDate(order.createdAt, "long")}</span>
             </div>
             <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">{order.orderNumber}</h2>
@@ -578,14 +701,14 @@ export function OrderDetailView({
             <CardHeader className="border-b border-border p-5">
               <CardTitle className="font-display text-base">Items in this order</CardTitle>
               <p className="text-xs text-muted-foreground">
-                {order.items.reduce((sum, item) => sum + item.quantity, 0)} unit(s) ·{" "}
+                {order.items.reduce((sum, item) => sum + item.quantity, 0)} unit(s) Â·{" "}
                 {order.items.length} line{order.items.length === 1 ? "" : "s"}
               </p>
             </CardHeader>
             <ul className="divide-y divide-border">
               {order.items.map((item) => (
                 <li key={item.id} className="flex gap-3 p-4 sm:items-center">
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-none bg-muted">
                     <SmartImage
                       src={item.productImage}
                       alt={item.productName}
@@ -597,13 +720,19 @@ export function OrderDetailView({
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-semibold">{item.productName}</p>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      {item.sku ? `SKU ${item.sku} · ` : ""}Qty {item.quantity}
+                      {item.sku ? `SKU ${item.sku} Â· ` : ""}Qty {item.quantity}
                     </p>
+                    {item.size || item.color ? (
+                      <p className="mt-1 flex flex-wrap gap-1">
+                        {item.size ? <Badge tone="neutral">Size: {item.size}</Badge> : null}
+                        {item.color ? <Badge tone="neutral">Color: {item.color}</Badge> : null}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="shrink-0 text-right">
                     <Price amount={item.totalPrice} size="sm" />
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      {item.quantity} × {new Intl.NumberFormat("en-US").format(item.finalUnitPrice)}
+                      {item.quantity} Ãƒâ€” {new Intl.NumberFormat("en-US").format(item.finalUnitPrice)}
                     </p>
                   </div>
                 </li>
@@ -616,8 +745,8 @@ export function OrderDetailView({
               </div>
               {order.discountAmount > 0 ? (
                 <div className="flex justify-between text-success">
-                  <dt>Discount{order.coupon ? ` · ${order.coupon.code}` : ""}</dt>
-                  <dd className="font-semibold tabular-nums">−{new Intl.NumberFormat("en-US").format(order.discountAmount)}</dd>
+                  <dt>Discount{order.coupon ? ` Â· ${order.coupon.code}` : ""}</dt>
+                  <dd className="font-semibold tabular-nums">Ã¢Ë†â€™{new Intl.NumberFormat("en-US").format(order.discountAmount)}</dd>
                 </div>
               ) : null}
               <div className="flex justify-between">
@@ -682,7 +811,7 @@ export function OrderDetailView({
                   <dt className="text-muted-foreground">Collected</dt>
                   <dd className="text-xs font-semibold text-right">
                     {formatDate(order.payment.collectedAt, "long")}
-                    {order.payment.collectedByName ? ` · ${order.payment.collectedByName}` : ""}
+                    {order.payment.collectedByName ? ` Â· ${order.payment.collectedByName}` : ""}
                   </dd>
                 </div>
               ) : null}
@@ -706,7 +835,7 @@ export function OrderDetailView({
               ) : null}
             </dl>
             {order.payment?.collectionNote ? (
-              <p className="mt-3 rounded-lg border border-border bg-muted/40 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+              <p className="mt-3 rounded-none border border-border bg-muted/40 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
                 {order.payment.collectionNote}
               </p>
             ) : null}
@@ -715,7 +844,7 @@ export function OrderDetailView({
             order.paymentStatus !== "REFUNDED" &&
             order.status !== "CANCELLED" &&
             order.status !== "RETURNED" ? (
-              <p className="mt-3 rounded-lg border border-warning/25 bg-warning-soft p-2.5 text-[11px] leading-relaxed text-warning">
+              <p className="mt-3 rounded-none border border-warning/25 bg-warning-soft p-2.5 text-[11px] leading-relaxed text-warning">
                 Cash payment due. Please have{" "}
                 {new Intl.NumberFormat("en-US").format(order.totalAmount)} ready
                 when your order is delivered. The order is already confirmed.
@@ -738,7 +867,7 @@ export function OrderDetailView({
                   <li key={step} className="flex items-center gap-2.5 text-xs">
                     <span
                       className={cn(
-                        "inline-flex h-5 w-5 items-center justify-center rounded-full border",
+                        "inline-flex h-5 w-5 items-center justify-center rounded-none border",
                         complete
                           ? "border-success bg-success text-primary-foreground"
                           : "border-border text-muted-foreground",

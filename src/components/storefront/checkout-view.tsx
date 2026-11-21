@@ -28,7 +28,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { StripePaymentDialog } from "@/components/payments/stripe-payment-dialog";
+import {
+  preloadStripe,
+  StripePaymentDialog,
+} from "@/components/payments/stripe-payment-dialog";
 import {
   FormField,
   Input,
@@ -95,7 +98,7 @@ function CheckoutGate() {
   return (
     <div className="mx-auto max-w-lg py-8">
       <Card className="p-8 text-center">
-        <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-none border border-border bg-secondary text-foreground">
           <ShieldCheck className="h-5 w-5" aria-hidden="true" />
         </span>
         <h2 className="mt-4 font-display text-xl font-semibold">Sign in to check out</h2>
@@ -211,7 +214,7 @@ function AddressFormDialog({
           <input
             type="checkbox"
             {...register("isDefault")}
-            className="h-4 w-4 rounded border-border text-primary-700 focus:ring-primary-400"
+            className="h-4 w-4 rounded-none border border-border bg-card accent-foreground focus:ring-1 focus:ring-foreground"
           />
           Make this my default delivery address
         </label>
@@ -262,6 +265,13 @@ export function CheckoutView() {
   });
 
   const providers = providersQuery.data;
+
+  // Start downloading Stripe.js as soon as we know the publishable key, so the
+  // card form is ready by the time the customer finishes placing the order.
+  React.useEffect(() => {
+    const key = providers?.cardPublishableKey;
+    if (key) void preloadStripe(key);
+  }, [providers?.cardPublishableKey]);
 
   React.useEffect(() => {
     if (!addressesQuery.data) return;
@@ -385,7 +395,7 @@ export function CheckoutView() {
           getPaymentStartErrorMessage(
             error,
             paymentMethod,
-            "Your order was saved, but the payment could not be started. Retry from the order page.",
+ "Your order was saved, but the payment could not be started. Retry from the order page.",
           ),
         );
         goToOrder(order.id);
@@ -424,7 +434,7 @@ export function CheckoutView() {
           hadRedirectUrl
             ? "The payment provider returned an insecure checkout link. Your order was saved — retry from the order page."
             : initiation.message ||
-                "The payment provider did not return a checkout link. Your order was saved — retry from the order page.",
+ "The payment provider did not return a checkout link. Your order was saved — retry from the order page.",
         );
         goToOrder(order.id);
       }
@@ -437,8 +447,8 @@ export function CheckoutView() {
   if (!hydrated) {
     return (
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <Skeleton className="h-96 w-full rounded-2xl" />
-        <Skeleton className="h-72 w-full rounded-2xl" />
+        <Skeleton className="h-96 w-full rounded-none" />
+        <Skeleton className="h-72 w-full rounded-none" />
       </div>
     );
   }
@@ -484,7 +494,7 @@ export function CheckoutView() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-bold">
-                <MapPin className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+                <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 Delivery address
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -499,11 +509,11 @@ export function CheckoutView() {
 
           {addressesQuery.isLoading ? (
             <div className="mt-4 space-y-2">
-              <Skeleton className="h-20 w-full rounded-xl" />
-              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-none" />
+              <Skeleton className="h-20 w-full rounded-none" />
             </div>
           ) : addresses.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-dashed border-border bg-muted/40 p-5 text-center">
+            <div className="mt-4 rounded-none border border-border bg-secondary p-5 text-center">
               <p className="text-sm font-semibold">No delivery address yet</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Add one to continue. You can save more addresses from your account later.
@@ -524,18 +534,18 @@ export function CheckoutView() {
                     aria-checked={active}
                     onClick={() => setSelectedAddress(address.id)}
                     className={cn(
-                      "flex items-start gap-3 rounded-xl border p-3.5 text-left transition",
+ "flex items-start gap-3 rounded-none border p-3.5 text-left transition-colors",
                       active
-                        ? "border-primary-400 bg-primary-50/60 ring-2 ring-accent-300/40 dark:border-accent-400 dark:bg-primary-900/40"
-                        : "border-border bg-card hover:border-primary-300",
+                        ? "border-foreground bg-secondary text-foreground"
+                        : "border-border bg-card text-foreground hover:border-foreground",
                     )}
                   >
                     <span
                       className={cn(
-                        "mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+ "mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-none border",
                         active
-                          ? "border-primary-600 bg-primary-600 text-white dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950"
-                          : "border-border",
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border bg-background",
                       )}
                       aria-hidden="true"
                     >
@@ -544,7 +554,7 @@ export function CheckoutView() {
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-bold">{address.fullName}</span>
-                        {address.isDefault ? <Badge tone="info">Default</Badge> : null}
+                        {address.isDefault ? <Badge tone="success">Default</Badge> : null}
                       </span>
                       <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
                         {address.addressLine}
@@ -563,7 +573,7 @@ export function CheckoutView() {
 
         <Card className="p-5 sm:p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <CreditCard className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+            <CreditCard className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Payment method
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -589,18 +599,30 @@ export function CheckoutView() {
                   disabled={!enabled}
                   onClick={() => setPaymentMethod(option.value)}
                   className={cn(
-                    "flex items-start gap-3 rounded-xl border p-3.5 text-left transition disabled:cursor-not-allowed disabled:opacity-55",
+ "flex items-start gap-3 rounded-none border p-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55",
                     active
-                      ? "border-primary-400 bg-primary-50/60 ring-2 ring-accent-300/40 dark:border-accent-400 dark:bg-primary-900/40"
-                      : "border-border bg-card hover:border-primary-300",
+                      ? "border-foreground bg-secondary text-foreground"
+                      : "border-border bg-card text-foreground hover:border-foreground",
                   )}
                 >
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                  <span
+                    className={cn(
+                      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none border",
+                      active
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-secondary text-foreground",
+                    )}
+                  >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-bold">{meta.label}</span>
-                    <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
+                    <span
+                      className={cn(
+                        "mt-0.5 block text-[11px] leading-relaxed",
+                        active ? "text-background/70" : "text-muted-foreground",
+                      )}
+                    >
                       {enabled ? meta.description : "Not configured by the store yet."}
                     </span>
                   </span>
@@ -616,7 +638,7 @@ export function CheckoutView() {
             </p>
           ) : null}
           {providersQuery.isError ? (
-            <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+            <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <AlertCircle className="h-3 w-3" aria-hidden="true" />
               Could not reach the payment provider status endpoint. Cash on delivery remains available.
             </p>
@@ -631,7 +653,7 @@ export function CheckoutView() {
 
         <Card className="p-5 sm:p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <Tag className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
+            <Tag className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Coupon & order notes
           </h2>
 
@@ -676,7 +698,7 @@ export function CheckoutView() {
           </div>
 
           {coupon ? (
-            <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
               {coupon.coupon.code} applied · saving {formatCurrency(computeCouponDiscount(coupon.coupon, subtotal))}
             </p>
@@ -702,15 +724,15 @@ export function CheckoutView() {
             <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-muted-foreground">
               Order summary
             </h2>
-            <Link href="/cart" className="text-xs font-semibold text-primary-600 hover:underline dark:text-accent-300">
+            <Link href="/cart" className="border-b border-foreground text-xs font-bold uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-foreground hover:text-background">
               Edit bag
             </Link>
           </div>
 
           <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1">
             {items.map((item) => (
-              <li key={item.productId} className="flex gap-3">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
+              <li key={item.productId} className="flex gap-3 border-b border-border pb-3 last:border-b-0 last:pb-0">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-none border border-border bg-muted">
                   <SmartImage src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -728,7 +750,7 @@ export function CheckoutView() {
               <dd><Price amount={subtotal} size="sm" /></dd>
             </div>
             {discount > 0 ? (
-              <div className="flex items-center justify-between gap-3 text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center justify-between gap-3 text-muted-foreground">
                 <dt>Coupon discount</dt>
                 <dd className="font-semibold tabular-nums">−{formatCurrency(discount)}</dd>
               </div>

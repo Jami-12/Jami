@@ -63,14 +63,14 @@ export function OrderDetailDialog({
     >
       {loading || !order ? (
         <div className="space-y-3">
-          <Skeleton className="h-20 w-full rounded-xl" />
-          <Skeleton className="h-20 w-full rounded-xl" />
-          <Skeleton className="h-20 w-full rounded-xl" />
+          <Skeleton className="h-20 w-full rounded-none" />
+          <Skeleton className="h-20 w-full rounded-none" />
+          <Skeleton className="h-20 w-full rounded-none" />
         </div>
       ) : (
         <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-border p-3">
+            <div className="rounded-none border border-border p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Fulfilment
               </p>
@@ -78,7 +78,7 @@ export function OrderDetailDialog({
                 <OrderStatusBadge status={order.status} />
               </div>
             </div>
-            <div className="rounded-xl border border-border p-3">
+            <div className="rounded-none border border-border p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Payment
               </p>
@@ -86,7 +86,7 @@ export function OrderDetailDialog({
                 <PaymentStatusBadge status={order.paymentStatus} />
               </div>
             </div>
-            <div className="rounded-xl border border-border p-3">
+            <div className="rounded-none border border-border p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Method
               </p>
@@ -97,8 +97,8 @@ export function OrderDetailDialog({
           </div>
 
           {cashDue ? (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+            <div className="rounded-none border border-border bg-muted p-3">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                 <Banknote className="h-3.5 w-3.5" aria-hidden="true" />
                 Cash payment due
               </p>
@@ -115,8 +115,8 @@ export function OrderDetailDialog({
           ) : null}
 
           {order.payment?.collectedAt ? (
-            <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+            <div className="rounded-none border border-border bg-muted p-3">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                 Cash collection recorded
               </p>
@@ -136,7 +136,7 @@ export function OrderDetailDialog({
           ) : null}
 
           {ORDER_TRANSITIONS[order.status].length > 0 ? (
-            <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <div className="rounded-none border border-border bg-muted/30 p-3">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-bold">
                 <Truck className="h-3.5 w-3.5" aria-hidden="true" />
                 Move this order forward
@@ -156,17 +156,17 @@ export function OrderDetailDialog({
               </div>
             </div>
           ) : (
-            <p className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground">
+            <p className="rounded-none bg-muted/40 p-3 text-xs text-muted-foreground">
               This order is in a terminal state and cannot move further.
             </p>
           )}
 
           <div>
             <p className="mb-2 text-xs font-bold">Items</p>
-            <ul className="divide-y divide-border rounded-xl border border-border">
+            <ul className="divide-y divide-border rounded-none border border-border">
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-center gap-3 p-3">
-                  <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-none bg-muted">
                     <SmartImage
                       src={item.productImage}
                       alt={item.productName}
@@ -176,10 +176,17 @@ export function OrderDetailDialog({
                     />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold">{item.productName}</p>
+                    <p className="break-words text-xs font-semibold">{item.productName}</p>
                     <p className="text-[11px] text-muted-foreground">
                       {formatCurrency(item.finalUnitPrice)} × {item.quantity}
                     </p>
+                    {item.size || item.color ? (
+                      <p className="break-words text-[10px] text-muted-foreground">
+                        {[item.size ? `Size: ${item.size}` : null, item.color ? `Color: ${item.color}` : null]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    ) : null}
                   </div>
                   <span className="text-xs font-bold">
                     {formatCurrency(item.totalPrice)}
@@ -190,7 +197,7 @@ export function OrderDetailDialog({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-border p-3">
+            <div className="rounded-none border border-border p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Shipping address
               </p>
@@ -212,7 +219,7 @@ export function OrderDetailDialog({
                 </p>
               )}
             </div>
-            <div className="rounded-xl border border-border p-3">
+            <div className="rounded-none border border-border p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Summary
               </p>

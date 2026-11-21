@@ -10,10 +10,10 @@ import type {
 export const ONLINE_PAYMENT_METHODS = ["BKASH", "NAGAD", "CARD"] as const;
 
 /** How often an in-flight payment is re-checked while the customer waits. */
-export const PAYMENT_STATUS_REFRESH_INTERVAL_MS = 5_000;
+export const PAYMENT_STATUS_REFRESH_INTERVAL_MS = 3_000;
 
 /** Stop automatic polling after this long so a stuck payment does not poll forever. */
-export const PAYMENT_STATUS_POLL_TIMEOUT_MS = 2 * 60_000;
+export const PAYMENT_STATUS_POLL_TIMEOUT_MS = 90_000;
 
 export function isOnlinePaymentMethod(
   method: PaymentMethod | null | undefined,
@@ -94,13 +94,13 @@ export function ensureInitiatePaymentResult(
     payment.id.length === 0
   ) {
     throw new Error(
-      "The payment provider response is missing the payment record.",
+ "The payment provider response is missing the payment record.",
     );
   }
 
   if (value.method !== expectedMethod || payment.method !== expectedMethod) {
     throw new Error(
-      "The payment provider response does not match this order's payment method.",
+ "The payment provider response does not match this order's payment method.",
     );
   }
 
@@ -109,7 +109,7 @@ export function ensureInitiatePaymentResult(
     !(PAYMENT_STATUSES as string[]).includes(value.paymentStatus)
   ) {
     throw new Error(
-      "The payment provider response is missing a valid payment status.",
+ "The payment provider response is missing a valid payment status.",
     );
   }
 

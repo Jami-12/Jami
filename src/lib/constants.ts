@@ -19,7 +19,7 @@ export const SITE = {
   name: process.env.NEXT_PUBLIC_STORE_NAME?.trim() || "Store",
   tagline: "Modern commerce, thoughtfully made",
   description:
-    "A modern storefront for considered essentials — quality pieces, clear details and a smooth shopping experience.",
+ "A modern storefront for considered essentials — quality pieces, clear details and a smooth shopping experience.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@example.com",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+880 1000 000000",
@@ -124,63 +124,63 @@ export const PRODUCT_SORT_OPTIONS = [
 ] as const;
 
 export const PRODUCT_STATUSES: ProductStatus[] = [
-  "ACTIVE",
-  "INACTIVE",
-  "DRAFT",
-  "OUT_OF_STOCK",
+ "ACTIVE",
+ "INACTIVE",
+ "DRAFT",
+ "OUT_OF_STOCK",
 ];
 
 export const ORDER_STATUSES: OrderStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "PROCESSING",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-  "RETURNED",
+ "PENDING",
+ "CONFIRMED",
+ "PROCESSING",
+ "SHIPPED",
+ "DELIVERED",
+ "CANCELLED",
+ "RETURNED",
 ];
 
 export const PAYMENT_STATUSES: PaymentStatus[] = [
-  "PENDING",
-  "PROCESSING",
-  "PAID",
-  "FAILED",
-  "CANCELLED",
-  "REFUNDED",
+ "PENDING",
+ "PROCESSING",
+ "PAID",
+ "FAILED",
+ "CANCELLED",
+ "REFUNDED",
 ];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
-  "CASH_ON_DELIVERY",
-  "BKASH",
-  "NAGAD",
-  "CARD",
+ "CASH_ON_DELIVERY",
+ "BKASH",
+ "NAGAD",
+ "CARD",
 ];
 
 export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
-  "PRODUCT_PURCHASE",
-  "EMPLOYEE_SALARY",
-  "SHOP_RENT",
-  "ELECTRICITY_BILL",
-  "INTERNET_BILL",
-  "WATER_BILL",
-  "GAS_BILL",
-  "TRANSPORT",
-  "DELIVERY",
-  "MARKETING",
-  "ADVERTISING",
-  "MAINTENANCE",
-  "OFFICE_SUPPLIES",
-  "TAX",
-  "OTHER",
+ "PRODUCT_PURCHASE",
+ "EMPLOYEE_SALARY",
+ "SHOP_RENT",
+ "ELECTRICITY_BILL",
+ "INTERNET_BILL",
+ "WATER_BILL",
+ "GAS_BILL",
+ "TRANSPORT",
+ "DELIVERY",
+ "MARKETING",
+ "ADVERTISING",
+ "MAINTENANCE",
+ "OFFICE_SUPPLIES",
+ "TAX",
+ "OTHER",
 ];
 
 export const INVENTORY_MOVEMENTS: InventoryMovementType[] = [
-  "STOCK_IN",
-  "STOCK_OUT",
-  "ADJUSTMENT",
-  "ORDER_SALE",
-  "ORDER_CANCEL",
-  "ORDER_RETURN",
+ "STOCK_IN",
+ "STOCK_OUT",
+ "ADJUSTMENT",
+ "ORDER_SALE",
+ "ORDER_CANCEL",
+ "ORDER_RETURN",
 ];
 
 export type Tone = "neutral" | "success" | "warning" | "danger" | "info" | "accent";
@@ -199,8 +199,8 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 export const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: Tone }> = {
   PENDING: { label: "Pending", tone: "warning" },
   CONFIRMED: { label: "Confirmed", tone: "info" },
-  PROCESSING: { label: "Processing", tone: "accent" },
-  SHIPPED: { label: "Shipped", tone: "accent" },
+  PROCESSING: { label: "Processing", tone: "info" },
+  SHIPPED: { label: "Shipped", tone: "info" },
   DELIVERED: { label: "Delivered", tone: "success" },
   CANCELLED: { label: "Cancelled", tone: "danger" },
   RETURNED: { label: "Returned", tone: "neutral" },
@@ -304,6 +304,7 @@ export const CUSTOMER_NAV = [
   { label: "Addresses", href: "/account/addresses", icon: "map" },
   { label: "Wishlist", href: "/account/wishlist", icon: "heart" },
   { label: "Notifications", href: "/account/notifications", icon: "bell" },
+  { label: "Notepad", href: "/account/notepad", icon: "scroll" },
   { label: "Security", href: "/account/security", icon: "shield" },
 ] as const;
 
@@ -320,7 +321,10 @@ export const ADMIN_NAV = [
   { label: "Coupons", href: "/admin/coupons", icon: "ticket", superOnly: false },
   { label: "Reviews", href: "/admin/reviews", icon: "star", superOnly: false },
   { label: "Expenses", href: "/admin/expenses", icon: "wallet", superOnly: false },
+  { label: "Cash collection", href: "/admin/cash-collection", icon: "banknote", superOnly: false },
+  { label: "Receipt settings", href: "/admin/receipt-settings", icon: "receipt", superOnly: false },
   { label: "Notifications", href: "/admin/notifications", icon: "bell", superOnly: false },
+  { label: "Notepad", href: "/admin/notepad", icon: "scroll", superOnly: false },
   { label: "Analytics", href: "/super-admin/analytics", icon: "chart", superOnly: true },
   { label: "Accounting", href: "/super-admin/accounting", icon: "calculator", superOnly: true },
   { label: "Users", href: "/super-admin/users", icon: "users", superOnly: true },
@@ -338,6 +342,7 @@ export const SUPER_ADMIN_NAV = [
   { label: "Employees", href: "/super-admin/employees", icon: "id" },
   { label: "Salaries", href: "/super-admin/salaries", icon: "banknote" },
   { label: "Notifications", href: "/super-admin/notifications", icon: "bell" },
+  { label: "Notepad", href: "/super-admin/notepad", icon: "scroll" },
   { label: "Audit logs", href: "/super-admin/audit", icon: "scroll" },
   { label: "Settings", href: "/super-admin/settings", icon: "shield" },
   { label: "Admin console", href: "/admin", icon: "shield" },
@@ -363,6 +368,7 @@ export const CUSTOMER_NAV_GROUPS: readonly NavGroupDefinition[] = [
       { label: "Addresses", href: "/account/addresses", icon: "map" },
       { label: "Wishlist", href: "/account/wishlist", icon: "heart" },
       { label: "Notifications", href: "/account/notifications", icon: "bell" },
+      { label: "Notepad", href: "/account/notepad", icon: "scroll" },
     ],
   },
   {
@@ -415,7 +421,10 @@ export const ADMIN_NAV_GROUPS: readonly NavGroupDefinition[] = [
     label: "Operations",
     items: [
       { label: "Expenses", href: "/admin/expenses", icon: "wallet" },
+      { label: "Cash collection", href: "/admin/cash-collection", icon: "banknote" },
+      { label: "Receipt settings", href: "/admin/receipt-settings", icon: "receipt" },
       { label: "Notifications", href: "/admin/notifications", icon: "bell" },
+      { label: "Notepad", href: "/admin/notepad", icon: "scroll" },
     ],
   },
 ];
@@ -450,6 +459,7 @@ export const SUPER_ADMIN_NAV_GROUPS: readonly NavGroupDefinition[] = [
     label: "System",
     items: [
       { label: "Notifications", href: "/super-admin/notifications", icon: "bell" },
+      { label: "Notepad", href: "/super-admin/notepad", icon: "scroll" },
       { label: "Audit logs", href: "/super-admin/audit", icon: "scroll" },
       { label: "Settings", href: "/super-admin/settings", icon: "shield" },
       { label: "Admin console", href: "/admin", icon: "shield" },
@@ -458,16 +468,16 @@ export const SUPER_ADMIN_NAV_GROUPS: readonly NavGroupDefinition[] = [
 ];
 
 export const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+ "January",
+ "February",
+ "March",
+ "April",
+ "May",
+ "June",
+ "July",
+ "August",
+ "September",
+ "October",
+ "November",
+ "December",
 ] as const;

@@ -3,14 +3,11 @@
 import Link from "next/link";
 import { Heart, LayoutDashboard, Search, ShoppingBag, User } from "lucide-react";
 
-import { CurrencyToggle } from "@/components/layout/currency-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 
-import { SoundToggle } from "./sound-toggle";
-
 const iconButton =
-  "relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-muted-foreground transition hover:border-border hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none border border-border bg-background text-muted-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function Count({ value, label }: { value: number; label: string }) {
   if (value <= 0) return null;
@@ -18,7 +15,7 @@ function Count({ value, label }: { value: number; label: string }) {
   return (
     <span
       aria-label={`${value} ${label}`}
-      className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-800 px-1 text-[10px] font-bold text-primary-50 dark:bg-accent-300 dark:text-primary-950"
+      className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-none border border-background bg-foreground px-1 text-[10px] font-bold tabular-nums text-background"
     >
       {value}
     </span>
@@ -51,8 +48,6 @@ export function DesktopActions({
         <Search className="h-4 w-4" aria-hidden="true" />
       </button>
 
-      <SoundToggle className="hidden sm:inline-flex" />
-      <CurrencyToggle className="mr-0.5 hidden xl:inline-flex" />
       <ThemeToggle className="hidden sm:inline-flex" />
 
       <Link
@@ -80,13 +75,13 @@ export function DesktopActions({
         type="button"
         onClick={onOpenCart}
         aria-label={`Open bag${cartCount ? `, ${cartCount} items` : ""}`}
-        className="relative ml-1 inline-flex h-10 items-center gap-2 rounded-full border border-primary-800 bg-primary-800 px-3.5 text-primary-50 shadow-soft transition hover:border-primary-900 hover:bg-primary-900 dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950 dark:hover:bg-accent-200"
+        className="relative ml-1 inline-flex h-10 items-center gap-2 rounded-none border border-foreground bg-primary px-3.5 text-primary-foreground transition-colors hover:border-foreground hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden text-[11px] font-bold uppercase tracking-[0.14em] sm:inline">
+        <span className="hidden text-[11px] font-bold uppercase tracking-[0.14em] not-italic sm:inline">
           Bag
         </span>
-        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-300 px-1 text-[11px] font-bold text-primary-950 dark:bg-primary-950 dark:text-accent-300">
+        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-none border border-primary bg-primary-foreground px-1 text-[11px] font-bold tabular-nums text-primary">
           {cartCount}
         </span>
       </button>

@@ -31,7 +31,7 @@ export function RatingStars({
           ))}
         </span>
         <span
-          className="absolute inset-y-0 left-0 inline-flex gap-0.5 overflow-hidden text-[var(--color-accent-400)] dark:text-[var(--color-accent-300)]"
+          className="absolute inset-y-0 left-0 inline-flex gap-0.5 overflow-hidden text-foreground"
           style={{ width: `${percent}%` }}
         >
           {[0, 1, 2, 3, 4].map((index) => (

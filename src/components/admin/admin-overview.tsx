@@ -139,13 +139,13 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-muted/30">
+      <Card className="overflow-hidden bg-muted">
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
               Command centre
             </p>
-            <CardTitle className="font-display text-xl sm:text-2xl">
+            <CardTitle className="font-display text-xl not-italic sm:text-2xl">
               Store operations at a glance
             </CardTitle>
             <CardDescription>
@@ -191,7 +191,7 @@ export function AdminOverview() {
         />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
@@ -290,7 +290,7 @@ export function AdminOverview() {
                   {lowStock.map((item) => (
                     <li
                       key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-none border border-border bg-muted px-3 py-2 transition-colors hover:border-foreground"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-xs font-semibold">{item.title}</p>

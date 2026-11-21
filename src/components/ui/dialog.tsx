@@ -8,7 +8,7 @@ import { Button } from "./button";
 import { cn } from "@/lib/utils";
 
 const FOCUSABLE =
-  "input, select, textarea, button, [href], [tabindex]:not([tabindex='-1'])";
+ "input, select, textarea, button, [href], [tabindex]:not([tabindex='-1'])";
 
 export function Dialog({
   open,
@@ -94,7 +94,7 @@ export function Dialog({
         type="button"
         aria-label="Close dialog"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[var(--color-primary-950)]/60 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-[var(--overlay)]"
       />
       <div
         ref={panelRef}
@@ -103,7 +103,7 @@ export function Dialog({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "relative flex max-h-[min(92dvh,52rem)] w-full flex-col overflow-hidden rounded-t-3xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-lift)] ring-1 ring-black/5 dark:ring-white/5 sm:rounded-3xl",
+ "relative flex max-h-[min(92dvh,52rem)] w-full flex-col overflow-hidden rounded-none border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-none",
           sizes[size],
         )}
       >
@@ -122,7 +122,7 @@ export function Dialog({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
           >
             <X size={18} aria-hidden="true" />
           </button>

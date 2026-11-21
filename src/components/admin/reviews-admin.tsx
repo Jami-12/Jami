@@ -119,7 +119,7 @@ export function ReviewsAdmin() {
           <Button
             variant="ghost"
             size="sm"
-            className={review.isApproved ? "text-amber-600" : "text-emerald-600"}
+            className={review.isApproved ? "text-muted-foreground" : "text-muted-foreground"}
             onClick={() => moderate.mutate({ review, isApproved: !review.isApproved })}
             loading={moderate.isPending && moderate.variables?.review.id === review.id}
           >
@@ -139,7 +139,7 @@ export function ReviewsAdmin() {
             variant="ghost"
             size="icon"
             aria-label="Delete review"
-            className="text-muted-foreground hover:text-red-600"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setDeleting(review)}
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />

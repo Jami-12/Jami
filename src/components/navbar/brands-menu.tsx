@@ -28,7 +28,7 @@ export function BrandsMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-10 items-center gap-1 rounded-full px-3.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground transition hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted data-[state=open]:text-foreground"
+          className="inline-flex h-10 items-center gap-2 rounded-none border border-border bg-background px-3.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground not-italic transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-foreground data-[state=open]:bg-foreground data-[state=open]:text-background"
         >
           Brands
           <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
@@ -36,13 +36,17 @@ export function BrandsMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="w-56 rounded-2xl border-border/80 p-2 shadow-lift"
+        className="w-56 rounded-none border border-border bg-popover p-1 text-popover-foreground shadow-none"
       >
-        <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground not-italic">
           Shop by brand
         </DropdownMenuLabel>
         {query.data.slice(0, 8).map((brand) => (
-          <DropdownMenuItem key={brand.id} asChild className="rounded-xl">
+          <DropdownMenuItem
+            key={brand.id}
+            asChild
+            className="rounded-none text-[13px] font-medium text-muted-foreground transition-colors hover:bg-foreground hover:text-background focus:bg-foreground focus:text-background"
+          >
             <Link href={`/products?brand=${encodeURIComponent(brand.slug)}`}>
               {brand.name}
             </Link>

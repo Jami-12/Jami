@@ -15,6 +15,7 @@ export const queryKeys = {
   settings: {
     all: ["settings"] as const,
     detail: () => ["settings", "detail"] as const,
+    receipt: () => ["settings", "receipt"] as const,
   },
 
   notifications: {
@@ -24,6 +25,11 @@ export const queryKeys = {
     unreadCount: () => ["notifications", "unread-count"] as const,
     popover: () => ["notifications", "popover"] as const,
     recent: () => ["notifications", "recent"] as const,
+  },
+
+  notes: {
+    all: () => ["notes"] as const,
+    list: () => ["notes", "list"] as const,
   },
 
   orders: {
@@ -36,6 +42,7 @@ export const queryKeys = {
     pendingPayment: () => ["orders", "pending-payment"] as const,
     inTransit: () => ["orders", "in-transit"] as const,
     receipt: (id: string) => ["order-receipt", id] as const,
+    receiptAll: () => ["order-receipt"] as const,
     admin: {
       all: () => ["admin", "orders"] as const,
       list: (params?: Record<string, unknown>) =>

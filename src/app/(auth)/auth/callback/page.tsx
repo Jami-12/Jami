@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
       title="One moment"
       description="We are finishing the secure hand-off from Google."
     >
-      <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+      <Suspense fallback={<Skeleton className="h-48 w-full rounded-none" />}>
         <AuthCallbackView />
       </Suspense>
     </AuthShell>

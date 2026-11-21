@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Eye, EyeOff, KeyRound, Lock, ShieldCheck } from "lucide-react";
@@ -92,7 +93,7 @@ export function SecurityForm() {
                   type="button"
                   onClick={() => setShow((value) => !value)}
                   aria-label={show ? "Hide password" : "Show password"}
-                  className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-none text-muted-foreground transition hover:bg-muted hover:text-foreground"
                 >
                   {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -169,8 +170,14 @@ export function SecurityForm() {
             <div>
               <p className="font-semibold">Forgot your password?</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Self-service reset is not available yet. Contact support and the
-                team will verify your identity before restoring access.
+                Use the{" "}
+                <Link
+                  href="/forgot-password"
+                  className="font-semibold text-foreground underline-offset-4 hover:underline"
+                >
+                  verified reset flow
+                </Link>{" "}
+                to receive a one-time code by email and choose a new password.
               </p>
             </div>
           </li>

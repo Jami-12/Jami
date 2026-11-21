@@ -35,7 +35,7 @@ function Panel({ item, index }: { item: WallItem; index: number }) {
       >
         <mesh position={[0, 0, -0.04]} scale={[layout.scale[0] + 0.1, layout.scale[1] + 0.1, 1]}>
           <planeGeometry />
-          <meshStandardMaterial color="#0f766e" metalness={0.65} roughness={0.3} />
+          <meshStandardMaterial color="#0a0a0a" metalness={0.35} roughness={0.5} />
         </mesh>
         {/* drei's Image takes `url`, not an `alt`; the link list below carries accessible names. */}
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
@@ -49,9 +49,9 @@ function Panel({ item, index }: { item: WallItem; index: number }) {
         <mesh position={[0, 0, 0.01]} scale={[layout.scale[0], layout.scale[1], 1]}>
           <planeGeometry />
           <meshBasicMaterial
-            color="#5eead4"
+            color="#fafafa"
             transparent
-            opacity={hovered ? 0.16 : 0}
+            opacity={hovered ? 0.14 : 0}
           />
         </mesh>
       </Float>
@@ -91,8 +91,8 @@ export default function ProductWallScene({ items }: { items: WallItem[] }) {
     >
       <ambientLight intensity={0.85} />
       <directionalLight position={[3, 4, 6]} intensity={1.9} />
-      <pointLight position={[-4, 1, 3]} intensity={14} color="#5eead4" />
-      <spotLight position={[0, 5, 2]} angle={0.55} penumbra={1} intensity={16} color="#F8FAFC" />
+      <pointLight position={[-4, 1, 3]} intensity={10} color="#fafafa" />
+      <spotLight position={[0, 5, 2]} angle={0.55} penumbra={1} intensity={12} color="#fafafa" />
       <WallGroup items={items} />
       <ContactShadows
         position={[0, -1.9, 0]}
@@ -100,7 +100,7 @@ export default function ProductWallScene({ items }: { items: WallItem[] }) {
         scale={12}
         blur={2.8}
         far={5}
-        color="#020617"
+        color="#000000"
       />
     </Canvas>
   );

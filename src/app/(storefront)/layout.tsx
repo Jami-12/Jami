@@ -14,29 +14,29 @@ export default function StorefrontLayout({
 }) {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <div className="border-b border-border bg-primary text-primary-foreground dark:border-border dark:bg-card dark:text-foreground">
+      <div className="rounded-none border-b border-border bg-foreground text-background dark:bg-card dark:text-foreground">
         <div className="container-page flex h-9 items-center justify-between gap-3 text-[10px] font-medium uppercase tracking-[0.16em]">
           <p className="flex min-w-0 items-center gap-2">
-            <Truck className="h-3.5 w-3.5 shrink-0 text-primary-foreground/80" aria-hidden="true" />
+            <Truck className="h-3.5 w-3.5 shrink-0 text-background/80 dark:text-foreground/80" aria-hidden="true" />
             <span className="truncate">
               Complimentary delivery over {formatCurrency(FREE_SHIPPING_THRESHOLD)}
             </span>
-            <span aria-hidden="true" className="hidden text-primary-foreground/50 sm:inline">
+            <span aria-hidden="true" className="hidden text-background/50 dark:text-foreground/50 sm:inline">
               ·
             </span>
-            <span className="hidden text-primary-foreground/80 sm:inline">30-day returns</span>
+            <span className="hidden text-background/80 dark:text-foreground/80 sm:inline">30-day returns</span>
           </p>
           <div className="hidden items-center gap-4 md:flex">
             <Link
               href="/account/orders"
-              className="inline-flex items-center gap-1 text-primary-foreground/85 transition hover:text-primary-foreground"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 text-background/85 transition hover:bg-background hover:text-foreground dark:text-foreground/85 dark:hover:bg-foreground dark:hover:text-background"
             >
               Track an order
               <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
             <Link
               href="/#contact"
-              className="text-primary-foreground/85 transition hover:text-primary-foreground"
+              className="px-1.5 py-0.5 text-background/85 transition hover:bg-background hover:text-foreground dark:text-foreground/85 dark:hover:bg-foreground dark:hover:text-background"
             >
               Client care
             </Link>

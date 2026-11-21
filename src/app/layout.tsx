@@ -33,12 +33,12 @@ export const metadata: Metadata = {
   description: SITE.description,
   applicationName: SITE.name,
   keywords: [
-    "modern commerce",
-    "online store",
-    "fashion",
-    "lifestyle",
-    "premium essentials",
-    "ecommerce",
+ "modern commerce",
+ "online store",
+ "fashion",
+ "lifestyle",
+ "premium essentials",
+ "ecommerce",
     SITE.name,
   ],
   authors: [{ name: `${SITE.name} Studio`, url: SITE.url }],
@@ -86,7 +86,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#09090b" },
   ],
 };

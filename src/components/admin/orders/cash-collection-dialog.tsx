@@ -54,7 +54,7 @@ export function CashCollectionDialog({
       }
     >
       <div className="space-y-4">
-        <p className="rounded-xl border border-border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+        <p className="rounded-none border border-border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
           This records the cash as collected, marks the payment{" "}
           <strong className="font-semibold text-foreground">PAID</strong> and posts
           the income to the ledger. The order&apos;s fulfilment status is not changed.

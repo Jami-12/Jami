@@ -152,13 +152,13 @@ export function AuditView() {
 
   return (
     <div className="space-y-4">
-      <Card className="bg-muted/30">
+      <Card className="bg-muted">
         <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
               Security trail
             </p>
-            <CardTitle className="font-display text-xl">Audit logs</CardTitle>
+            <CardTitle className="font-display text-xl not-italic">Audit logs</CardTitle>
             <CardDescription>Immutable record of privileged actions across the platform.</CardDescription>
           </div>
           <Badge tone="accent" dot>
@@ -168,7 +168,7 @@ export function AuditView() {
         </CardHeader>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-3">
         <StatCard
           label="Matching entries"
           value={query.data?.meta.total ?? "—"}
@@ -334,7 +334,7 @@ export function AuditView() {
                 <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   Previous data
                 </p>
-                <pre className="max-h-72 overflow-auto rounded-xl border border-border bg-muted/50 p-3 text-[11px] leading-relaxed">
+                <pre className="max-h-72 overflow-auto rounded-none border border-border bg-muted p-3 text-[11px] leading-relaxed">
                   {prettyJson(inspect.oldData)}
                 </pre>
               </div>
@@ -342,7 +342,7 @@ export function AuditView() {
                 <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   New data
                 </p>
-                <pre className="max-h-72 overflow-auto rounded-xl border border-border bg-muted/50 p-3 text-[11px] leading-relaxed">
+                <pre className="max-h-72 overflow-auto rounded-none border border-border bg-muted p-3 text-[11px] leading-relaxed">
                   {prettyJson(inspect.newData)}
                 </pre>
               </div>

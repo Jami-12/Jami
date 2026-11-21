@@ -11,16 +11,16 @@ export interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const tones = {
-  neutral: "bg-[var(--muted)] text-[var(--muted-foreground)]",
-  primary: "bg-primary/10 text-primary",
-  accent: "bg-[var(--accent-soft)] text-[var(--accent-foreground)]",
-  success: "bg-[var(--success-soft)] text-[var(--success)]",
-  warning: "bg-[var(--warning-soft)] text-[var(--warning)]",
-  danger: "bg-[var(--danger-soft)] text-[var(--danger)]",
-  info: "bg-[var(--info-soft)] text-[var(--info)]",
+  neutral: "border border-[var(--border)] bg-[var(--muted)] text-[var(--muted-foreground)]",
+  primary: "border border-foreground bg-primary text-primary-foreground",
+  accent: "border border-foreground bg-[var(--muted)] text-[var(--foreground)]",
+  success: "border border-success/25 bg-success-soft text-success",
+  warning: "border border-warning/25 bg-warning-soft text-warning",
+  danger: "border border-danger/25 bg-danger-soft text-danger",
+  info: "border border-info/25 bg-info-soft text-info",
 } as const;
 
-/** Compact pill used for filters, metadata and selectable tags. */
+/** Compact square tag used for filters, metadata and selectable options. */
 export function Chip({
   icon: Icon,
   tone = "neutral",
@@ -33,9 +33,9 @@ export function Chip({
     <span
       data-selected={selected || undefined}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-current/10 transition-[background-color,color,box-shadow] duration-200",
+ "inline-flex items-center gap-1.5 rounded-none px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] transition-[background-color,color,border-color] duration-150",
         tones[tone],
-        selected && "ring-2 ring-primary/50",
+        selected && "border-foreground ring-1 ring-foreground ring-inset",
         className,
       )}
       {...props}

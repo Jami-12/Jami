@@ -49,13 +49,23 @@ const columns: DataColumn<Order>[] = [
         <span className="text-muted-foreground">—</span>
       ) : (
         <div className="max-w-52">
-          <p className="truncate text-xs font-semibold">
+          <p className="line-clamp-2 break-words text-xs font-semibold">
             {order.items[0]?.productName}
             {order.items.length > 1 ? ` +${order.items.length - 1} more` : ""}
           </p>
           <p className="text-[11px] text-muted-foreground">
             {order.items.reduce((sum, item) => sum + item.quantity, 0)} unit(s)
           </p>
+          {order.items[0]?.size || order.items[0]?.color ? (
+            <p className="break-words text-[10px] text-muted-foreground">
+              {[
+                order.items[0]?.size ? `Size: ${order.items[0]?.size}` : null,
+                order.items[0]?.color ? `Color: ${order.items[0]?.color}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          ) : null}
         </div>
       ),
   },
@@ -112,11 +122,18 @@ function OrderMobileCard({ order }: { order: Order }) {
 
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-xs font-semibold">
+          <p className="line-clamp-2 break-words text-xs font-semibold">
             {firstItem?.productName ?? "No items"}
             {order.items.length > 1 ? ` +${order.items.length - 1}` : ""}
           </p>
           <p className="text-[11px] text-muted-foreground">{units} unit(s)</p>
+          {firstItem?.size || firstItem?.color ? (
+            <p className="break-words text-[10px] text-muted-foreground">
+              {[firstItem?.size ? `Size: ${firstItem.size}` : null, firstItem?.color ? `Color: ${firstItem.color}` : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          ) : null}
         </div>
         <Button asChild variant="outline" size="sm" className="h-8 shrink-0">
           <Link href={`/account/orders/${order.id}`}>

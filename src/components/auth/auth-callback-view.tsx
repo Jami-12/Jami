@@ -65,17 +65,19 @@ export function AuthCallbackView() {
 
   if (error) {
     return (
-      <Card className="p-7 text-center">
-        <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300">
+      <Card className="border-border bg-card p-7 text-center shadow-soft">
+        <span className="mx-auto inline-flex h-12 w-12 items-center justify-center border border-border bg-muted text-foreground">
           <AlertCircle className="h-5 w-5" aria-hidden="true" />
         </span>
-        <h1 className="mt-4 text-xl font-extrabold">Sign-in did not complete</h1>
+        <h1 className="mt-4 font-display text-xl font-semibold tracking-tight text-foreground not-italic">
+          Sign-in did not complete
+        </h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{error}</p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Button asChild>
             <Link href="/login">Back to sign in</Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="hover:bg-foreground hover:text-background">
             <Link href="/">Continue browsing</Link>
           </Button>
         </div>
@@ -84,9 +86,11 @@ export function AuthCallbackView() {
   }
 
   return (
-    <Card className="p-8 text-center">
-      <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-500 dark:text-accent-300" aria-hidden="true" />
-      <h1 className="mt-4 text-lg font-extrabold">Completing sign-in</h1>
+    <Card className="border-border bg-card p-8 text-center shadow-soft">
+      <Loader2 className="mx-auto h-8 w-8 animate-spin text-foreground" aria-hidden="true" />
+      <h1 className="mt-4 font-display text-lg font-semibold tracking-tight text-foreground not-italic">
+        Completing sign-in
+      </h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Verifying your Google session and loading your account…
       </p>

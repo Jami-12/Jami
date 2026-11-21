@@ -16,8 +16,13 @@ export function NewArrivals({ products }: { products: Product[] }) {
         eyebrow="New arrivals"
         title="Just off the rail."
         description="The most recent pieces to reach the studio, photographed on the hanger and close up."
+        className="border-b border-border pb-6"
         action={
-          <Button asChild variant="outline">
+          <Button
+            asChild
+            variant="outline"
+            className="border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
+          >
             <Link href="/products?sort=newest">
               View all new
               <ArrowRight className="h-4 w-4" aria-hidden="true" />

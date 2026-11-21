@@ -119,7 +119,7 @@ export function ProductDetail({ product }: { product: Product }) {
     if (outOfStock || selectionIncomplete) return false;
     setAdding(true);
     try {
-      await addItem(product, quantity);
+      await addItem(product, quantity, { size, color });
       return true;
     } finally {
       setAdding(false);
@@ -149,7 +149,7 @@ export function ProductDetail({ product }: { product: Product }) {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12 xl:gap-16">
       <div className="min-w-0">
-        <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl border border-border bg-muted shadow-soft sm:aspect-[5/6]">
+        <div className="group relative aspect-[4/5] overflow-hidden border border-border bg-muted sm:aspect-[5/6]">
           <SmartImage
             src={image?.url ?? null}
             alt={image?.alt || name}
@@ -164,7 +164,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <Badge tone="danger">−{percent}%</Badge>
             ) : null}
             {product.isFeatured ? <Badge tone="accent">Studio edit</Badge> : null}
-            {outOfStock ? <Badge tone="neutral">Sold out</Badge> : null}
+            {outOfStock ? <Badge tone="danger">Sold out</Badge> : null}
           </div>
 
           {gallery.length > 1 ? (
@@ -177,7 +177,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   )
                 }
                 aria-label="Previous image"
-                className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/85 text-primary-950 shadow-soft backdrop-blur transition hover:bg-white"
+                className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border bg-background text-foreground outline-none transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -187,14 +187,14 @@ export function ProductDetail({ product }: { product: Product }) {
                   setActiveImage((current) => (current + 1) % gallery.length)
                 }
                 aria-label="Next image"
-                className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/85 text-primary-950 shadow-soft backdrop-blur transition hover:bg-white"
+                className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-border bg-background text-foreground outline-none transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </>
           ) : null}
 
-          <span className="absolute bottom-3 right-3 rounded-full border border-white/20 bg-primary-950/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur">
+          <span className="absolute bottom-3 right-3 border border-border bg-foreground px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-background">
             {activeImage === 0 ? "On the hanger" : `View ${activeImage + 1}`}
           </span>
         </div>
@@ -209,10 +209,10 @@ export function ProductDetail({ product }: { product: Product }) {
                 aria-label={`Show image ${index + 1}`}
                 aria-current={activeImage === index}
                 className={cn(
-                  "relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-muted transition",
+                  "relative h-20 w-20 shrink-0 overflow-hidden border-2 bg-muted transition",
                   activeImage === index
-                    ? "border-primary-600 dark:border-accent-300"
-                    : "border-transparent opacity-70 hover:opacity-100",
+                    ? "border-foreground"
+                    : "border-border opacity-60 hover:opacity-100",
                 )}
               >
                 <SmartImage
@@ -223,7 +223,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   className="object-cover"
                 />
                 {index === 0 ? (
-                  <span className="absolute inset-x-0 bottom-0 bg-primary-950/65 py-0.5 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-white">
+                  <span className="absolute inset-x-0 bottom-0 bg-foreground py-0.5 text-center text-[8px] font-bold uppercase tracking-[0.12em] text-background">
                     Hanger
                   </span>
                 ) : null}
@@ -250,8 +250,8 @@ export function ProductDetail({ product }: { product: Product }) {
               copy: "bKash, Nagad, card, COD",
             },
           ].map((item) => (
-            <Card key={item.label} className="flex items-start gap-2.5 p-3.5">
-              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary-600 dark:text-accent-300">
+            <Card key={item.label} className="flex items-start gap-2.5 border-border p-3.5 transition-colors hover:border-foreground">
+              <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center border border-border bg-muted text-foreground">
                 <item.icon className="h-4 w-4" aria-hidden="true" />
               </span>
               <div>
@@ -269,7 +269,7 @@ export function ProductDetail({ product }: { product: Product }) {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/products?category=${product.category.slug}`}
-            className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-600 hover:underline dark:text-accent-300"
+            className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground underline-offset-4 hover:underline"
           >
             {product.category.name}
           </Link>
@@ -308,7 +308,7 @@ export function ProductDetail({ product }: { product: Product }) {
             size="xl"
           />
           {discounted && percent > 0 ? (
-            <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600 dark:bg-red-500/10 dark:text-red-300">
+            <span className="border border-border bg-background px-2.5 py-1 text-[11px] font-bold text-foreground">
               Save {percent}%
             </span>
           ) : null}
@@ -320,17 +320,17 @@ export function ProductDetail({ product }: { product: Product }) {
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
           {outOfStock ? (
-            <span className="inline-flex items-center gap-1.5 text-red-600 dark:text-red-400">
+            <span className="inline-flex items-center gap-1.5 text-danger">
               <Package className="h-3.5 w-3.5" aria-hidden="true" />
               Out of stock
             </span>
           ) : product.stock <= product.minimumStockLevel ? (
-            <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+            <span className="inline-flex items-center gap-1.5 text-warning">
               <Package className="h-3.5 w-3.5" aria-hidden="true" />
               Only {product.stock} left in stock
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 text-success">
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
               In stock · ships in 48 hours
             </span>
@@ -338,7 +338,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <span className="text-muted-foreground">· SKU {product.sku}</span>
         </div>
 
-        <Card className="mt-6 space-y-5 p-4 shadow-soft sm:p-5">
+        <Card className="mt-6 space-y-6 border border-border bg-card p-4 sm:p-5">
           {colors.length > 0 ? (
             <fieldset>
               <legend className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
@@ -359,14 +359,14 @@ export function ProductDetail({ product }: { product: Product }) {
                       aria-pressed={active}
                       title={option.name}
                       className={cn(
-                        "inline-flex h-10 w-10 items-center justify-center rounded-full border-2 transition",
+                        "inline-flex h-10 w-10 items-center justify-center border-2 transition-colors",
                         active
-                          ? "border-primary-700 bg-primary-50 dark:border-accent-300 dark:bg-accent-300/10"
-                          : "border-border hover:border-accent-400/60",
+                          ? "border-foreground"
+                          : "border-border hover:border-foreground",
                       )}
                     >
                       <span
-                        className="h-6 w-6 rounded-full border border-black/10"
+                        className="h-6 w-6 border border-foreground/20"
                         style={{ backgroundColor: option.hex }}
                       />
                     </button>
@@ -394,10 +394,10 @@ export function ProductDetail({ product }: { product: Product }) {
                       onClick={() => setSize(option)}
                       aria-pressed={active}
                       className={cn(
-                        "inline-flex h-10 min-w-11 items-center justify-center rounded-xl border px-3 text-xs font-semibold transition",
+                        "inline-flex h-11 w-11 items-center justify-center border p-0 text-xs font-semibold transition-colors",
                         active
-                          ? "border-primary-700 bg-primary-700 text-primary-50 dark:border-accent-300 dark:bg-accent-300 dark:text-primary-950"
-                          : "border-border bg-card text-muted-foreground hover:border-accent-400/60 hover:text-foreground",
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border bg-card text-foreground hover:border-foreground",
                       )}
                     >
                       {option}
@@ -411,10 +411,8 @@ export function ProductDetail({ product }: { product: Product }) {
           {(colors.length > 0 || (sizes && sizes.length > 0)) && (
             <div
               className={cn(
-                "rounded-xl border px-3 py-2.5 text-xs",
-                selectionIncomplete
-                  ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
-                  : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+                "border border-border bg-muted px-3 py-2.5 text-xs text-foreground",
+                selectionIncomplete && "text-muted-foreground",
               )}
               aria-live="polite"
             >
@@ -442,7 +440,7 @@ export function ProductDetail({ product }: { product: Product }) {
             />
             <Button
               size="lg"
-              className="min-w-40 flex-1"
+              className="min-w-40 flex-1 border border-foreground bg-foreground text-background hover:bg-background hover:text-foreground"
               onClick={() => void handleAdd()}
               loading={adding}
               disabled={outOfStock || selectionIncomplete}
@@ -456,7 +454,7 @@ export function ProductDetail({ product }: { product: Product }) {
               onClick={() => void toggleWishlist(product.id, name)}
               aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
               aria-pressed={saved}
-              className="h-11 w-11 shrink-0"
+              className="h-11 w-11 shrink-0 border border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
             >
               <Heart
                 className="h-4 w-4"
@@ -469,7 +467,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <Button
             size="lg"
             variant="secondary"
-            className="w-full"
+            className="w-full border border-border bg-background text-foreground hover:border-foreground hover:bg-foreground hover:text-background"
             onClick={() => void handleBuyNow()}
             loading={buying}
             disabled={outOfStock || selectionIncomplete}
@@ -489,7 +487,7 @@ export function ProductDetail({ product }: { product: Product }) {
             { label: "Rating", value: product.averageRating.toFixed(1) },
             { label: "Reviews", value: product.reviewCount },
           ].map((stat) => (
-            <Card key={stat.label} className="px-2 py-3">
+            <Card key={stat.label} className="border-border px-2 py-3 transition-colors hover:border-foreground">
               <p className="font-display text-lg font-semibold tabular-nums">
                 {stat.value}
               </p>
@@ -500,11 +498,11 @@ export function ProductDetail({ product }: { product: Product }) {
           ))}
         </div>
 
-        <div className="mt-8">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="mt-8 border border-border bg-card p-5">
+          <h2 className="border-b border-border pb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             The details
           </h2>
-          <div className="mt-3 space-y-4 text-sm leading-relaxed text-muted-foreground">
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
             {product.description
               .split("\n")
               .filter(Boolean)
@@ -518,7 +516,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <dl className="grid gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
             {[
               [
-                "Material",
+ "Material",
                 product.brand?.name
                   ? `${product.brand.name} signature finish`
                   : "Considered natural fibres",
@@ -526,11 +524,11 @@ export function ProductDetail({ product }: { product: Product }) {
               ["Category", product.category.name],
               ["SKU", product.sku],
               [
-                "Availability",
+ "Availability",
                 outOfStock ? "Out of stock" : `${product.stock} in stock`,
               ],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-border bg-card px-4 py-3">
+              <div key={label} className="border border-border bg-background px-4 py-3">
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {label}
                 </dt>
@@ -542,11 +540,11 @@ export function ProductDetail({ product }: { product: Product }) {
           </dl>
         </div>
 
-        <div className="mt-10">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="mt-10 border border-border bg-card p-5">
+          <h2 className="border-b border-border pb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Reviews
           </h2>
-          <div className="mt-3 space-y-5">
+          <div className="mt-5 space-y-5">
             <ReviewList
               productId={product.id}
               averageRating={product.averageRating}
@@ -565,13 +563,13 @@ export function ProductDetail({ product }: { product: Product }) {
 export function ProductDetailSkeleton() {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <div className="aspect-[4/5] animate-pulse rounded-3xl bg-muted" />
+      <div className="aspect-[4/5] animate-pulse rounded-none bg-muted" />
       <div className="space-y-4">
-        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-        <div className="h-10 w-3/4 animate-pulse rounded bg-muted" />
-        <div className="h-6 w-40 animate-pulse rounded bg-muted" />
-        <div className="h-24 w-full animate-pulse rounded bg-muted" />
-        <div className="h-16 w-full animate-pulse rounded bg-muted" />
+        <div className="h-4 w-24 animate-pulse rounded-none bg-muted" />
+        <div className="h-10 w-3/4 animate-pulse rounded-none bg-muted" />
+        <div className="h-6 w-40 animate-pulse rounded-none bg-muted" />
+        <div className="h-24 w-full animate-pulse rounded-none bg-muted" />
+        <div className="h-16 w-full animate-pulse rounded-none bg-muted" />
       </div>
     </div>
   );

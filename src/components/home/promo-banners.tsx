@@ -20,33 +20,36 @@ function BannerCard({
 
   const inner = (
     <>
-      <SmartImage
-        src={banner.imageUrl}
-        alt={banner.title}
-        fill
-        sizes={variant === "hero" ? "100vw" : "(max-width: 640px) 100vw, 33vw"}
-        className="object-cover transition-transform duration-[1100ms] ease-out group-hover:scale-[1.04]"
-      />
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent"
-      />
-      <div className="relative flex h-full flex-col justify-end p-5 text-white sm:p-6">
+      <div
+        className={cn(
+          "relative w-full overflow-hidden bg-muted",
+          variant === "hero" ? "aspect-[16/9] sm:aspect-[21/9]" : "aspect-square sm:aspect-[4/3]",
+        )}
+      >
+        <SmartImage
+          src={banner.imageUrl}
+          alt={banner.title}
+          fill
+          sizes={variant === "hero" ? "100vw" : "(max-width: 640px) 100vw, 33vw"}
+          className="object-cover"
+        />
+      </div>
+      <div className="flex flex-col gap-2 border-t border-border bg-background p-5 text-foreground transition-colors group-hover:bg-foreground group-hover:text-background sm:p-6">
         <h3
           className={cn(
-            "font-display font-semibold leading-tight",
-            variant === "hero" ? "text-2xl sm:text-3xl" : "text-xl",
+            "font-display font-semibold leading-tight not-italic",
+            variant === "hero" ? "text-2xl sm:text-3xl" : "text-lg",
           )}
         >
           {banner.title}
         </h3>
         {banner.subtitle ? (
-          <p className="mt-1.5 max-w-lg text-xs leading-relaxed text-white/80 sm:text-sm">
+          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground transition-colors group-hover:text-background/70 sm:text-sm">
             {banner.subtitle}
           </p>
         ) : null}
         {href ? (
-          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+          <span className="mt-2 inline-flex items-center gap-2 border-b border-current pb-0.5 text-[10px] font-bold uppercase tracking-[0.2em]">
             Discover
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </span>
@@ -56,8 +59,7 @@ function BannerCard({
   );
 
   const className = cn(
-    "group relative block overflow-hidden rounded-3xl border border-border bg-muted shadow-soft transition-shadow hover:shadow-lift",
-    variant === "hero" ? "aspect-[16/9] sm:aspect-[21/9]" : "aspect-[16/10]",
+    "group relative block overflow-hidden border border-border bg-background outline-none transition-colors focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   );
 
   if (!href) {

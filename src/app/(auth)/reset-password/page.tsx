@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KeyRound, Mail } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { SITE } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Reset password",
@@ -17,41 +16,34 @@ export default function ResetPasswordPage() {
     <AuthShell
       eyebrow="Account access"
       title="Complete your password reset"
-      description="Reset links are issued manually after support verifies account ownership."
+      description="Password resets are completed with a verified one-time email code."
     >
       <div className="space-y-4">
-        <div className="rounded-xl border border-border bg-muted/50 p-4 text-xs leading-relaxed text-muted-foreground">
+        <div className="border border-border bg-muted/50 p-4 text-xs leading-relaxed text-muted-foreground">
           <p className="flex items-center gap-2 text-sm font-bold text-foreground">
-            <KeyRound className="h-4 w-4 text-primary-500 dark:text-accent-300" aria-hidden="true" />
-            No reset token found
+            <KeyRound className="h-4 w-4 text-info" aria-hidden="true" />
+            Start with your email
           </p>
           <p className="mt-1.5">
-            This store does not expose an automated password-reset endpoint, so
-            there is nothing to submit on this page. Support will send you a
-            verified one-time link or help you change the password after signing
-            in.
+            Enter your account email on the forgot-password page, verify the
+            6-digit code we send you, then choose a new password. You will be
+            redirected to sign in as soon as the reset is complete.
           </p>
+        </div>
+
+        <div className="flex items-start gap-2 border border-info/25 bg-info-soft p-3 text-xs leading-relaxed text-info">
+          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Codes expire after 10 minutes and can only be used once.
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button asChild>
-            <Link href="/forgot-password">Request a reset</Link>
+            <Link href="/forgot-password">Start verified reset</Link>
           </Button>
           <Button asChild variant="outline">
-            <a href={`mailto:${SITE.email}`}>
-              <Mail className="h-4 w-4" aria-hidden="true" />
-              Email support
-            </a>
+            <Link href="/login">Back to sign in</Link>
           </Button>
         </div>
-
-        <p className="text-xs text-muted-foreground">
-          Already signed in?{" "}
-          <Link href="/account/security" className="font-semibold text-primary-600 hover:underline dark:text-accent-300">
-            Change your password from account security
-          </Link>
-          .
-        </p>
       </div>
     </AuthShell>
   );

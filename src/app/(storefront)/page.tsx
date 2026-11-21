@@ -7,6 +7,7 @@ import {
   MiddleCategories,
   NewArrivals,
   NewsletterSection,
+  OrderTracking,
   ProductFinder,
   PromoBanners,
 } from "@/components/home";
@@ -76,8 +77,8 @@ export default async function HomePage() {
   );
 
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+ "@context": "https://schema.org",
+ "@type": "Organization",
     name: SITE.name,
     url: SITE.url,
     logo: `${SITE.url}/icon.svg`,
@@ -129,6 +130,8 @@ export default async function HomePage() {
       {isHomeSectionVisible(settings, "showPromoBanners") ? (
         <PromoBanners banners={banners} />
       ) : null}
+
+      <OrderTracking />
 
       {isHomeSectionVisible(settings, "showNewsletter") ? (
         <NewsletterSection />

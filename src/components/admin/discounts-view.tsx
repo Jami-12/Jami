@@ -319,7 +319,7 @@ export function DiscountsView() {
                 variant="ghost"
                 size="icon"
                 aria-label={`Remove discount from ${product.title}`}
-                className="text-muted-foreground hover:text-red-600"
+                className="text-muted-foreground hover:text-foreground"
                 onClick={() => setRemoving(product)}
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />

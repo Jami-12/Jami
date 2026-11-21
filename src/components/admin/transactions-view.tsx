@@ -27,11 +27,11 @@ import { formatDate, humanizeEnum, isoDate } from "@/lib/utils";
 import type { FinancialTransaction, TransactionType } from "@/types";
 
 const TYPES: TransactionType[] = [
-  "INCOME",
-  "EXPENSE",
-  "INVESTMENT",
-  "WITHDRAWAL",
-  "REFUND",
+ "INCOME",
+ "EXPENSE",
+ "INVESTMENT",
+ "WITHDRAWAL",
+ "REFUND",
 ];
 
 const TYPE_TONE: Record<TransactionType, "success" | "warning" | "accent" | "danger" | "info"> = {
@@ -43,9 +43,9 @@ const TYPE_TONE: Record<TransactionType, "success" | "warning" | "accent" | "dan
 };
 
 const CATEGORY_OPTIONS = [
-  "SALES_REVENUE",
-  "SALES_REFUND",
-  "INVESTMENT",
+ "SALES_REVENUE",
+ "SALES_REFUND",
+ "INVESTMENT",
   ...EXPENSE_CATEGORIES,
 ];
 
@@ -82,8 +82,8 @@ export function TransactionsView() {
 
   const query = useQuery({
     queryKey: [
-      "accounting",
-      "transactions",
+ "accounting",
+ "transactions",
       { page, limit, type, category, search: debounced, startDate, endDate, sortOrder },
     ],
     queryFn: () =>
@@ -153,11 +153,7 @@ export function TransactionsView() {
         <Price
           amount={signedAmount(transaction)}
           size="sm"
-          className={
-            signedAmount(transaction) >= 0
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-red-600 dark:text-red-400"
-          }
+          className="text-foreground tabular-nums"
         />
       ),
       className: "text-right",
@@ -195,7 +191,7 @@ export function TransactionsView() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-xl">Transactions</CardTitle>
+          <CardTitle className="font-display text-xl not-italic">Transactions</CardTitle>
           <CardDescription>
             Search, filter and page through the full accounting ledger.
           </CardDescription>
@@ -270,7 +266,7 @@ export function TransactionsView() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-3">
         <StatCard
           label="Entries (this page)"
           value={rows.length}

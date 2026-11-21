@@ -202,8 +202,8 @@ export function SalariesView() {
       header: "Adjustments",
       cell: (salary) => (
         <div className="text-right text-[11px]">
-          <p className="text-emerald-600 dark:text-emerald-400">+{salary.bonus.toFixed(2)}</p>
-          <p className="text-red-600 dark:text-red-400">−{salary.deduction.toFixed(2)}</p>
+          <p className="text-muted-foreground">+{salary.bonus.toFixed(2)}</p>
+          <p className="text-muted-foreground">−{salary.deduction.toFixed(2)}</p>
         </div>
       ),
       className: "text-right",
@@ -236,7 +236,7 @@ export function SalariesView() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-emerald-600"
+              className="text-muted-foreground"
               onClick={() => setPaying(salary)}
             >
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
@@ -248,7 +248,7 @@ export function SalariesView() {
               variant="ghost"
               size="icon"
               aria-label="Cancel salary payment"
-              className="text-muted-foreground hover:text-red-600"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => setCancelling(salary)}
             >
               <X className="h-4 w-4" aria-hidden="true" />

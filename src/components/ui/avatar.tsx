@@ -23,9 +23,9 @@ export function Avatar({
       role="img"
       aria-label={name}
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
-        "bg-gradient-to-br from-primary-600 via-primary-700 to-accent-500",
-        "font-bold text-white ring-2 ring-[var(--card)] shadow-[var(--shadow-soft)]",
+ "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-none",
+ "border border-foreground bg-foreground text-background",
+ "font-bold ring-1 ring-[var(--card)] shadow-none",
         SIZES[size],
         className,
       )}

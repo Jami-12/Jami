@@ -189,7 +189,7 @@ export function CategorySectionsCard({
         </div>
 
         {categories.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+          <p className="rounded-none border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
             No categories yet. Add a category to create a home page section.
           </p>
         ) : (
@@ -202,7 +202,7 @@ export function CategorySectionsCard({
               return (
                 <div
                   key={category.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5"
+                  className="flex items-center justify-between gap-3 rounded-none border border-border bg-muted/30 px-3 py-2.5"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold">{category.name}</p>

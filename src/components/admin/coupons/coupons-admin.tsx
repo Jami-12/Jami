@@ -183,7 +183,7 @@ export function CouponsAdmin() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-600 focus:text-red-600 dark:text-red-400"
+                className="text-muted-foreground focus:text-foreground"
                 onClick={() => setDeleting(coupon)}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

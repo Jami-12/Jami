@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck, MailOpen, Trash2 } from "lucide-react";
 
@@ -15,8 +16,10 @@ import { Tabs } from "@/components/ui/tabs";
 import { useOptimisticMutation, clampPage } from "@/hooks/use-optimistic-mutation";
 import { notificationsApi } from "@/lib/api/services";
 import { NOTIFICATION_META } from "@/lib/constants";
+import { notificationHref } from "@/lib/notification-links";
 import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { cn, formatRelative } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import type { Notification, PaginatedNotifications } from "@/types";
 
 const FILTERS = [
@@ -37,6 +40,8 @@ function patchNotificationList(
 
 export function NotificationsView() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const [filter, setFilter] = React.useState<string>("ALL");
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
@@ -124,6 +129,12 @@ export function NotificationsView() {
   const meta = query.data?.meta;
   const unread = query.data?.unreadCount ?? 0;
 
+  const openNotification = (notification: Notification) => {
+    if (!notification.isRead) markRead.mutate(notification.id);
+    const href = notificationHref(notification, user?.role);
+    if (href) router.push(href);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -173,7 +184,7 @@ export function NotificationsView() {
         {query.isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-16 w-full rounded-xl" />
+              <Skeleton key={index} className="h-16 w-full rounded-none" />
             ))}
           </div>
         ) : notifications.length === 0 ? (
@@ -199,10 +210,14 @@ export function NotificationsView() {
                     !notification.isRead && "relative",
                   )}
                 >
-                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => openNotification(notification)}
+                    className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                  >
                     <span
                       className={cn(
-                        "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset",
+                        "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none ring-1 ring-inset",
                         notification.isRead
                           ? "bg-muted text-muted-foreground ring-border"
                           : "bg-accent-100 text-accent-800 ring-accent-200 dark:bg-accent-300/10 dark:text-accent-200 dark:ring-accent-300/20",
@@ -223,7 +238,7 @@ export function NotificationsView() {
                         <Badge tone={notificationMeta.tone}>{notificationMeta.label}</Badge>
                         {!notification.isRead ? (
                           <span
-                            className="h-2 w-2 rounded-full bg-accent-500"
+                            className="h-2 w-2 rounded-none bg-accent-500"
                             aria-label="Unread"
                           />
                         ) : null}
@@ -235,7 +250,7 @@ export function NotificationsView() {
                         {formatRelative(notification.createdAt)}
                       </p>
                     </div>
-                  </div>
+                  </button>
                   <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
                     {!notification.isRead ? (
                       <Button
@@ -252,7 +267,7 @@ export function NotificationsView() {
                       variant="ghost"
                       size="icon-sm"
                       aria-label="Delete notification"
-                      className="text-muted-foreground hover:text-red-600"
+                      className="text-muted-foreground hover:text-foreground"
                       onClick={() => setDeleting(notification)}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

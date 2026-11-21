@@ -215,7 +215,7 @@ export function EmployeesView() {
               variant="ghost"
               size="icon"
               aria-label={`Deactivate ${employee.name}`}
-              className="text-muted-foreground hover:text-red-600"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => setDeactivating(employee)}
             >
               <UserMinus className="h-4 w-4" aria-hidden="true" />

@@ -10,7 +10,7 @@ import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { SmartImage } from "@/components/ui/smart-image";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
-import { cartSubtotal, useCartStore } from "@/stores/cart-store";
+import { cartLineKey, cartSubtotal, useCartStore } from "@/stores/cart-store";
 import { useUiStore } from "@/stores/ui-store";
 
 export function CartDrawer() {
@@ -63,7 +63,7 @@ export function CartDrawer() {
     >
       {items.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center px-6 py-16 text-center">
-          <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted/60 text-muted-foreground">
+          <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none border border-border bg-muted/60 text-muted-foreground">
             <ShoppingBag className="h-6 w-6" aria-hidden="true" />
           </span>
           <h3 className="font-display text-lg font-semibold">Your bag is empty</h3>
@@ -82,10 +82,10 @@ export function CartDrawer() {
         </div>
       ) : (
         <div className="px-5 py-5">
-          <div className="mb-5 rounded-2xl border border-border bg-muted/40 p-3.5">
+          <div className="mb-5 rounded-none border border-border bg-muted/40 p-3.5">
             <div className="flex items-center gap-2 text-xs font-semibold">
               <Truck
-                className="h-4 w-4 text-primary-600 dark:text-accent-300"
+                className="h-4 w-4 text-foreground"
                 aria-hidden="true"
               />
               {remaining > 0 ? (
@@ -93,7 +93,7 @@ export function CartDrawer() {
                   {formatCurrency(remaining)} away from free standard shipping
                 </span>
               ) : (
-                <span className="text-emerald-600 dark:text-emerald-400">
+                <span className="text-foreground">
                   Free standard shipping unlocked
                 </span>
               )}
@@ -104,7 +104,7 @@ export function CartDrawer() {
               ) : null}
             </div>
             <div
-              className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-border"
+              className="mt-2.5 h-1.5 overflow-hidden rounded-none bg-border"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={100}
@@ -112,7 +112,7 @@ export function CartDrawer() {
               aria-label="Progress toward free shipping"
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary-600 to-accent-400 transition-all duration-500"
+                className="h-full rounded-none bg-foreground transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -121,13 +121,13 @@ export function CartDrawer() {
           <ul className="divide-y divide-border">
             {items.map((item) => (
               <li
-                key={item.productId}
+                key={item.cartItemId ?? cartLineKey(item)}
                 className="flex gap-3 py-4 first:pt-0 last:pb-0"
               >
                 <Link
                   href={`/products/${item.slug}`}
                   onClick={closeCart}
-                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-muted"
+                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-none border border-border bg-muted"
                 >
                   <SmartImage
                     src={item.image}
@@ -150,12 +150,22 @@ export function CartDrawer() {
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {formatCurrency(item.price)} each
                       </p>
+                      {item.selectedSize || item.selectedColor ? (
+                        <p className="mt-1 break-words text-[11px] text-muted-foreground">
+                          {[
+                            item.selectedSize ? `Size: ${item.selectedSize}` : null,
+                            item.selectedColor ? `Color: ${item.selectedColor}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      ) : null}
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.productId)}
+                      onClick={() => removeItem(item.cartItemId ?? cartLineKey(item))}
                       aria-label={`Remove ${item.name} from bag`}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-red-500/10 hover:text-red-600"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none text-muted-foreground transition hover:bg-muted hover:text-foreground"
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
@@ -165,7 +175,7 @@ export function CartDrawer() {
                       value={item.quantity}
                       max={Math.max(1, item.stock)}
                       onChange={(quantity) =>
-                        updateQuantity(item.productId, quantity)
+                        updateQuantity(item.cartItemId ?? cartLineKey(item), quantity)
                       }
                       className="h-8 [&>button]:w-8"
                       label={`Quantity of ${item.name}`}

@@ -8,6 +8,7 @@ import type {
   AnalyticsOverview,
   AuditLog,
   AuditLogListParams,
+  AddCartItemInput,
   AuthResult,
   Banner,
   BannerInput,
@@ -25,12 +26,15 @@ import type {
   CustomerListParams,
   CustomerSummary,
   DashboardOverview,
+  DataResetSummary,
+  DataResetVerification,
   Employee,
   EmployeeInput,
   EmployeeSummary,
   Expense,
   ExpenseInput,
   ExpenseSummary,
+  ExecuteDataResetInput,
   FinancialReport,
   FinancialSummary,
   FinancialTransaction,
@@ -41,16 +45,20 @@ import type {
   Investment,
   InvestmentInput,
   InvestmentSummary,
+  Note,
+  NoteInput,
   Notification,
   Order,
   OrderAnalytics,
   OrderListParams,
   OrderStatus,
+  OrderTrackingResult,
   Paginated,
   PaginatedNotifications,
   Payment,
   PaymentAnalytics,
   PaymentProviderStatus,
+  PasswordResetVerification,
   Product,
   ProductDiscountDetail,
   ProductDiscountInput,
@@ -59,10 +67,14 @@ import type {
   ProductListParams,
   ProductReviews,
   ReceiptData,
+  ReceiptSettings,
+  UpdateReceiptSettingsInput,
   Review,
   ReviewInput,
+  ResetPasswordInput,
   RevenueAnalytics,
   SalaryInput,
+  SendPasswordResetCodeInput,
   SalaryPayment,
   SalarySummary,
   SiteSettings,
@@ -73,6 +85,7 @@ import type {
   UserListParams,
   UserPublic,
   UserResponse,
+  VerifyPasswordResetCodeInput,
   WishlistItem,
   Role,
 } from "@/types";
@@ -126,6 +139,24 @@ export const authApi = {
 
   changePassword: (input: { currentPassword?: string; newPassword: string }) =>
     apiRequest<null>({ method: "PATCH", url: "/auth/change-password", data: input }),
+
+  /** Public self-service reset: email code → short-lived token → new password. */
+  sendPasswordResetCode: (input: SendPasswordResetCodeInput) =>
+    apiRequest<null>({
+      method: "POST",
+      url: "/auth/forgot-password/send-code",
+      data: input,
+    }),
+
+  verifyPasswordResetCode: (input: VerifyPasswordResetCodeInput) =>
+    apiRequest<PasswordResetVerification>({
+      method: "POST",
+      url: "/auth/forgot-password/verify-code",
+      data: input,
+    }),
+
+  resetPassword: (input: ResetPasswordInput) =>
+    apiRequest<null>({ method: "POST", url: "/auth/forgot-password/reset", data: input }),
 };
 
 /* -------------------------------------------------------------------------- */
@@ -552,7 +583,7 @@ export const cartApi = {
     return result.cart;
   },
 
-  add: async (input: { productId: string; quantity: number }) => {
+  add: async (input: AddCartItemInput) => {
     const result = await apiRequest<{ cart: Cart }>({
       method: "POST",
       url: "/cart/items",
@@ -639,6 +670,16 @@ export const addressesApi = {
 /* -------------------------------------------------------------------------- */
 
 export const ordersApi = {
+  /** Public, PII-free order status lookup by order number or receipt code. */
+  track: async (code: string) => {
+    const result = await apiRequest<{ tracking: OrderTrackingResult }>({
+      method: "GET",
+      url: "/orders/track",
+      params: { code },
+    });
+    return result.tracking;
+  },
+
   checkout: async (input: CheckoutInput) => {
     const result = await apiRequest<{ order: Order }>({
       method: "POST",
@@ -838,15 +879,50 @@ export const notificationsApi = {
   },
 
   markAllRead: async () => {
-    const result = await apiRequest<{ updated: number }>({
+    const result = await apiRequest<{ updatedCount: number }>({
       method: "PATCH",
       url: "/notifications/read-all",
     });
-    return result.updated;
+    return result.updatedCount;
   },
 
   remove: (id: string) =>
     apiRequest<null>({ method: "DELETE", url: `/notifications/${id}` }),
+};
+
+/* -------------------------------------------------------------------------- */
+/* Notes                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const notesApi = {
+  list: async () => {
+    const result = await apiRequest<{ notes: Note[] }>({
+      method: "GET",
+      url: "/notes",
+    });
+    return result.notes;
+  },
+
+  create: async (input: NoteInput) => {
+    const result = await apiRequest<{ note: Note }>({
+      method: "POST",
+      url: "/notes",
+      data: clean(input as unknown as Record<string, unknown>),
+    });
+    return result.note;
+  },
+
+  update: async (id: string, input: Partial<NoteInput>) => {
+    const result = await apiRequest<{ note: Note }>({
+      method: "PATCH",
+      url: `/notes/${id}`,
+      data: clean(input as unknown as Record<string, unknown>),
+    });
+    return result.note;
+  },
+
+  remove: (id: string) =>
+    apiRequest<{ id: string }>({ method: "DELETE", url: `/notes/${id}` }),
 };
 
 /* -------------------------------------------------------------------------- */
@@ -1415,6 +1491,29 @@ function settingsFormData(input: UpdateSettingsInput): FormData {
 }
 
 /**
+ * Shop/admin-owned printable receipt branding. Reads are public so checkout
+ * and account receipts render identically for signed-in and guest visitors.
+ */
+export const receiptSettingsApi = {
+  get: async () => {
+    const result = await apiRequest<{ settings: ReceiptSettings }>({
+      method: "GET",
+      url: "/settings/receipt",
+    });
+    return result.settings;
+  },
+
+  update: async (input: UpdateReceiptSettingsInput) => {
+    const result = await apiRequest<{ settings: ReceiptSettings }>({
+      method: "PATCH",
+      url: "/settings/receipt",
+      data: input,
+    });
+    return result.settings;
+  },
+};
+
+/**
  * Storefront presentation settings. Reads are public because the storefront
  * needs the logo and section visibility before a visitor signs in; writes are
  * restricted to SUPER_ADMIN on the API.
@@ -1436,4 +1535,25 @@ export const settingsApi = {
     });
     return result.settings;
   },
+
+  /**
+   * Danger zone. Every step requires a SUPER_ADMIN bearer token, and the final
+   * wipe also requires the short-lived token from the Gmail-code step.
+   */
+  requestDataResetCode: () =>
+    apiRequest<null>({ method: "POST", url: "/settings/data-reset/request-code" }),
+
+  verifyDataResetCode: (code: string) =>
+    apiRequest<DataResetVerification>({
+      method: "POST",
+      url: "/settings/data-reset/verify-code",
+      data: { code },
+    }),
+
+  executeDataReset: (input: ExecuteDataResetInput) =>
+    apiRequest<{ summary: DataResetSummary }>({
+      method: "POST",
+      url: "/settings/data-reset/execute",
+      data: input,
+    }),
 };

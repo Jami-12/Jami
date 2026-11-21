@@ -28,13 +28,13 @@ function ControlSkeleton() {
           {HOME_SECTION_KEYS.map((key) => (
             <div
               key={key}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-border p-4"
+              className="flex items-center justify-between gap-4 rounded-none border border-border p-4"
             >
               <div className="space-y-2">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-3 w-52 max-w-full" />
               </div>
-              <Skeleton className="h-5 w-9 shrink-0 rounded-full" />
+              <Skeleton className="h-5 w-9 shrink-0 rounded-none" />
             </div>
           ))}
         </CardContent>
@@ -75,7 +75,7 @@ export function HomeSectionsControl() {
         title="Could not load home section settings"
         description={getErrorMessage(
           settingsQuery.error ?? categoriesQuery.error,
-          "Please try again in a moment.",
+ "Please try again in a moment.",
         )}
         action={
           <Button

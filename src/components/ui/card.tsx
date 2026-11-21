@@ -10,9 +10,9 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl text-[var(--card-foreground)] shadow-[var(--shadow-soft)] transition-[border-color,box-shadow] duration-200",
+ "rounded-none text-[var(--card-foreground)] shadow-soft transition-[border-color,background-color,box-shadow] duration-150",
         glass
-          ? "border border-[var(--glass-border)] bg-[var(--glass)] backdrop-blur-xl hover:border-[var(--color-accent-400)] hover:shadow-[var(--shadow-lift)]"
+          ? "border border-[var(--glass-border)] bg-[var(--glass)] hover:border-foreground"
           : "border border-[var(--border)] bg-[var(--card)]",
         className,
       )}
@@ -29,7 +29,7 @@ export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingEle
   return (
     <h3
       className={cn(
-        "font-display text-base font-semibold tracking-tight text-[var(--foreground)]",
+ "font-display text-base font-semibold tracking-tight text-[var(--foreground)]",
         className,
       )}
       {...props}
@@ -77,16 +77,14 @@ export function SectionHeading({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
+ "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
         align === "center" && "sm:flex-col sm:items-center sm:text-center",
         className,
       )}
     >
       <div className={cn("max-w-2xl", align === "center" && "mx-auto")}>
         {eyebrow ? (
-          <p className="eyebrow mb-2 text-[var(--color-primary-500)] dark:text-[var(--color-accent-300)]">
-            {eyebrow}
-          </p>
+          <p className="eyebrow mb-2 text-muted-foreground">{eyebrow}</p>
         ) : null}
         <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
           {title}

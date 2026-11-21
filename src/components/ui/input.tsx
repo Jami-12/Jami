@@ -9,9 +9,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const fieldBase =
-  "w-full rounded-2xl border border-[var(--input)] bg-[var(--card)] px-4 text-sm text-[var(--foreground)] shadow-sm outline-none transition-[color,background-color,border-color,box-shadow] duration-200 placeholder:text-[var(--muted-foreground)] focus:border-primary focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-[var(--muted)] disabled:opacity-60 aria-[invalid=true]:border-[var(--destructive)] aria-[invalid=true]:focus:ring-[var(--destructive)]/20";
+ "w-full rounded-none border border-[var(--border)] bg-[var(--card)] px-3.5 text-sm text-[var(--foreground)] shadow-none outline-none transition-[color,background-color,border-color] duration-150 placeholder:text-[var(--muted-foreground)] focus:border-foreground focus:ring-1 focus:ring-foreground disabled:cursor-not-allowed disabled:bg-[var(--muted)] disabled:opacity-60 aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger";
 
-const pillField = "rounded-full px-4";
+const pillField = "rounded-none px-3.5";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
@@ -65,12 +65,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
       className={cn(
         fieldBase,
         pillField,
-        "h-11 appearance-none bg-[length:16px] pr-10",
+ "h-11 appearance-none bg-[length:16px] pr-10",
         className,
       )}
       style={{
         backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f766e' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+ "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230a0a0a' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 0.75rem center",
       }}
@@ -96,7 +96,7 @@ export function Label({
     <label
       htmlFor={htmlFor}
       className={cn(
-        "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]",
+ "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]",
         className,
       )}
     >

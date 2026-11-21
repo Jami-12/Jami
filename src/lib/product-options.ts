@@ -1,50 +1,56 @@
 import type { Product } from "@/types";
 
 /**
- * The catalogue has no variant model, so colour and size options are derived
- * from real product copy (title, description and image alt text). Nothing is
+ * Colour and size options come from the product's explicit variant fields when
+ * they are set in the admin, and otherwise fall back to options derived from
+ * real product copy (title, description and image alt text). Nothing is
  * invented: if a product does not mention a colour, no swatches are shown.
  */
 
+/**
+ * Real product swatch values. The neutral design system governs surfaces and
+ * typography, but a product's actual colour must stay truthful in cards,
+ * filters and detail views.
+ */
 const COLOR_HEX: Record<string, string> = {
-  black: "#16242E",
-  ivory: "#F5F0E4",
-  cream: "#F1ECDF",
-  off_white: "#F8F6F0",
-  white: "#F8F6F0",
-  beige: "#D8DCCF",
-  sand: "#D0C4A6",
-  camel: "#C6A46A",
-  tan: "#D0AE78",
-  taupe: "#9E9A8B",
-  brown: "#6b4f3a",
-  espresso: "#3f2f24",
-  chocolate: "#4a3428",
-  grey: "#8a8782",
-  gray: "#8a8782",
-  charcoal: "#2A383F",
-  navy: "#172B3A",
-  blue: "#244B50",
-  sky: "#C8D6D3",
-  green: "#4f6b4a",
-  olive: "#6b6b45",
-  sage: "#9ca88f",
-  rust: "#a4532f",
-  terracotta: "#b65c3e",
-  orange: "#c97a3f",
-  wine: "#6d2338",
-  burgundy: "#5e1f2f",
-  red: "#a32f2a",
-  maroon: "#5a1f26",
-  pink: "#d8a3a8",
-  blush: "#e6c2bb",
-  rose: "#c98a92",
-  yellow: "#d8b45a",
-  mustard: "#C6A46A",
-  gold: "#C6A46A",
-  purple: "#6b4f7a",
-  lavender: "#b9a8c9",
-  lilac: "#c3b3d4",
+  black: "#0A0A0A",
+  ivory: "#F8F4E6",
+  cream: "#F5E6C8",
+  off_white: "#FAF9F6",
+  white: "#FFFFFF",
+  beige: "#D6C2A1",
+  sand: "#C2B280",
+  camel: "#B1936E",
+  tan: "#D2B48C",
+  taupe: "#8C8275",
+  brown: "#6B4423",
+  espresso: "#3B2A20",
+  chocolate: "#4A2E1B",
+  grey: "#808080",
+  gray: "#808080",
+  charcoal: "#36454F",
+  navy: "#1A2B4A",
+  blue: "#2F5D9E",
+  sky: "#87CEEB",
+  green: "#3F6B4A",
+  olive: "#556B2F",
+  sage: "#8A9A7B",
+  rust: "#A6532D",
+  terracotta: "#C26B4B",
+  orange: "#E07B39",
+  wine: "#6B2737",
+  burgundy: "#6A1E2B",
+  red: "#C0392B",
+  maroon: "#6E1F2B",
+  pink: "#E59AAA",
+  blush: "#F1C7C7",
+  rose: "#D98A96",
+  yellow: "#E7C33A",
+  mustard: "#C99B20",
+  gold: "#C9A227",
+  purple: "#6B4C9A",
+  lavender: "#B7A2D8",
+  lilac: "#C3AED6",
 };
 
 export interface ProductColor {
@@ -54,18 +60,18 @@ export interface ProductColor {
 
 /** A curated palette for the shop filter. Matching still uses product copy. */
 export const COLOR_SWATCHES: ProductColor[] = [
-  { name: "Black", hex: COLOR_HEX.black ?? "#16242E" },
-  { name: "Ivory", hex: COLOR_HEX.ivory ?? "#F5F0E4" },
-  { name: "Cream", hex: COLOR_HEX.cream ?? "#F1ECDF" },
-  { name: "Beige", hex: COLOR_HEX.beige ?? "#D8DCCF" },
-  { name: "Camel", hex: COLOR_HEX.camel ?? "#C6A46A" },
-  { name: "Brown", hex: COLOR_HEX.brown ?? "#6b4f3a" },
-  { name: "Grey", hex: COLOR_HEX.grey ?? "#8a8782" },
-  { name: "Navy", hex: COLOR_HEX.navy ?? "#172B3A" },
-  { name: "Olive", hex: COLOR_HEX.olive ?? "#6b6b45" },
-  { name: "Rust", hex: COLOR_HEX.rust ?? "#a4532f" },
-  { name: "Wine", hex: COLOR_HEX.wine ?? "#6d2338" },
-  { name: "Blush", hex: COLOR_HEX.blush ?? "#e6c2bb" },
+  { name: "Black", hex: COLOR_HEX.black ?? "#0A0A0A" },
+  { name: "Ivory", hex: COLOR_HEX.ivory ?? "#F8F4E6" },
+  { name: "Cream", hex: COLOR_HEX.cream ?? "#F5E6C8" },
+  { name: "Beige", hex: COLOR_HEX.beige ?? "#D6C2A1" },
+  { name: "Camel", hex: COLOR_HEX.camel ?? "#B1936E" },
+  { name: "Brown", hex: COLOR_HEX.brown ?? "#6B4423" },
+  { name: "Grey", hex: COLOR_HEX.grey ?? "#808080" },
+  { name: "Navy", hex: COLOR_HEX.navy ?? "#1A2B4A" },
+  { name: "Olive", hex: COLOR_HEX.olive ?? "#556B2F" },
+  { name: "Rust", hex: COLOR_HEX.rust ?? "#A6532D" },
+  { name: "Wine", hex: COLOR_HEX.wine ?? "#6B2737" },
+  { name: "Blush", hex: COLOR_HEX.blush ?? "#F1C7C7" },
 ];
 
 function labelFor(name: string): string {
@@ -75,8 +81,15 @@ function labelFor(name: string): string {
     .join(" ");
 }
 
-/** Colours explicitly mentioned in the product's own copy. */
+/** Explicit admin colours first, then colours mentioned in the product copy. */
 export function productColors(product: Product): ProductColor[] {
+  if (product.colors?.length) {
+    return product.colors.slice(0, 6).map((colour) => ({
+      name: colour.name,
+      hex: colour.hex,
+    }));
+  }
+
   const haystack = [
     product.title,
     product.shortDescription ?? "",
@@ -104,8 +117,9 @@ const APPAREL =
   /(fashion|apparel|cloth|shirt|tee|t-shirt|knit|outerwear|dress|trouser|pant|coat|jacket|hoodie|sweater|blouse|skirt|suit|blazer)/i;
 const FOOTWEAR = /(shoe|sneaker|boot|sandal|loafer|heel|footwear)/i;
 
-/** Size runs for apparel and footwear categories; null for everything else. */
+/** Explicit admin sizes first, then inferred runs for apparel and footwear. */
 export function productSizes(product: Product): string[] | null {
+  if (product.sizes?.length) return product.sizes.slice(0, 30);
   const haystack = `${product.category?.name ?? ""} ${product.category?.slug ?? ""} ${product.title}`;
   if (FOOTWEAR.test(haystack)) return ["38", "39", "40", "41", "42", "43", "44"];
   if (APPAREL.test(haystack)) return ["XS", "S", "M", "L", "XL", "XXL"];

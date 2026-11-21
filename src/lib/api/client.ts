@@ -128,7 +128,7 @@ export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {
         (typeof payload?.message === "string" && payload.message) ||
         (typeof payload?.error === "string" && payload.error) ||
         error.message ||
-        "Network request failed";
+ "Network request failed";
 
       throw new ApiClientError(message, error.response?.status ?? null, payload);
     }

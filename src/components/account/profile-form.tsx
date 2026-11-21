@@ -144,7 +144,7 @@ export function ProfileForm() {
                 size="lg"
               />
               {uploadingImage && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                <div className="absolute inset-0 flex items-center justify-center rounded-none bg-black/50">
                   <Loader2 className="h-5 w-5 animate-spin text-white" />
                 </div>
               )}
@@ -183,7 +183,7 @@ export function ProfileForm() {
                     size="sm"
                     disabled={uploadingImage || mutation.isPending}
                     onClick={clearImage}
-                    className="text-xs text-muted-foreground hover:text-red-500"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Remove
                   </Button>
@@ -228,7 +228,7 @@ export function ProfileForm() {
           </FormField>
 
           {image ? (
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
+            <div className="flex items-center gap-3 rounded-none border border-border bg-muted/40 p-3">
               <ImageIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="truncate text-xs text-muted-foreground">{image}</span>
             </div>

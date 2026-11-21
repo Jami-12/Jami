@@ -19,11 +19,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border)] bg-[var(--card)]/60 px-6 py-14 text-center shadow-[var(--shadow-soft)] sm:py-16",
+ "flex flex-col items-center justify-center rounded-none border border-dashed border-[var(--border)] bg-[var(--card)]/60 px-6 py-14 text-center shadow-soft sm:py-16",
         className,
       )}
     >
-      <span className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--muted)] text-[var(--color-primary-600)] ring-1 ring-[var(--border)] dark:text-[var(--color-accent-300)]">
+      <span className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-none bg-[var(--muted)] text-[var(--color-primary-600)] ring-1 ring-[var(--border)] dark:text-[var(--color-accent-300)]">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <h3 className="font-display text-lg font-semibold tracking-tight text-[var(--foreground)]">
