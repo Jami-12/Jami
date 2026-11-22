@@ -481,17 +481,17 @@ export function ProductDetail({ product }: { product: Product }) {
           </p>
         </Card>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div className="mt-4 grid grid-cols-3 gap-1.5 text-center sm:gap-2">
           {[
             { label: "Sold", value: product.soldCount },
             { label: "Rating", value: product.averageRating.toFixed(1) },
             { label: "Reviews", value: product.reviewCount },
           ].map((stat) => (
-            <Card key={stat.label} className="border-border px-2 py-3 transition-colors hover:border-foreground">
+            <Card key={stat.label} className="min-w-0 border-border px-1.5 py-3 transition-colors hover:border-foreground sm:px-2">
               <p className="font-display text-lg font-semibold tabular-nums">
                 {stat.value}
               </p>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground sm:text-[10px] sm:tracking-[0.14em]">
                 {stat.label}
               </p>
             </Card>

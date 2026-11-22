@@ -16,6 +16,8 @@ import type {
   Brand,
   BrandInput,
   Cart,
+  CashCollectionItem,
+  CashCollectionListParams,
   Category,
   CategoryInput,
   CheckoutInput,
@@ -54,6 +56,7 @@ import type {
   OrderStatus,
   OrderTrackingResult,
   Paginated,
+  PaginatedCashCollections,
   PaginatedNotifications,
   Payment,
   PaymentAnalytics,
@@ -743,6 +746,24 @@ export const ordersApi = {
       data: clean(input),
     });
     return result.order;
+  },
+};
+
+export const cashCollectionsApi = {
+  list: (params: CashCollectionListParams = {}) =>
+    apiRequest<PaginatedCashCollections>({
+      method: "GET",
+      url: "/admin/cash-collections",
+      params: clean(params as Record<string, unknown>),
+    }),
+
+  /** One-click collection — no note, reference, modal or form required. */
+  collect: async (orderId: string) => {
+    const result = await apiRequest<{ entry: CashCollectionItem }>({
+      method: "PATCH",
+      url: `/admin/cash-collections/${orderId}/collect`,
+    });
+    return result.entry;
   },
 };
 
@@ -1477,6 +1498,10 @@ function settingsFormData(input: UpdateSettingsInput): FormData {
     ["showBrands", input.showBrands],
     ["showPromoBanners", input.showPromoBanners],
     ["showNewsletter", input.showNewsletter],
+    ["codEnabled", input.codEnabled],
+    ["bkashEnabled", input.bkashEnabled],
+    ["nagadEnabled", input.nagadEnabled],
+    ["stripeEnabled", input.stripeEnabled],
   ];
 
   for (const [key, value] of toggles) {

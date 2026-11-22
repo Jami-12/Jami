@@ -38,7 +38,7 @@ export function CartDrawer() {
         items.length > 0 ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">Product Subtotal</span>
               <Price amount={subtotal} size="md" />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -170,7 +170,7 @@ export function CartDrawer() {
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <QuantityStepper
                       value={item.quantity}
                       max={Math.max(1, item.stock)}
@@ -180,7 +180,7 @@ export function CartDrawer() {
                       className="h-8 [&>button]:w-8"
                       label={`Quantity of ${item.name}`}
                     />
-                    <Price amount={item.price * item.quantity} size="sm" />
+                    <Price amount={item.price * item.quantity} size="sm" className="ml-auto" />
                   </div>
                 </div>
               </li>

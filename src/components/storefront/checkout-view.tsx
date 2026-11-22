@@ -9,14 +9,12 @@ import { useForm } from "react-hook-form";
 import {
   AlertCircle,
   ArrowLeft,
-  Banknote,
   Check,
   CreditCard,
   Loader2,
   MapPin,
   Plus,
   ShieldCheck,
-  Smartphone,
   Tag,
   Truck,
   X,
@@ -28,6 +26,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  PAYMENT_OPTIONS,
+  PaymentMethodSelector,
+} from "@/components/payments/payment-method-selector";
 import {
   preloadStripe,
   StripePaymentDialog,
@@ -51,7 +53,6 @@ import {
 } from "@/lib/api/services";
 import {
   FREE_SHIPPING_THRESHOLD,
-  PAYMENT_METHOD_META,
   SHIPPING_FLAT_RATE,
 } from "@/lib/constants";
 import { relatedKeys } from "@/lib/query-keys";
@@ -68,31 +69,26 @@ import { cartSubtotal, useCartStore } from "@/stores/cart-store";
 import type {
   CouponValidation,
   PaymentMethod,
-  PaymentProviderStatus,
 } from "@/types";
+
+/** Mirrors the server's `roundMoney` so the displayed total matches the charge. */
+function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
 
 function computeCouponDiscount(coupon: CouponValidation["coupon"] | null, subtotal: number): number {
   if (!coupon) return 0;
   let discount = 0;
   if (coupon.discountPercent !== null) {
-    discount = (subtotal * coupon.discountPercent) / 100;
+    discount = roundMoney((subtotal * coupon.discountPercent) / 100);
   } else if (coupon.discountAmount !== null) {
     discount = coupon.discountAmount;
   }
   if (coupon.maxDiscount !== null) discount = Math.min(discount, coupon.maxDiscount);
-  return Math.min(discount, subtotal);
+  return roundMoney(Math.min(discount, subtotal));
 }
 
-const PAYMENT_OPTIONS: {
-  value: PaymentMethod;
-  icon: typeof Banknote;
-  providerKey: keyof Pick<PaymentProviderStatus, "cashOnDelivery" | "bkash" | "nagad" | "card">;
-}[] = [
-  { value: "CASH_ON_DELIVERY", icon: Banknote, providerKey: "cashOnDelivery" },
-  { value: "BKASH", icon: Smartphone, providerKey: "bkash" },
-  { value: "NAGAD", icon: Smartphone, providerKey: "nagad" },
-  { value: "CARD", icon: CreditCard, providerKey: "card" },
-];
+
 
 function CheckoutGate() {
   return (
@@ -283,8 +279,18 @@ export function CheckoutView() {
 
   React.useEffect(() => {
     if (!providers) return;
-    const available = PAYMENT_OPTIONS.find((option) => option.value === paymentMethod);
-    if (available && !providers[available.providerKey]) {
+    const option = PAYMENT_OPTIONS.find((item) => item.value === paymentMethod);
+    if (!option) {
+      setPaymentMethod("CASH_ON_DELIVERY");
+      return;
+    }
+
+    const enabled =
+      paymentMethod === "CARD"
+        ? Boolean(providers.card && providers.cardPublishableKey)
+        : Boolean(providers[option.providerKey]);
+
+    if (!enabled) {
       setPaymentMethod("CASH_ON_DELIVERY");
     }
   }, [providers, paymentMethod]);
@@ -292,8 +298,11 @@ export function CheckoutView() {
   const subtotal = cartSubtotal(items);
   const discount = computeCouponDiscount(coupon?.coupon ?? null, subtotal);
   const discountedSubtotal = Math.max(0, subtotal - discount);
+  // Shipping is based on the PRODUCT SUBTOTAL only, exactly as on the server.
+  // Coupons and discounts never affect shipping, and the free-shipping
+  // threshold matches the cart estimate.
   const shipping =
-    discountedSubtotal === 0 || discountedSubtotal >= FREE_SHIPPING_THRESHOLD
+    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD
       ? 0
       : SHIPPING_FLAT_RATE;
   const total = discountedSubtotal + shipping;
@@ -341,19 +350,19 @@ export function CheckoutView() {
       return;
     }
 
-    if (paymentMethod !== "CASH_ON_DELIVERY") {
-      if (!providers) {
-        toast.error("Payment methods are still loading. Please try again in a moment.");
-        return;
-      }
-      if (!providers[selectedOption.providerKey]) {
-        toast.error("That payment method is not available right now. Choose another.");
-        return;
-      }
-      if (paymentMethod === "CARD" && !providers.cardPublishableKey) {
-        toast.error("Card payments are not available right now. Choose another method.");
-        return;
-      }
+    if (!providers) {
+      toast.error("Payment methods are still loading. Please try again in a moment.");
+      return;
+    }
+
+    const enabled =
+      paymentMethod === "CARD"
+        ? Boolean(providers.card && providers.cardPublishableKey)
+        : Boolean(providers[selectedOption.providerKey]);
+
+    if (!enabled) {
+      toast.error("That payment method is not available right now. Choose another.");
+      return;
     }
 
     placingRef.current = true;
@@ -577,58 +586,15 @@ export function CheckoutView() {
             Payment method
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Provider availability is reported by the store payment gateway.
+            Choose a payment method enabled by the store. Disabled methods are unavailable.
           </p>
 
-          <div className="mt-4 grid gap-2.5 sm:grid-cols-2" role="radiogroup" aria-label="Payment method">
-            {PAYMENT_OPTIONS.map((option) => {
-              const meta = PAYMENT_METHOD_META[option.value];
-              const Icon = option.icon;
-              const enabled = providers
-                ? option.value === "CARD"
-                  ? cardAvailable
-                  : Boolean(providers[option.providerKey])
-                : option.value === "CASH_ON_DELIVERY";
-              const active = paymentMethod === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  disabled={!enabled}
-                  onClick={() => setPaymentMethod(option.value)}
-                  className={cn(
- "flex items-start gap-3 rounded-none border p-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55",
-                    active
-                      ? "border-foreground bg-secondary text-foreground"
-                      : "border-border bg-card text-foreground hover:border-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-none border",
-                      active
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border bg-secondary text-foreground",
-                    )}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-bold">{meta.label}</span>
-                    <span
-                      className={cn(
-                        "mt-0.5 block text-[11px] leading-relaxed",
-                        active ? "text-background/70" : "text-muted-foreground",
-                      )}
-                    >
-                      {enabled ? meta.description : "Not configured by the store yet."}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+          <div className="mt-4">
+            <PaymentMethodSelector
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              providers={providers}
+            />
           </div>
 
           {providersQuery.isLoading ? (
@@ -645,8 +611,8 @@ export function CheckoutView() {
           ) : null}
           {providers && !cardAvailable && providers.card ? (
             <p className="mt-3 text-[11px] text-muted-foreground">
-              Card payments are enabled on the server but no publishable key is
-              available to the browser, so card checkout is hidden.
+              Card payments are enabled but no Stripe publishable key is available
+              to the browser, so card checkout is unavailable.
             </p>
           ) : null}
         </Card>
@@ -746,7 +712,7 @@ export function CheckoutView() {
 
           <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted-foreground">Subtotal · {count} item{count === 1 ? "" : "s"}</dt>
+              <dt className="text-muted-foreground">Product Subtotal · {count} item{count === 1 ? "" : "s"}</dt>
               <dd><Price amount={subtotal} size="sm" /></dd>
             </div>
             {discount > 0 ? (

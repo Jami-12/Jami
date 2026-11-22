@@ -698,6 +698,49 @@ export interface OrderListParams {
   sortOrder?: "asc" | "desc";
 }
 
+/* -------------------------------------------------------------------------- */
+/* Cash collection (all payment methods)                                      */
+/* -------------------------------------------------------------------------- */
+
+export type CashCollectionStatus = "PENDING" | "COLLECTED" | "CANCELLED";
+
+export interface CashCollectionItem {
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  /** Product code/SKU (falls back to product or line-item id). */
+  productNumber: string;
+  itemCount: number;
+  status: CashCollectionStatus;
+  amount: number;
+  currency: string;
+  paymentMethod: PaymentMethod;
+  orderStatus: OrderStatus;
+  transactionId: string | null;
+  collectedAt: string | null;
+  collectedByName: string | null;
+  createdAt: string;
+}
+
+export interface CashCollectionSummary {
+  pendingCount: number;
+  collectedCount: number;
+  cancelledCount: number;
+  pendingAmount: number;
+  collectedAmount: number;
+}
+
+export interface CashCollectionListParams {
+  page?: number;
+  limit?: number;
+  status?: CashCollectionStatus;
+  search?: string;
+}
+
+export interface PaginatedCashCollections extends Paginated<CashCollectionItem> {
+  summary: CashCollectionSummary;
+}
+
 export interface OrderTrackingEvent {
   label: string;
   description: string;
@@ -1073,7 +1116,16 @@ export interface ReceiptData {
 export interface FinancialSummary {
   currency: string;
   period: { start: string; end: string };
-  revenue: { sales: number; refunds: number; net: number };
+  revenue: {
+    /** Cash collected, including shipping. */
+    sales: number;
+    /** Product sales only (subtotal minus discounts); excludes shipping. */
+    productSales: number;
+    /** Shipping charged separately; never part of product revenue. */
+    shipping: number;
+    refunds: number;
+    net: number;
+  };
   cogs: number;
   grossProfit: number;
   expenses: {

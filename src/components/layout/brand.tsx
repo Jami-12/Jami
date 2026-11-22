@@ -53,7 +53,7 @@ export function Brand({
       href={href}
       onClick={onClick}
       className={cn(
-        "group inline-flex min-w-0 items-center gap-3 rounded-none not-italic outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "group inline-flex min-w-0 max-w-full items-center gap-3 rounded-none not-italic outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
       aria-label={`${name} home`}

@@ -19,6 +19,10 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  PaymentMethodSelector,
+  isPaymentMethodAvailable,
+} from "@/components/payments/payment-method-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -43,7 +47,7 @@ import {
   isRedirectPaymentMethod,
 } from "@/lib/payments";
 import { cn, formatDate, getErrorMessage, humanizeEnum } from "@/lib/utils";
-import type { Order, PaymentStatus, ReceiptData } from "@/types";
+import type { Order, PaymentMethod, PaymentStatus, ReceiptData } from "@/types";
 
 const KNOWN_PAYMENT_STATUSES = new Set<PaymentStatus>([
  "PENDING",
@@ -84,13 +88,13 @@ function PaymentBanner({ status }: { status: PaymentStatus }) {
       tone: "border-danger/25 bg-danger-soft text-danger",
       icon: XCircle,
       title: "Payment failed",
-      copy: "The provider did not complete this payment. Retry below or choose a different order.",
+      copy: "The provider did not complete this payment. Use Retry payment to choose a method and try again.",
     },
     CANCELLED: {
       tone: "border-border bg-muted text-foreground",
       icon: XCircle,
       title: "Payment cancelled",
-      copy: "This payment was cancelled. The order will not be fulfilled until a payment succeeds.",
+      copy: "This payment was cancelled. Use Retry payment to choose a different method or try again.",
     },
     REFUNDED: {
       tone: "border-border bg-muted text-foreground",
@@ -164,8 +168,8 @@ export function ReceiptDialog({
               ${variant ? `<div class="variant">${escapeHtml(variant)}</div>` : ""}
             </td>
             <td class="num">${item.quantity}</td>
-            <td class="num">${money(item.unitPrice)}</td>
-            <td class="num">${money(item.totalPrice)}</td>
+            <td class="num">${money(item.unitPrice, data.totals.currency)}</td>
+            <td class="num">${money(item.totalPrice, data.totals.currency)}</td>
           </tr>`;
       })
       .join("");
@@ -266,9 +270,9 @@ export function ReceiptDialog({
       <tbody>${itemRows}</tbody>
     </table>
     <div class="totals">
-      <div><span>Subtotal</span><span>${money(data.totals.subtotal)}</span></div>
-      <div><span>Discount</span><span>âˆ’${money(data.totals.discountAmount)}</span></div>
-      <div><span>Shipping</span><span>${money(data.totals.shippingCost)}</span></div>
+      <div><span>Product Subtotal</span><span>${money(data.totals.subtotal, data.totals.currency)}</span></div>
+      <div><span>Discount</span><span>−${money(data.totals.discountAmount)}</span></div>
+      <div><span>Shipping</span><span>${money(data.totals.shippingCost, data.totals.currency)}</span></div>
       <div class="total"><span>Total</span><span>${money(data.totals.totalAmount, data.totals.currency)}</span></div>
     </div>
     <p class="foot">${escapeHtml(data.store.footerNote)}</p>
@@ -438,16 +442,16 @@ export function ReceiptDialog({
 
           <dl className="space-y-1.5 text-xs">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums">{money(receipt.data.totals.subtotal)}</dd>
+              <dt className="text-muted-foreground">Product Subtotal</dt>
+              <dd className="tabular-nums">{money(receipt.data.totals.subtotal, receipt.data.totals.currency)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Discount</dt>
-              <dd className="tabular-nums">âˆ’{money(receipt.data.totals.discountAmount)}</dd>
+              <dd className="tabular-nums">−{money(receipt.data.totals.discountAmount)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Shipping</dt>
-              <dd className="tabular-nums">{money(receipt.data.totals.shippingCost)}</dd>
+              <dd className="tabular-nums">{money(receipt.data.totals.shippingCost, receipt.data.totals.currency)}</dd>
             </div>
             <div className="flex justify-between border-t border-border pt-1.5 text-sm font-bold">
               <dt>Total</dt>
@@ -480,6 +484,8 @@ export function OrderDetailView({
   );
   const [cancelOpen, setCancelOpen] = React.useState(false);
   const [receiptOpen, setReceiptOpen] = React.useState(false);
+  const [retryOpen, setRetryOpen] = React.useState(false);
+  const [retryMethod, setRetryMethod] = React.useState<PaymentMethod>("CASH_ON_DELIVERY");
   const [cardSession, setCardSession] = React.useState<{ clientSecret: string; publishableKey: string } | null>(null);
   const [paying, setPaying] = React.useState(false);
   const payingRef = React.useRef(false);
@@ -543,52 +549,89 @@ export function OrderDetailView({
     onError: (error) => toast.error(getErrorMessage(error, "Could not cancel this order")),
   });
 
-  const retryPayment = async (current: Order) => {
-    if (current.paymentStatus === "PAID" || current.paymentStatus === "REFUNDED") return;
-    if (!isOnlinePaymentMethod(current.paymentMethod)) return;
+  const openRetryPayment = React.useCallback((current: Order) => {
+    setRetryMethod(current.paymentMethod);
+    setRetryOpen(true);
+  }, []);
+
+  const startPayment = async (current: Order, method: PaymentMethod) => {
+    if (
+      current.paymentStatus === "PAID" ||
+      current.paymentStatus === "REFUNDED" ||
+      current.status === "CANCELLED" ||
+      current.status === "RETURNED"
+    ) {
+      return;
+    }
     if (payingRef.current) return;
+
+    const providers = providersQuery.data;
+    if (!providers) {
+      toast.error("Payment methods are still loading. Please try again in a moment.");
+      return;
+    }
+    if (!isPaymentMethodAvailable(method, providers)) {
+      toast.error("That payment method is not available right now. Choose another.");
+      return;
+    }
 
     payingRef.current = true;
     setPaying(true);
+    // A fresh attempt must not inherit the previous polling timeout window.
+    paymentPollStartedAt.current = null;
 
     try {
       const initiation = ensureInitiatePaymentResult(
-        await paymentsApi.initiate({ orderId: current.id }),
-        current.paymentMethod,
+        await paymentsApi.initiate({ orderId: current.id, method }),
+        method,
       );
 
       if (initiation.paymentStatus === "PAID") {
         toast.success("This payment is already confirmed.");
+        setRetryOpen(false);
         refreshOrder();
         return;
       }
 
-      if (current.paymentMethod === "CARD") {
-        const publishableKey = providersQuery.data?.cardPublishableKey;
+      if (method === "CASH_ON_DELIVERY") {
+        toast.success(
+          initiation.message ||
+            "Cash on delivery selected. Please pay the courier when your order arrives.",
+        );
+        setRetryOpen(false);
+        refreshOrder();
+        return;
+      }
+
+      if (method === "CARD") {
+        const publishableKey = providers.cardPublishableKey;
 
         if (initiation.clientSecret && publishableKey) {
+          setRetryOpen(false);
           setCardSession({
             clientSecret: initiation.clientSecret,
             publishableKey,
           });
         } else if (initiation.clientSecret) {
           toast.error(
- "Card payments are configured on the server but no publishable key is available to the browser.",
+            "Card payments are configured on the server but no publishable key is available to the browser.",
           );
         } else {
           toast.info(initiation.message || "Card payment is already processing.");
+          setRetryOpen(false);
           refreshOrder();
         }
         return;
       }
 
-      if (isRedirectPaymentMethod(current.paymentMethod)) {
+      if (isRedirectPaymentMethod(method)) {
         const redirectUrl = getSafePaymentRedirectUrl(
           initiation.redirectUrl,
-          current.paymentMethod,
+          method,
         );
 
         if (redirectUrl) {
+          setRetryOpen(false);
           window.location.assign(redirectUrl);
           return;
         }
@@ -605,7 +648,8 @@ export function OrderDetailView({
         refreshOrder();
       }
     } catch (error) {
-      toast.error(getPaymentStartErrorMessage(error, current.paymentMethod));
+      toast.error(getPaymentStartErrorMessage(error, method));
+      refreshOrder();
     } finally {
       payingRef.current = false;
       setPaying(false);
@@ -641,7 +685,6 @@ export function OrderDetailView({
   const canRetryPayment =
     order.paymentStatus !== "PAID" &&
     order.paymentStatus !== "REFUNDED" &&
-    isOnlinePaymentMethod(order.paymentMethod) &&
     order.status !== "CANCELLED" &&
     order.status !== "RETURNED";
   const steps = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
@@ -681,7 +724,7 @@ export function OrderDetailView({
               Receipt
             </Button>
             {canRetryPayment ? (
-              <Button size="sm" loading={paying} onClick={() => void retryPayment(order)}>
+              <Button size="sm" loading={paying} onClick={() => openRetryPayment(order)}>
                 <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
                 Retry payment
               </Button>
@@ -740,13 +783,13 @@ export function OrderDetailView({
             </ul>
             <dl className="space-y-2 border-t border-border px-5 py-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Subtotal</dt>
+                <dt className="text-muted-foreground">Product Subtotal</dt>
                 <dd><Price amount={order.subtotal} size="sm" /></dd>
               </div>
               {order.discountAmount > 0 ? (
                 <div className="flex justify-between text-success">
                   <dt>Discount{order.coupon ? ` Â· ${order.coupon.code}` : ""}</dt>
-                  <dd className="font-semibold tabular-nums">Ã¢Ë†â€™{new Intl.NumberFormat("en-US").format(order.discountAmount)}</dd>
+                  <dd className="font-semibold tabular-nums">−{new Intl.NumberFormat("en-US").format(order.discountAmount)}</dd>
                 </div>
               ) : null}
               <div className="flex justify-between">
@@ -891,6 +934,60 @@ export function OrderDetailView({
       </div>
 
       <ReceiptDialog orderId={orderId} open={receiptOpen} onClose={() => setReceiptOpen(false)} />
+
+      <Dialog
+        open={retryOpen}
+        onClose={() => {
+          if (!paying) setRetryOpen(false);
+        }}
+        title="Retry payment"
+        description="Choose a payment method for this order. You can switch to another available method if your previous attempt failed or was cancelled."
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setRetryOpen(false)}
+              disabled={paying}
+            >
+              Cancel
+            </Button>
+            <Button
+              loading={paying}
+              onClick={() => void startPayment(order, retryMethod)}
+            >
+              Continue with {PAYMENT_METHOD_META[retryMethod].label}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <PaymentMethodSelector
+            value={retryMethod}
+            onChange={setRetryMethod}
+            providers={providersQuery.data}
+            disabled={paying}
+          />
+          {providersQuery.isLoading ? (
+            <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <RotateCcw className="h-3 w-3 animate-spin" aria-hidden="true" />
+              Checking payment method availability…
+            </p>
+          ) : null}
+          {providersQuery.isError ? (
+            <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <AlertCircle className="h-3 w-3" aria-hidden="true" />
+              Could not load payment methods. Please try again.
+            </p>
+          ) : null}
+          {!providersQuery.isLoading &&
+          providersQuery.data &&
+          !isPaymentMethodAvailable(retryMethod, providersQuery.data) ? (
+            <p className="text-[11px] text-muted-foreground">
+              The selected method is currently unavailable. Choose another method.
+            </p>
+          ) : null}
+        </div>
+      </Dialog>
 
       <ConfirmDialog
         open={cancelOpen}

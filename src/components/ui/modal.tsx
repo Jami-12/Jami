@@ -100,7 +100,7 @@ export function Modal({
               {children}
             </div>
             {footer ? (
-              <div className="border-t border-[var(--border)] bg-[var(--muted)]/40 px-5 py-4 sm:px-6">
+              <div className="flex flex-col-reverse flex-wrap gap-2 border-t border-[var(--border)] bg-[var(--muted)]/40 px-5 py-4 sm:flex-row sm:flex-nowrap sm:justify-end sm:px-6 sm:[&>*]:w-auto [&>*]:w-full">
                 {footer}
               </div>
             ) : null}

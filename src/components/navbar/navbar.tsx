@@ -92,7 +92,7 @@ export function Navbar() {
           )}
         >
           {/* Left: Mobile Drawer Trigger + Brand Logo */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <Button
               type="button"
               variant="ghost"
@@ -107,7 +107,7 @@ export function Navbar() {
 
             <Brand
               wordmarkClassName="text-sm font-bold uppercase tracking-[0.2em] text-foreground not-italic"
-              className="shrink-0"
+              className="min-w-0 shrink"
             />
           </div>
 

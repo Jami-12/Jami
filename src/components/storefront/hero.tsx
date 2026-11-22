@@ -236,11 +236,11 @@ export function Hero({ products }: { products: Product[] }) {
           className="mx-auto mt-8 grid max-w-2xl grid-cols-3 divide-x divide-border rounded-xl border border-border bg-muted/30 py-3.5 text-center sm:mt-10"
         >
           {STATS.map((stat) => (
-            <div key={stat.label} className="px-3">
+            <div key={stat.label} className="min-w-0 px-1.5 sm:px-3">
               <dt className="font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                 {stat.value}
               </dt>
-              <dd className="mt-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <dd className="mt-1 text-[9px] font-medium uppercase tracking-[0.06em] text-muted-foreground sm:text-[10px] sm:tracking-[0.16em]">
                 {stat.label}
               </dd>
             </div>

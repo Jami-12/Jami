@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Eye, Heart, Plus, Sparkles } from "lucide-react";
+import { Eye, Heart, Plus } from "lucide-react";
 
 import { QuickViewDialog } from "./quick-view-dialog";
 
@@ -126,12 +126,6 @@ export function ProductCard({
                 {isNew && !discounted ? (
                   <Badge tone="accent" className="bg-foreground text-background ring-0">
                     New
-                  </Badge>
-                ) : null}
-                {product.isFeatured ? (
-                  <Badge tone="accent" className="bg-foreground text-background ring-0">
-                    <Sparkles className="h-3 w-3" aria-hidden="true" />
-                    Edit
                   </Badge>
                 ) : null}
                 {outOfStock ? (

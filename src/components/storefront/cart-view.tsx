@@ -239,7 +239,7 @@ export function CartView() {
           <dl className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">
-                Subtotal · {count} item{count === 1 ? "" : "s"}
+                Product Subtotal · {count} item{count === 1 ? "" : "s"}
               </dt>
               <dd>
                 <Price amount={subtotal} size="sm" />

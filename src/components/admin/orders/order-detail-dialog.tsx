@@ -225,7 +225,7 @@ export function OrderDetailDialog({
               </p>
               <dl className="mt-1.5 space-y-1 text-xs">
                 <div className="flex justify-between gap-2">
-                  <dt className="text-muted-foreground">Subtotal</dt>
+                  <dt className="text-muted-foreground">Product Subtotal</dt>
                   <dd>{formatCurrency(order.subtotal)}</dd>
                 </div>
                 <div className="flex justify-between gap-2">

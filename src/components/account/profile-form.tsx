@@ -149,7 +149,7 @@ export function ProfileForm() {
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="min-w-0 flex-1 sm:min-w-[200px]">
               <p className="text-sm font-bold text-foreground">{user?.name}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">

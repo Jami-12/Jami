@@ -45,7 +45,7 @@ export const ADMIN_TITLES: TitleEntry[] = [
   { path: "/admin/coupons", title: "Coupons", subtitle: "Discount codes and usage limits." },
   { path: "/admin/reviews", title: "Reviews", subtitle: "Moderate customer feedback." },
   { path: "/admin/expenses", title: "Expenses", subtitle: "Operating spend and bills." },
-  { path: "/admin/cash-collection", title: "Cash collection", subtitle: "Record and review cash-on-delivery collections." },
+  { path: "/admin/cash-collection", title: "Cash collection", subtitle: "Review and collect every order, whichever payment method was used." },
   { path: "/admin/notifications", title: "Notifications", subtitle: "Order, payment and account updates." },
   { path: "/admin/notepad", title: "Notepad", subtitle: "Your private, cloud-synced notes." },
   { path: "/admin", title: "Admin overview", subtitle: "Today's commerce at a glance." },

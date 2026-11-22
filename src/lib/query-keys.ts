@@ -54,6 +54,14 @@ export const queryKeys = {
     },
   },
 
+  cashCollections: {
+    all: ["admin", "cash-collections"] as const,
+    list: (params?: Record<string, unknown>) =>
+      params
+        ? (["admin", "cash-collections", params] as const)
+        : (["admin", "cash-collections", "list"] as const),
+  },
+
   products: {
     all: () => ["products"] as const,
     detail: (idOrSlug: string) => ["products", idOrSlug] as const,
@@ -231,6 +239,7 @@ const RELATED: Record<string, QueryKey[]> = {
     queryKeys.orders.detailAll(),
     queryKeys.orders.admin.all(),
     queryKeys.orders.admin.detailAll(),
+    queryKeys.cashCollections.all,
     queryKeys.notifications.all,
     queryKeys.notifications.unreadCount(),
   ],

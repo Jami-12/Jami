@@ -21,30 +21,30 @@ export function FooterBrand() {
         <li>
           <a
             href={`mailto:${SITE.email}`}
-            className="inline-flex items-center gap-2.5 transition hover:text-foreground"
+            className="flex min-w-0 max-w-full items-center gap-2.5 transition hover:text-foreground"
           >
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-none border border-border bg-card">
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-border bg-card">
               <Mail className="h-4 w-4" aria-hidden="true" />
             </span>
-            {SITE.email}
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">{SITE.email}</span>
           </a>
         </li>
         <li>
           <a
             href={`tel:${SITE.phone.replace(/\s+/g, "")}`}
-            className="inline-flex items-center gap-2.5 transition hover:text-foreground"
+            className="flex min-w-0 max-w-full items-center gap-2.5 transition hover:text-foreground"
           >
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-none border border-border bg-card">
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-border bg-card">
               <Phone className="h-4 w-4" aria-hidden="true" />
             </span>
-            {SITE.phone}
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">{SITE.phone}</span>
           </a>
         </li>
-        <li className="inline-flex items-center gap-2.5">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-none border border-border bg-card">
+        <li className="flex min-w-0 max-w-full items-center gap-2.5">
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-border bg-card">
             <MapPin className="h-4 w-4" aria-hidden="true" />
           </span>
-          {SITE.address}
+          <span className="min-w-0 break-words [overflow-wrap:anywhere]">{SITE.address}</span>
         </li>
       </ul>
 

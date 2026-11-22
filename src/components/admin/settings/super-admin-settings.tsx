@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Database, ShieldCheck, UserRound, Store } from "lucide-react";
+import { CreditCard, Database, ShieldCheck, UserRound, Store } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 
 import { DataManagementSettings } from "./data-management-settings";
+import { PaymentMethodSettings } from "./payment-method-settings";
 import { ProfileSettingsForm } from "./profile-settings-form";
 import { StoreLogoForm } from "./store-logo-form";
 
 const TABS = [
   { value: "profile", label: "Profile", icon: UserRound },
   { value: "store", label: "Store & logo", icon: Store },
+  { value: "payments", label: "Payment methods", icon: CreditCard },
   { value: "data", label: "Data management", icon: Database },
 ] as const;
 
@@ -66,7 +68,11 @@ export function SuperAdminSettings() {
             <span>{active.label}</span>
             <Separator orientation="vertical" className="h-4" />
             <span>
-              {tab === "data" ? "Verification required" : "Changes apply instantly"}
+              {tab === "data"
+                ? "Verification required"
+                : tab === "payments"
+                  ? "Saved per method"
+                  : "Changes apply instantly"}
             </span>
           </div>
         </CardContent>
@@ -83,7 +89,9 @@ export function SuperAdminSettings() {
               ? "Verify your Gmail and explicitly confirm before permanently wiping store data."
               : tab === "store"
                 ? "Update the storefront name and logo seen by every visitor and admin."
-                : "Update the contact details attached to your super admin account."}
+                : tab === "payments"
+                  ? "Turn COD, bKash, Nagad, or Stripe on or off. Disabled methods are hidden at checkout and rejected by the API."
+                  : "Update the contact details attached to your super admin account."}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
@@ -91,6 +99,8 @@ export function SuperAdminSettings() {
             <DataManagementSettings />
           ) : tab === "store" ? (
             <StoreLogoForm />
+          ) : tab === "payments" ? (
+            <PaymentMethodSettings />
           ) : (
             <ProfileSettingsForm />
           )}
@@ -102,15 +112,25 @@ export function SuperAdminSettings() {
           variant="link"
           size="sm"
           onClick={() =>
-            setTab(tab === "profile" ? "store" : tab === "store" ? "data" : "profile")
+            setTab(
+              tab === "profile"
+                ? "store"
+                : tab === "store"
+                  ? "payments"
+                  : tab === "payments"
+                    ? "data"
+                    : "profile",
+            )
           }
         >
           Switch to{" "}
           {tab === "profile"
             ? "store settings"
             : tab === "store"
-              ? "data management"
-              : "profile"}
+              ? "payment methods"
+              : tab === "payments"
+                ? "data management"
+                : "profile"}
         </Button>
       </div>
     </div>

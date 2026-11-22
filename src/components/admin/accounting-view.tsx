@@ -474,10 +474,18 @@ export function AccountingView() {
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Sales value
+                Product sales
               </p>
               <p className="mt-1 text-lg font-extrabold">
-                <Price amount={financial?.orders.salesValue ?? 0} size="md" />
+                <Price amount={financial?.revenue.productSales ?? 0} size="md" />
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Shipping
+              </p>
+              <p className="mt-1 text-lg font-extrabold">
+                <Price amount={financial?.revenue.shipping ?? 0} size="md" />
               </p>
             </div>
             <div>
