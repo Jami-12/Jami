@@ -1,3 +1,5 @@
+import type { DiscountType } from "./api";
+
 /** Presentation settings returned by the public `/settings` endpoint. */
 export interface HomeCategorySection {
   id: string;
@@ -27,6 +29,15 @@ export interface SiteSettings {
   bkashEnabled: boolean;
   nagadEnabled: boolean;
   stripeEnabled: boolean;
+  /** Store-wide shipping fee controls. */
+  shippingEnabled: boolean;
+  shippingFee: number;
+  freeShippingThreshold: number;
+  /** Automatic store-wide flat discount controls. */
+  flatDiscountEnabled: boolean;
+  flatDiscountType: DiscountType | null;
+  flatDiscountValue: number;
+  flatDiscountMinAmount: number | null;
   categorySections: HomeCategorySection[];
   /** Category ids with a visible home section, supplied by the API. */
   visibleCategoryIds: string[];
@@ -57,5 +68,12 @@ export interface UpdateSettingsInput {
   bkashEnabled?: boolean;
   nagadEnabled?: boolean;
   stripeEnabled?: boolean;
+  shippingEnabled?: boolean;
+  shippingFee?: number;
+  freeShippingThreshold?: number;
+  flatDiscountEnabled?: boolean;
+  flatDiscountType?: DiscountType | null;
+  flatDiscountValue?: number;
+  flatDiscountMinAmount?: number | null;
   categorySections?: HomeCategorySectionInput[];
 }

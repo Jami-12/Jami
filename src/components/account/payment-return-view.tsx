@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { paymentsApi } from "@/lib/api/services";
+import { getGuestToken } from "@/lib/guest-orders";
 import { relatedKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -23,26 +24,35 @@ export function PaymentReturnView({
   paymentStatus,
   paymentIntent = null,
   redirectStatus = null,
+  guest = false,
 }: {
   orderId: string;
   paymentStatus: string | null;
   paymentIntent?: string | null;
   redirectStatus?: string | null;
+  guest?: boolean;
 }) {
   const hydrated = useAuthStore((state) => state.hydrated);
   const accessToken = useAuthStore((state) => state.accessToken);
   const queryClient = useQueryClient();
+  const [guestToken, setGuestToken] = React.useState<string | null>(null);
   const reconciledFor = React.useRef<string | null>(null);
   const [reconcileState, setReconcileState] = React.useState<ReconcileState>("idle");
   const [reconcileError, setReconcileError] = React.useState<string | null>(null);
   const [verifiedStatus, setVerifiedStatus] = React.useState<PaymentStatus | null>(null);
 
   React.useEffect(() => {
-    if (!hydrated || !accessToken || !paymentIntent) return;
+    if (guest) setGuestToken(getGuestToken(orderId));
+  }, [guest, orderId]);
+
+  React.useEffect(() => {
+    if (!hydrated || !paymentIntent) return;
+    if (!guest && !accessToken) return;
+    if (guest && !guestToken) return;
 
     // Stripe can render the same return URL more than once (refresh, React
     // development remounts). Reconcile at most once per intent.
-    const key = `${orderId}:${paymentIntent}`;
+    const key = `${guest ? "guest" : "auth"}:${orderId}:${paymentIntent}`;
     if (reconciledFor.current === key) return;
     reconciledFor.current = key;
 
@@ -51,7 +61,9 @@ export function PaymentReturnView({
 
     void (async () => {
       try {
-        const payment = await paymentsApi.reconcileCard(orderId);
+        const payment = guestToken
+          ? await paymentsApi.guestReconcileCard(orderId, guestToken)
+          : await paymentsApi.reconcileCard(orderId);
         setVerifiedStatus(payment.status);
         setReconcileState("checked");
         invalidateKeys(queryClient, relatedKeys("orders"));
@@ -65,7 +77,7 @@ export function PaymentReturnView({
         );
       }
     })();
-  }, [accessToken, hydrated, orderId, paymentIntent, queryClient]);
+  }, [accessToken, guest, guestToken, hydrated, orderId, paymentIntent, queryClient]);
 
   if (!hydrated) {
     return (
@@ -75,7 +87,7 @@ export function PaymentReturnView({
     );
   }
 
-  if (!accessToken) {
+  if (!guest && !accessToken) {
     const nextParams = new URLSearchParams();
     if (paymentStatus) nextParams.set("paymentStatus", paymentStatus);
     if (paymentIntent) nextParams.set("payment_intent", paymentIntent);
@@ -122,7 +134,15 @@ export function PaymentReturnView({
           <div className="flex flex-wrap items-center gap-2">
             {verifiedStatus ? <Badge tone="info">Verified: {verifiedStatus}</Badge> : null}
             <Button asChild variant="outline" size="sm">
-              <Link href={`/account/orders/${orderId}`}>Open in your account</Link>
+              <Link
+                href={
+                  guest
+                    ? `/account/orders/${orderId}?guest=1`
+                    : `/account/orders/${orderId}`
+                }
+              >
+                {guest ? "View guest order" : "Open in your account"}
+              </Link>
             </Button>
           </div>
         </CardContent>
@@ -174,7 +194,11 @@ export function PaymentReturnView({
         </div>
       ) : null}
 
-      <OrderDetailView orderId={orderId} paymentStatusParam={paymentStatus} />
+      <OrderDetailView
+        orderId={orderId}
+        paymentStatusParam={paymentStatus}
+        guest={guest}
+      />
     </div>
   );
 }

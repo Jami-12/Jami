@@ -351,7 +351,7 @@ export function ProductImagesDialog({
                         className="object-cover"
                       />
                     </div>
-                    <div className="flex items-center justify-between gap-1 p-1.5">
+                    <div className="flex flex-wrap items-center justify-end gap-1 p-1.5">
                       <Button
                         variant="ghost"
                         size="sm"

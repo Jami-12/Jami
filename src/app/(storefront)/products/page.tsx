@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { FREE_SHIPPING_THRESHOLD, SITE } from "@/lib/constants";
-import { productColors } from "@/lib/product-options";
 import { formatCurrency } from "@/lib/utils";
 import { productQuerySchema } from "@/lib/validations";
 import { catalog } from "@/services/catalog";
@@ -49,7 +48,6 @@ export default async function ProductsPage({
         q: undefined,
         category: undefined,
         brand: undefined,
-        color: undefined,
         minPrice: undefined,
         maxPrice: undefined,
         rating: undefined,
@@ -60,11 +58,11 @@ export default async function ProductsPage({
   const sort = mapSort(query.sort);
 
   /**
-   * Rating, sale and colour are not part of the catalogue API. When one of
-   * them is active we page through the base result set first, then filter and
-   * paginate locally so counts, pages and results always agree.
+   * Rating and sale are not part of the catalogue API. When either is active we
+   * page through the base result set first, then filter and paginate locally so
+   * counts, pages and results always agree.
    */
-  const hasClientOnlyFilters = Boolean(query.rating || query.onSale || query.color);
+  const hasClientOnlyFilters = Boolean(query.rating || query.onSale);
   const baseParams = {
     search: query.q,
     category: query.category,
@@ -114,15 +112,6 @@ export default async function ProductsPage({
         (product) => product.finalPrice < product.originalPrice,
       );
     }
-    if (query.color) {
-      const wanted = query.color.toLowerCase();
-      allItems = allItems.filter((product) =>
-        productColors(product).some(
-          (colour) => colour.name.toLowerCase() === wanted,
-        ),
-      );
-    }
-
     total = allItems.length;
     totalPages = Math.max(1, Math.ceil(total / pageSize));
     page = Math.min(query.page, totalPages);
@@ -142,7 +131,6 @@ export default async function ProductsPage({
     q: query.q,
     category: query.category,
     brand: query.brand,
-    color: query.color,
     minPrice: query.minPrice,
     maxPrice: query.maxPrice,
     rating: query.rating,
@@ -206,7 +194,7 @@ export default async function ProductsPage({
         </p>
       </header>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <ProductFilters categories={categories} brands={brands} priceRange={priceRange}>
           <div className="flex items-center justify-between gap-3 pb-1">
             <p className="text-xs text-muted-foreground sm:text-sm" aria-live="polite">
@@ -238,7 +226,7 @@ export default async function ProductsPage({
             page={page}
             totalPages={totalPages}
             href={{ pathname: "/products", params: paginationParams }}
-            className="pt-6"
+            className="pt-5"
           />
         </ProductFilters>
       </div>

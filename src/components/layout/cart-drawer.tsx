@@ -8,7 +8,8 @@ import { Drawer } from "@/components/ui/drawer";
 import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { SmartImage } from "@/components/ui/smart-image";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants";
+import { useSiteSettings } from "@/components/providers/site-settings-provider";
+import { computeCartTotals } from "@/lib/commerce";
 import { formatCurrency } from "@/lib/utils";
 import { cartLineKey, cartSubtotal, useCartStore } from "@/stores/cart-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -20,10 +21,16 @@ export function CartDrawer() {
   const syncing = useCartStore((state) => state.syncing);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
+  const { settings } = useSiteSettings();
 
   const subtotal = cartSubtotal(items);
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const totals = computeCartTotals(subtotal, settings);
+  const threshold = settings.freeShippingThreshold;
+  const showShippingProgress = settings.shippingEnabled && threshold > 0;
+  const remaining = showShippingProgress ? Math.max(0, threshold - subtotal) : 0;
+  const progress = showShippingProgress
+    ? Math.min(100, (subtotal / threshold) * 100)
+    : 0;
   const count = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
@@ -41,8 +48,20 @@ export function CartDrawer() {
               <span className="text-muted-foreground">Product Subtotal</span>
               <Price amount={subtotal} size="md" />
             </div>
+            {totals.flatDiscount > 0 ? (
+              <div className="flex items-center justify-between text-sm text-success">
+                <span>Store discount</span>
+                <span className="font-semibold tabular-nums">
+                  −{formatCurrency(totals.flatDiscount)}
+                </span>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between border-t border-border pt-3 text-sm font-bold">
+              <span>Estimated total</span>
+              <Price amount={totals.total} size="md" />
+            </div>
             <p className="text-xs text-muted-foreground">
-              Taxes and shipping are calculated at checkout.
+              Shipping and taxes are finalised at checkout.
             </p>
             <div onClick={closeCart}>
               <Button asChild size="lg" className="w-full" disabled={syncing}>
@@ -68,8 +87,10 @@ export function CartDrawer() {
           </span>
           <h3 className="font-display text-lg font-semibold">Your bag is empty</h3>
           <p className="mt-1.5 max-w-[17rem] text-sm leading-relaxed text-muted-foreground">
-            Add something considered. Free shipping over{" "}
-            {formatCurrency(FREE_SHIPPING_THRESHOLD)}.
+            Add something considered.{" "}
+            {settings.shippingEnabled
+              ? `Free shipping over ${formatCurrency(settings.freeShippingThreshold)}.`
+              : "Shipping is free on every order."}
           </p>
           <div onClick={closeCart} className="mt-6 flex flex-col gap-2 sm:flex-row">
             <Button asChild>
@@ -88,7 +109,11 @@ export function CartDrawer() {
                 className="h-4 w-4 text-foreground"
                 aria-hidden="true"
               />
-              {remaining > 0 ? (
+              {!settings.shippingEnabled ? (
+                <span className="text-foreground">
+                  Free shipping is on for every order
+                </span>
+              ) : remaining > 0 ? (
                 <span>
                   {formatCurrency(remaining)} away from free standard shipping
                 </span>
@@ -103,19 +128,21 @@ export function CartDrawer() {
                 </span>
               ) : null}
             </div>
-            <div
-              className="mt-2.5 h-1.5 overflow-hidden rounded-none bg-border"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(progress)}
-              aria-label="Progress toward free shipping"
-            >
+            {showShippingProgress ? (
               <div
-                className="h-full rounded-none bg-foreground transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+                className="mt-2.5 h-1.5 overflow-hidden rounded-none bg-border"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(progress)}
+                aria-label="Progress toward free shipping"
+              >
+                <div
+                  className="h-full rounded-none bg-foreground transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            ) : null}
           </div>
 
           <ul className="divide-y divide-border">

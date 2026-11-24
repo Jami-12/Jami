@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Heart, Package, ShoppingBag } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ export function QuickViewDialog({
   onClose: () => void;
 }) {
   const addItem = useCartStore((state) => state.addItem);
+  const router = useRouter();
   const toggleWishlist = useWishlistStore((state) => state.toggle);
   const wishlistIds = useWishlistStore((state) => state.ids);
 
@@ -71,7 +73,12 @@ export function QuickViewDialog({
     if (outOfStock || selectionIncomplete) return;
     setAdding(true);
     try {
-      await addItem(product, quantity, { size, color });
+      const added = await addItem(product, quantity, { size, color });
+      if (added) {
+        onClose();
+        router.push("/cart");
+        return;
+      }
       setAdded(true);
       window.setTimeout(() => setAdded(false), 2200);
     } finally {

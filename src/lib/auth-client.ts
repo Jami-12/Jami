@@ -15,7 +15,12 @@ export async function adoptGuestState(): Promise<void> {
 
   await Promise.allSettled(
     cartItems.map((item) =>
-      cartApi.add({ productId: item.productId, quantity: item.quantity }),
+      cartApi.add({
+        productId: item.productId,
+        quantity: item.quantity,
+        selectedSize: item.selectedSize ?? "",
+        selectedColor: item.selectedColor ?? "",
+      }),
     ),
   );
 

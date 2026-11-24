@@ -10,14 +10,11 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
+      // Keep this allowlist in sync with OPTIMIZABLE_HOSTS in
+      // `src/lib/utils.ts` so SmartImage only hands Next allowed URLs.
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "*.cloudinary.com",
         pathname: "/**",
       },
       {
@@ -27,6 +24,9 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ["image/avif", "image/webp"],
+    // Next.js 16 requires an explicit allowlist; one quality keeps cached
+    // variants small and predictable across the storefront.
+    qualities: [75],
   },
   turbopack: {
     rules: {

@@ -5,35 +5,26 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { ProductGrid } from "./product-grid";
+import { useProductsByIds } from "./wishlist-view";
 
 import { SectionHeading } from "@/components/ui/section-heading";
-import { productsApi } from "@/lib/api/services";
 import { useRecentlyViewedStore } from "@/stores/recently-viewed-store";
-import type { Product } from "@/types";
 
 export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   const ids = useRecentlyViewedStore((state) => state.ids);
-  const [products, setProducts] = React.useState<Product[]>([]);
+  const idsKey = ids.join("|");
+  const targetIds = React.useMemo(
+    () =>
+      idsKey
+        ? Array.from(new Set(idsKey.split("|")))
+            .filter((id) => id !== excludeId)
+            .slice(0, 4)
+        : [],
+    [idsKey, excludeId],
+  );
 
-  React.useEffect(() => {
-    const target = ids.filter((id) => id !== excludeId).slice(0, 4);
-    if (target.length === 0) {
-      setProducts([]);
-      return;
-    }
-
-    let cancelled = false;
-    void Promise.all(
-      target.map((id) => productsApi.get(id).catch(() => null)),
-    ).then((results) => {
-      if (cancelled) return;
-      setProducts(results.filter((item): item is Product => item !== null));
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [ids, excludeId]);
+  const { data } = useProductsByIds(targetIds);
+  const products = data ?? [];
 
   if (products.length === 0) return null;
 

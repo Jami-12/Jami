@@ -77,8 +77,10 @@ export function SmartImage({
         src={resolved}
         alt={alt}
         fill
-        sizes={sizes}
-        priority={priority}
+        sizes={sizes ?? "100vw"}
+        preload={priority}
+        quality={75}
+        decoding="async"
         className={cn("object-cover", className)}
         onError={() => setFailed(true)}
       />
@@ -91,8 +93,10 @@ export function SmartImage({
       alt={alt}
       width={width}
       height={height}
-      sizes={sizes}
-      priority={priority}
+      sizes={sizes ?? "100vw"}
+      preload={priority}
+      quality={75}
+      decoding="async"
       className={cn("bg-[var(--muted)]", className)}
       onError={() => setFailed(true)}
     />

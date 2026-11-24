@@ -338,6 +338,7 @@ export interface Product {
   price: number;
   originalPrice: number;
   discountPrice: number | null;
+  isDiscountActive: boolean;
   discount: ProductDiscount | null;
   sellingPrice: number;
   finalPrice: number;
@@ -404,6 +405,7 @@ export interface ProductInput {
   shortDescription?: string | null;
   price: number;
   discountPrice?: number | null;
+  isDiscountActive?: boolean;
   costPrice?: number | null;
   purchasePrice?: number | null;
   stock: number;
@@ -596,6 +598,33 @@ export interface CheckoutInput {
   notes?: string;
 }
 
+export interface GuestCheckoutCustomerInput {
+  name: string;
+  email?: string;
+  phone: string;
+  addressLine: string;
+  division?: string;
+  district: string;
+  area?: string;
+  postalCode?: string;
+}
+
+export interface GuestCheckoutItemInput {
+  productId: string;
+  quantity: number;
+  size?: string | null;
+  color?: string | null;
+}
+
+/** Guest checkout sends contact details and cart items instead of an address id. */
+export interface GuestCheckoutInput {
+  customer: GuestCheckoutCustomerInput;
+  items: GuestCheckoutItemInput[];
+  paymentMethod: PaymentMethod;
+  couponCode?: string;
+  notes?: string;
+}
+
 export interface OrderCustomer {
   id: string;
   name: string;
@@ -675,6 +704,8 @@ export interface Order {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
+  /** Present only for guest orders; stored locally to access the order later. */
+  guestToken: string | null;
   receiptNumber: string | null;
   receiptUrl: string | null;
   notes: string | null;
@@ -800,6 +831,8 @@ export interface InitiatePaymentResult {
   paymentStatus: PaymentStatus;
   message: string;
   redirectUrl?: string;
+  /** bKash's canonical checkout URL field, mirrored by the server response. */
+  bkashURL?: string | null;
   clientSecret?: string;
   providerPaymentId?: string | null;
 }

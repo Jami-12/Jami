@@ -30,10 +30,11 @@ import {
   productsApi,
 } from "@/lib/api/services";
 import { PRODUCT_STATUSES } from "@/lib/constants";
+import { PRODUCT_SIZES, type ProductSize } from "@/lib/product-options";
 import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import { formResolver } from "@/lib/form-resolver";
 import { generateSku, slugify } from "@/lib/slug";
-import { getErrorMessage, humanizeEnum } from "@/lib/utils";
+import { cn, getErrorMessage, humanizeEnum } from "@/lib/utils";
 import { productFormSchema, type ProductFormValues } from "@/lib/validations";
 import type { Product, ProductImage, ProductInput } from "@/types";
 
@@ -44,6 +45,7 @@ const EMPTY: ProductFormValues = {
   shortDescription: "",
   price: "" as unknown as number,
   discountPrice: "",
+  isDiscountActive: false,
   purchasePrice: "",
   stock: 0,
   minimumStockLevel: 5,
@@ -73,7 +75,6 @@ export function ProductForm({ productId }: { productId?: string }) {
   } | null>(null);
   const [slugTouched, setSlugTouched] = React.useState(isEdit);
   const [skuTouched, setSkuTouched] = React.useState(isEdit);
-  const [sizeInput, setSizeInput] = React.useState("");
   const [colorName, setColorName] = React.useState("");
   const [colorHex, setColorHex] = React.useState("#facc15");
   const pendingRef = React.useRef<PendingImage[]>([]);
@@ -130,15 +131,14 @@ export function ProductForm({ productId }: { productId?: string }) {
   const sizes = watch("sizes");
   const colors = watch("colors");
 
-  const addSize = () => {
-    const value = sizeInput.trim();
-    if (!value) return;
+  const toggleSize = (value: ProductSize) => {
     setValue(
       "sizes",
-      Array.from(new Set([...(sizes ?? []), value])).slice(0, 30),
+      (sizes ?? []).includes(value)
+        ? (sizes ?? []).filter((size) => size !== value)
+        : [...(sizes ?? []), value],
       { shouldDirty: true },
     );
-    setSizeInput("");
   };
 
   const addColor = () => {
@@ -180,6 +180,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       shortDescription: item.shortDescription ?? "",
       price: item.price,
       discountPrice: item.discountPrice ?? "",
+      isDiscountActive: item.isDiscountActive ?? false,
       purchasePrice: item.purchasePrice ?? "",
       stock: item.stock,
       minimumStockLevel: item.minimumStockLevel,
@@ -191,7 +192,9 @@ export function ProductForm({ productId }: { productId?: string }) {
       modelUrl: item.modelUrl ?? "",
       thumbnail: item.thumbnail ?? "",
       slug: item.slug,
-      sizes: item.sizes ?? [],
+      sizes: (item.sizes ?? []).filter((size): size is ProductSize =>
+        (PRODUCT_SIZES as readonly string[]).includes(size),
+      ),
       colors: item.colors ?? [],
     });
   }, [product.data, reset]);
@@ -329,6 +332,8 @@ export function ProductForm({ productId }: { productId?: string }) {
       const discountPrice = optionalNumber(values.discountPrice);
       if (discountPrice !== undefined) payload.discountPrice = discountPrice;
       else if (isEdit) payload.discountPrice = null;
+      payload.isDiscountActive =
+        Boolean(values.isDiscountActive) && discountPrice !== undefined;
 
       const purchasePrice = optionalNumber(values.purchasePrice);
       if (purchasePrice !== undefined) payload.purchasePrice = purchasePrice;
@@ -671,6 +676,27 @@ export function ProductForm({ productId }: { productId?: string }) {
                   {...register("discountPrice")}
                 />
               </FormField>
+              <Controller
+                control={control}
+                name="isDiscountActive"
+                render={({ field }) => (
+                  <div className="flex items-start justify-between gap-3 border border-border bg-muted/30 p-3 sm:col-span-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold">Discount active</p>
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                        Show the discount price on the storefront and use it in
+                        the cart, checkout and reports. Turn off to ignore the
+                        saved discount price.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={Boolean(field.value)}
+                      onCheckedChange={field.onChange}
+                      aria-label="Discount active"
+                    />
+                  </div>
+                )}
+              />
               <FormField
                 label="Purchase cost"
                 htmlFor="product-cost"
@@ -725,52 +751,36 @@ export function ProductForm({ productId }: { productId?: string }) {
             <CardContent className="space-y-5">
               <div>
                 <p className="mb-2 text-xs font-semibold">Sizes</p>
-                <div className="flex gap-2">
-                  <Input
-                    aria-label="Add a size"
-                    placeholder="e.g. M, 42, XL"
-                    maxLength={24}
-                    value={sizeInput}
-                    onChange={(event) => setSizeInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        addSize();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addSize}
-                    disabled={!sizeInput.trim()}
-                  >
-                    Add
-                  </Button>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Select from the available sizes. Leave all unselected for a
+                  one-size item.
+                </p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Product sizes">
+                  {PRODUCT_SIZES.map((size) => {
+                    const active = (sizes ?? []).includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => toggleSize(size)}
+                        className={cn(
+                          "inline-flex min-h-10 items-center justify-center border px-3 py-1.5 text-xs font-semibold transition-colors",
+                          active
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border bg-background text-foreground hover:border-foreground",
+                        )}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {(sizes ?? []).map((size) => (
-                    <button
-                      type="button"
-                      key={size}
-                      onClick={() =>
-                        setValue(
-                          "sizes",
-                          (sizes ?? []).filter((value) => value !== size),
-                          { shouldDirty: true },
-                        )
-                      }
-                      className="inline-flex items-center gap-1 border border-border bg-muted px-2 py-1 text-xs hover:border-foreground"
-                    >
-                      {size}
-                      <X className="h-3 w-3" aria-hidden="true" />
-                    </button>
-                  ))}
-                  {!sizes?.length ? (
-                    <p className="text-xs text-muted-foreground">No sizes added.</p>
-                  ) : null}
-                </div>
+                {errors.sizes?.message ? (
+                  <p className="mt-2 text-xs text-destructive">
+                    {errors.sizes.message}
+                  </p>
+                ) : null}
               </div>
 
               <div>

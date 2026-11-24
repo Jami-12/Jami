@@ -37,6 +37,9 @@ export const queryKeys = {
     mine: (params?: Record<string, unknown>) =>
       params ? (["orders", "my", params] as const) : (["orders", "my"] as const),
     detail: (id: string) => ["order", id] as const,
+    /** Token-scoped key so guest and authenticated views never share cache. */
+    guestDetail: (id: string, token: string) =>
+      ["order", "guest", id, token] as const,
     detailAll: () => ["order"] as const,
     recent: () => ["orders", "recent"] as const,
     pendingPayment: () => ["orders", "pending-payment"] as const,

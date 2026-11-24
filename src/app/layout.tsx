@@ -24,8 +24,10 @@ const fraunces = Fraunces({
   fallback: ["Georgia", "serif"],
 });
 
+const siteUrl = SITE.url || undefined;
+
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
+  metadataBase: siteUrl ? new URL(siteUrl) : undefined,
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
     template: `%s · ${SITE.name}`,
@@ -41,14 +43,14 @@ export const metadata: Metadata = {
  "ecommerce",
     SITE.name,
   ],
-  authors: [{ name: `${SITE.name} Studio`, url: SITE.url }],
+  authors: [{ name: `${SITE.name} Studio`, url: siteUrl }],
   creator: `${SITE.name} Studio`,
   publisher: `${SITE.name} Studio`,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: SITE.url,
+    url: siteUrl,
     siteName: SITE.name,
     title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
@@ -85,10 +87,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
-  ],
+  themeColor: "#ffffff",
 };
 
 export default async function RootLayout({

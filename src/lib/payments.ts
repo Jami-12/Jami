@@ -75,6 +75,23 @@ export function getSafePaymentRedirectUrl(
 }
 
 /**
+ * bKash responses use `bkashURL`; other gateways use `redirectUrl`. Prefer the
+ * canonical field so a missing alias can never send the browser to the wrong
+ * place.
+ */
+export function getPaymentRedirectUrl(
+  result: InitiatePaymentResult,
+  method: PaymentMethod,
+): string | null {
+  const candidate =
+    method === "BKASH"
+      ? (result.bkashURL ?? result.redirectUrl)
+      : result.redirectUrl;
+
+  return getSafePaymentRedirectUrl(candidate, method);
+}
+
+/**
  * Guards against an unexpected or partial initiation response. The returned
  * value is the original API object; only its shape is checked.
  */

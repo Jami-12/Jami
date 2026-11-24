@@ -22,9 +22,17 @@ const queryClient = new QueryClient({
       gcTime: 5 * 60_000,
       retry: 1,
       refetchOnWindowFocus: false,
+      // Cached data stays usable on navigation; explicit invalidations after
+      // mutations still refresh it. This avoids redundant requests on mount.
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     },
   },
 });
+
+/** Guards against StrictMode double-effects and repeated user changes. */
+const syncedUsers = new Set<string>();
+let lastVerifiedToken: string | null = null;
 
 /**
  * Refreshes the persisted session against the API and hydrates the customer's
@@ -36,7 +44,8 @@ function SessionSync() {
   const role = useAuthStore((state) => state.user?.role);
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken || lastVerifiedToken === accessToken) return;
+    lastVerifiedToken = accessToken;
     let cancelled = false;
 
     authApi
@@ -54,7 +63,8 @@ function SessionSync() {
   }, [accessToken]);
 
   useEffect(() => {
-    if (!userId || role !== "CUSTOMER") return;
+    if (!userId || role !== "CUSTOMER" || syncedUsers.has(userId)) return;
+    syncedUsers.add(userId);
     void useCartStore.getState().syncFromServer();
     void useWishlistStore.getState().syncFromServer();
   }, [userId, role]);

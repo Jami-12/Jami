@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { CreditCard, Database, ShieldCheck, UserRound, Store } from "lucide-react";
+import {
+  CreditCard,
+  Database,
+  Percent,
+  ShieldCheck,
+  Store,
+  Truck,
+  UserRound,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,21 +24,66 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
 
 import { DataManagementSettings } from "./data-management-settings";
+import { FlatDiscountSettings } from "./flat-discount-settings";
 import { PaymentMethodSettings } from "./payment-method-settings";
 import { ProfileSettingsForm } from "./profile-settings-form";
+import { ShippingSettings } from "./shipping-settings";
 import { StoreLogoForm } from "./store-logo-form";
 
 const TABS = [
-  { value: "profile", label: "Profile", icon: UserRound },
-  { value: "store", label: "Store & logo", icon: Store },
-  { value: "payments", label: "Payment methods", icon: CreditCard },
-  { value: "data", label: "Data management", icon: Database },
+  {
+    value: "profile",
+    label: "Profile",
+    icon: UserRound,
+    description: "Update the contact details attached to your super admin account.",
+    aside: "Changes apply instantly",
+  },
+  {
+    value: "store",
+    label: "Store & logo",
+    icon: Store,
+    description: "Update the storefront name and logo seen by every visitor and admin.",
+    aside: "Changes apply instantly",
+  },
+  {
+    value: "payments",
+    label: "Payment methods",
+    icon: CreditCard,
+    description:
+      "Turn COD, bKash, Nagad, or Stripe on or off. Disabled methods are hidden at checkout and rejected by the API.",
+    aside: "Saved per method",
+  },
+  {
+    value: "shipping",
+    label: "Shipping",
+    icon: Truck,
+    description:
+      "Set the flat shipping fee, its free-shipping threshold, or turn fees off entirely.",
+    aside: "Applied at checkout",
+  },
+  {
+    value: "flat-discount",
+    label: "Flat discount",
+    icon: Percent,
+    description:
+      "Configure one automatic store-wide discount applied before coupons.",
+    aside: "Applied before coupons",
+  },
+  {
+    value: "data",
+    label: "Data management",
+    icon: Database,
+    description: "Verify your Gmail and explicitly confirm before permanently wiping store data.",
+    aside: "Verification required",
+  },
 ] as const;
 
 export function SuperAdminSettings() {
   const [tab, setTab] = React.useState<string>(TABS[0].value);
   const active = TABS.find((item) => item.value === tab) ?? TABS[0];
   const ActiveIcon = active.icon;
+  const currentIndex = TABS.findIndex((item) => item.value === active.value);
+  const next = TABS[(currentIndex + 1) % TABS.length] ?? TABS[0];
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5">
@@ -67,13 +120,7 @@ export function SuperAdminSettings() {
             <ActiveIcon className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{active.label}</span>
             <Separator orientation="vertical" className="h-4" />
-            <span>
-              {tab === "data"
-                ? "Verification required"
-                : tab === "payments"
-                  ? "Saved per method"
-                  : "Changes apply instantly"}
-            </span>
+            <span>{active.aside}</span>
           </div>
         </CardContent>
       </Card>
@@ -84,23 +131,19 @@ export function SuperAdminSettings() {
             <ActiveIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <CardTitle className="font-display text-base">{active.label}</CardTitle>
           </div>
-          <CardDescription>
-            {tab === "data"
-              ? "Verify your Gmail and explicitly confirm before permanently wiping store data."
-              : tab === "store"
-                ? "Update the storefront name and logo seen by every visitor and admin."
-                : tab === "payments"
-                  ? "Turn COD, bKash, Nagad, or Stripe on or off. Disabled methods are hidden at checkout and rejected by the API."
-                  : "Update the contact details attached to your super admin account."}
-          </CardDescription>
+          <CardDescription>{active.description}</CardDescription>
         </CardHeader>
-        <CardContent className="pt-5">
+        <CardContent className="w-full min-w-0 pt-5">
           {tab === "data" ? (
             <DataManagementSettings />
           ) : tab === "store" ? (
             <StoreLogoForm />
           ) : tab === "payments" ? (
             <PaymentMethodSettings />
+          ) : tab === "shipping" ? (
+            <ShippingSettings />
+          ) : tab === "flat-discount" ? (
+            <FlatDiscountSettings />
           ) : (
             <ProfileSettingsForm />
           )}
@@ -111,26 +154,9 @@ export function SuperAdminSettings() {
         <Button
           variant="link"
           size="sm"
-          onClick={() =>
-            setTab(
-              tab === "profile"
-                ? "store"
-                : tab === "store"
-                  ? "payments"
-                  : tab === "payments"
-                    ? "data"
-                    : "profile",
-            )
-          }
+          onClick={() => setTab(next.value)}
         >
-          Switch to{" "}
-          {tab === "profile"
-            ? "store settings"
-            : tab === "store"
-              ? "payment methods"
-              : tab === "payments"
-                ? "data management"
-                : "profile"}
+          Switch to {next.label.toLowerCase()}
         </Button>
       </div>
     </div>

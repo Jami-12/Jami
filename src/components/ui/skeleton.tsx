@@ -20,12 +20,18 @@ export function Skeleton({
 
 export function ProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-none border border-[var(--border)] bg-[var(--card)] shadow-soft">
-      <Skeleton className="aspect-[4/5] w-full rounded-none" />
-      <div className="space-y-3 p-4">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/3" />
+    <div className="flex h-full flex-col overflow-hidden rounded-none border border-[var(--border)] bg-[var(--card)] shadow-soft">
+      <Skeleton className="aspect-square w-full rounded-none" />
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <Skeleton className="h-3.5 w-3/4" />
+        <Skeleton className="mt-1 h-3 w-1/2" />
+        <div className="mt-auto pt-2">
+          <Skeleton className="h-3.5 w-1/2" />
+          <div className="mt-2 flex items-center gap-1.5">
+            <Skeleton className="h-8 flex-1 sm:h-9" />
+            <Skeleton className="h-8 w-8 sm:h-9 sm:w-9" />
+          </div>
+        </div>
       </div>
     </div>
   );

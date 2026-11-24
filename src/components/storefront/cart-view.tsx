@@ -20,11 +20,9 @@ import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SmartImage } from "@/components/ui/smart-image";
+import { useSiteSettings } from "@/components/providers/site-settings-provider";
 import { useHydrated } from "@/hooks/use-hydrated";
-import {
-  FREE_SHIPPING_THRESHOLD,
-  SHIPPING_FLAT_RATE,
-} from "@/lib/constants";
+import { computeCartTotals } from "@/lib/commerce";
 import { formatCurrency } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { cartLineKey, cartSubtotal, useCartStore } from "@/stores/cart-store";
@@ -36,17 +34,27 @@ export function CartView() {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const clear = useCartStore((state) => state.clear);
+  const refreshLocalPrices = useCartStore((state) => state.refreshLocalPrices);
   const user = useAuthStore((state) => state.user);
+  const { settings } = useSiteSettings();
+
+  React.useEffect(() => {
+    if (hydrated) void refreshLocalPrices();
+  }, [hydrated, refreshLocalPrices]);
 
   const [confirmClear, setConfirmClear] = React.useState(false);
   const [clearing, setClearing] = React.useState(false);
 
   const subtotal = cartSubtotal(items);
   const count = items.reduce((total, item) => total + item.quantity, 0);
-  const shipping =
-    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const totals = computeCartTotals(subtotal, settings);
+  const { shipping } = totals;
+  const threshold = settings.freeShippingThreshold;
+  const showShippingProgress = settings.shippingEnabled && threshold > 0;
+  const remaining = showShippingProgress ? Math.max(0, threshold - subtotal) : 0;
+  const progress = showShippingProgress
+    ? Math.min(100, (subtotal / threshold) * 100)
+    : 0;
 
   if (!hydrated) {
     return (
@@ -99,7 +107,11 @@ export function CartView() {
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-none border border-border bg-secondary text-foreground">
               <Truck className="h-4 w-4" aria-hidden="true" />
             </span>
-            {remaining > 0 ? (
+            {!settings.shippingEnabled ? (
+              <span className="text-muted-foreground">
+                Free shipping is on for every order.
+              </span>
+            ) : remaining > 0 ? (
               <span>
                 You are {formatCurrency(remaining)} away from free standard
                 shipping.
@@ -116,19 +128,21 @@ export function CartView() {
               </span>
             ) : null}
           </div>
-          <div
-            className="mt-3 h-1.5 overflow-hidden rounded-none bg-border"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progress)}
-            aria-label="Progress toward free shipping"
-          >
+          {showShippingProgress ? (
             <div
-              className="h-full rounded-none bg-foreground transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+              className="mt-3 h-1.5 overflow-hidden rounded-none bg-border"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+              aria-label="Progress toward free shipping"
+            >
+              <div
+                className="h-full rounded-none bg-foreground transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          ) : null}
         </Card>
 
         <Card className="overflow-hidden">
@@ -245,6 +259,14 @@ export function CartView() {
                 <Price amount={subtotal} size="sm" />
               </dd>
             </div>
+            {totals.flatDiscount > 0 ? (
+              <div className="flex items-center justify-between gap-3 text-success">
+                <dt>Store discount</dt>
+                <dd className="font-semibold tabular-nums">
+                  −{formatCurrency(totals.flatDiscount)}
+                </dd>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">Estimated shipping</dt>
               <dd className="font-semibold tabular-nums">
@@ -263,7 +285,7 @@ export function CartView() {
 
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold">Estimated total</span>
-            <Price amount={subtotal + shipping} size="lg" />
+            <Price amount={totals.total} size="lg" />
           </div>
 
           <Button asChild size="lg" className="mt-5 w-full">
@@ -275,8 +297,8 @@ export function CartView() {
 
           {!user ? (
             <p className="mt-3 text-center text-[11px] leading-relaxed text-muted-foreground">
-              You will be asked to sign in before placing the order. Your bag is
-              saved on this device.
+              You can check out as a guest — no account needed. Your bag is saved
+              on this device.
             </p>
           ) : null}
 

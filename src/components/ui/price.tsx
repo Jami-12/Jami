@@ -33,7 +33,7 @@ export function Price({
   const price = (
     <span
       className={cn(
- "tabular-nums tracking-tight text-[var(--foreground)]",
+ "truncate tabular-nums tracking-tight text-[var(--foreground)]",
         SIZES[size],
         className,
       )}
@@ -45,9 +45,9 @@ export function Price({
   if (!compareAt || compareAt <= amount) return price;
 
   return (
-    <span className={cn("inline-flex items-baseline gap-2", inline && "gap-1.5")}>
+    <span className={cn("inline-flex min-w-0 max-w-full items-baseline gap-2", inline && "gap-1.5")}>
       {price}
-      <span className="text-xs font-medium tabular-nums text-[var(--muted-foreground)] line-through">
+      <span className="truncate text-xs font-medium tabular-nums text-[var(--muted-foreground)] line-through">
         {formatCurrency(displayAmount(compareAt, display), { currency: display })}
       </span>
     </span>

@@ -1,4 +1,8 @@
-import { SITE } from "@/lib/constants";
+import {
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FLAT_RATE,
+  SITE,
+} from "@/lib/constants";
 import type { SiteSettings } from "@/types";
 
 export const HOME_SECTION_KEYS = [
@@ -70,6 +74,13 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   bkashEnabled: true,
   nagadEnabled: true,
   stripeEnabled: true,
+  shippingEnabled: true,
+  shippingFee: SHIPPING_FLAT_RATE,
+  freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+  flatDiscountEnabled: false,
+  flatDiscountType: null,
+  flatDiscountValue: 0,
+  flatDiscountMinAmount: null,
   categorySections: [],
   visibleCategoryIds: [],
   updatedAt: "",

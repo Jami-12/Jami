@@ -21,7 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   PaymentMethodSelector,
+  getAvailablePaymentMethods,
   isPaymentMethodAvailable,
+  resolvePaymentMethod,
 } from "@/components/payments/payment-method-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
@@ -35,13 +37,14 @@ import { StripePaymentDialog } from "@/components/payments/stripe-payment-dialog
 import { invalidateKeys } from "@/hooks/use-optimistic-mutation";
 import { ordersApi, paymentsApi } from "@/lib/api/services";
 import { PAYMENT_METHOD_META } from "@/lib/constants";
+import { getGuestToken } from "@/lib/guest-orders";
 import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import {
   PAYMENT_STATUS_POLL_TIMEOUT_MS,
   PAYMENT_STATUS_REFRESH_INTERVAL_MS,
   ensureInitiatePaymentResult,
+  getPaymentRedirectUrl,
   getPaymentStartErrorMessage,
-  getSafePaymentRedirectUrl,
   isOnlinePaymentMethod,
   isPaymentInProgress,
   isRedirectPaymentMethod,
@@ -62,6 +65,17 @@ function normalizePaymentStatus(value: string | null | undefined): PaymentStatus
   if (!value) return null;
   const upper = value.toUpperCase() as PaymentStatus;
   return KNOWN_PAYMENT_STATUSES.has(upper) ? upper : null;
+}
+
+/** Mirrors the server's receipt gate: no receipt for unfinalised orders. */
+function canViewReceipt(order: Order): boolean {
+  if (order.paymentStatus === "PAID") return true;
+  return (
+    order.paymentMethod === "CASH_ON_DELIVERY" &&
+    (["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"] as string[]).includes(
+      order.status,
+    )
+  );
 }
 
 function PaymentBanner({ status }: { status: PaymentStatus }) {
@@ -140,16 +154,21 @@ function receiptVariantLabel(item: {
 
 export function ReceiptDialog({
   orderId,
+  guestToken = null,
   open,
   onClose,
 }: {
   orderId: string;
+  guestToken?: string | null;
   open: boolean;
   onClose: () => void;
 }) {
   const receipt = useQuery({
-    queryKey: queryKeys.orders.receipt(orderId),
-    queryFn: () => ordersApi.receipt(orderId),
+    queryKey: queryKeys.orders.receipt(guestToken ? `${orderId}:guest` : orderId),
+    queryFn: () =>
+      guestToken
+        ? ordersApi.guestReceipt(orderId, guestToken)
+        : ordersApi.receipt(orderId),
     enabled: open,
   });
 
@@ -473,9 +492,12 @@ export function ReceiptDialog({
 export function OrderDetailView({
   orderId,
   paymentStatusParam,
+  guest = false,
 }: {
   orderId: string;
   paymentStatusParam?: string | null;
+  /** Guest orders are authorised by a token stored in this browser. */
+  guest?: boolean;
 }) {
   const queryClient = useQueryClient();
   const refreshOrder = React.useCallback(
@@ -486,15 +508,31 @@ export function OrderDetailView({
   const [receiptOpen, setReceiptOpen] = React.useState(false);
   const [retryOpen, setRetryOpen] = React.useState(false);
   const [retryMethod, setRetryMethod] = React.useState<PaymentMethod>("CASH_ON_DELIVERY");
-  const [cardSession, setCardSession] = React.useState<{ clientSecret: string; publishableKey: string } | null>(null);
+  const [cardSession, setCardSession] = React.useState<{
+    clientSecret: string;
+    publishableKey: string;
+    guestToken: string | null;
+  } | null>(null);
   const [paying, setPaying] = React.useState(false);
   const payingRef = React.useRef(false);
   const paymentPollStartedAt = React.useRef<number | null>(null);
+  const [guestToken, setGuestToken] = React.useState<string | null>(null);
+  const [guestTokenResolved, setGuestTokenResolved] = React.useState(!guest);
+
+  React.useEffect(() => {
+    setGuestToken(guest ? getGuestToken(orderId) : null);
+    setGuestTokenResolved(true);
+  }, [guest, orderId]);
 
   const orderQuery = useQuery({
-    queryKey: queryKeys.orders.detail(orderId),
-    queryFn: () => ordersApi.get(orderId),
-    enabled: Boolean(orderId),
+    queryKey: guestToken
+      ? queryKeys.orders.guestDetail(orderId, guestToken)
+      : queryKeys.orders.detail(orderId),
+    queryFn: () =>
+      guestToken
+        ? ordersApi.guestGet(orderId, guestToken)
+        : ordersApi.get(orderId),
+    enabled: Boolean(orderId) && guestTokenResolved && (!guest || Boolean(guestToken)),
     refetchInterval: (query) => {
       const current = query.state.data;
       if (!current) return false;
@@ -518,6 +556,12 @@ export function OrderDetailView({
     queryFn: paymentsApi.providers,
     staleTime: 60_000,
   });
+
+  React.useEffect(() => {
+    if (!retryOpen || !providersQuery.data) return;
+    const enabledMethod = resolvePaymentMethod(retryMethod, providersQuery.data);
+    if (enabledMethod && enabledMethod !== retryMethod) setRetryMethod(enabledMethod);
+  }, [providersQuery.data, retryMethod, retryOpen]);
 
   const order = orderQuery.data;
   const callbackStatus = normalizePaymentStatus(paymentStatusParam);
@@ -581,10 +625,14 @@ export function OrderDetailView({
     paymentPollStartedAt.current = null;
 
     try {
-      const initiation = ensureInitiatePaymentResult(
-        await paymentsApi.initiate({ orderId: current.id, method }),
-        method,
-      );
+      const result = guestToken
+        ? await paymentsApi.guestInitiate({
+            orderId: current.id,
+            guestToken,
+            method,
+          })
+        : await paymentsApi.initiate({ orderId: current.id, method });
+      const initiation = ensureInitiatePaymentResult(result, method);
 
       if (initiation.paymentStatus === "PAID") {
         toast.success("This payment is already confirmed.");
@@ -611,6 +659,7 @@ export function OrderDetailView({
           setCardSession({
             clientSecret: initiation.clientSecret,
             publishableKey,
+            guestToken,
           });
         } else if (initiation.clientSecret) {
           toast.error(
@@ -625,10 +674,7 @@ export function OrderDetailView({
       }
 
       if (isRedirectPaymentMethod(method)) {
-        const redirectUrl = getSafePaymentRedirectUrl(
-          initiation.redirectUrl,
-          method,
-        );
+        const redirectUrl = getPaymentRedirectUrl(initiation, method);
 
         if (redirectUrl) {
           setRetryOpen(false);
@@ -636,9 +682,10 @@ export function OrderDetailView({
           return;
         }
 
-        const hadRedirectUrl =
-          typeof initiation.redirectUrl === "string" &&
-          initiation.redirectUrl.trim().length > 0;
+        const hadRedirectUrl = Boolean(
+          (method === "BKASH" ? initiation.bkashURL : null) ??
+            initiation.redirectUrl,
+        );
 
         toast.error(
           hadRedirectUrl
@@ -656,7 +703,22 @@ export function OrderDetailView({
     }
   };
 
-  if (orderQuery.isLoading) {
+  if (guest && guestTokenResolved && !guestToken) {
+    return (
+      <EmptyState
+        icon={AlertCircle}
+        title="Guest order access expired"
+        description="This browser no longer has the private link token for that order. Check the order confirmation message or place a new order."
+        action={
+          <Button asChild>
+            <Link href="/products">Back to the shop</Link>
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (orderQuery.isLoading || (guest && !guestTokenResolved)) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-28 w-full rounded-none" />
@@ -681,7 +743,9 @@ export function OrderDetailView({
     );
   }
 
-  const canCancel = order.status === "PENDING" || order.status === "CONFIRMED";
+  const canCancel =
+    !guest && (order.status === "PENDING" || order.status === "CONFIRMED");
+  const showReceipt = canViewReceipt(order);
   const canRetryPayment =
     order.paymentStatus !== "PAID" &&
     order.paymentStatus !== "REFUNDED" &&
@@ -719,10 +783,12 @@ export function OrderDetailView({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setReceiptOpen(true)}>
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-              Receipt
-            </Button>
+            {showReceipt ? (
+              <Button variant="outline" size="sm" onClick={() => setReceiptOpen(true)}>
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                Receipt
+              </Button>
+            ) : null}
             {canRetryPayment ? (
               <Button size="sm" loading={paying} onClick={() => openRetryPayment(order)}>
                 <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
@@ -933,7 +999,12 @@ export function OrderDetailView({
         </div>
       </div>
 
-      <ReceiptDialog orderId={orderId} open={receiptOpen} onClose={() => setReceiptOpen(false)} />
+      <ReceiptDialog
+        orderId={orderId}
+        guestToken={guestToken}
+        open={receiptOpen}
+        onClose={() => setReceiptOpen(false)}
+      />
 
       <Dialog
         open={retryOpen}
@@ -953,6 +1024,7 @@ export function OrderDetailView({
             </Button>
             <Button
               loading={paying}
+              disabled={paying || !isPaymentMethodAvailable(retryMethod, providersQuery.data)}
               onClick={() => void startPayment(order, retryMethod)}
             >
               Continue with {PAYMENT_METHOD_META[retryMethod].label}
@@ -979,11 +1051,10 @@ export function OrderDetailView({
               Could not load payment methods. Please try again.
             </p>
           ) : null}
-          {!providersQuery.isLoading &&
-          providersQuery.data &&
-          !isPaymentMethodAvailable(retryMethod, providersQuery.data) ? (
+          {providersQuery.data &&
+          getAvailablePaymentMethods(providersQuery.data).length === 0 ? (
             <p className="text-[11px] text-muted-foreground">
-              The selected method is currently unavailable. Choose another method.
+              No payment methods are currently enabled for this order.
             </p>
           ) : null}
         </div>
@@ -1007,6 +1078,7 @@ export function OrderDetailView({
           orderId={order.id}
           clientSecret={cardSession.clientSecret}
           publishableKey={cardSession.publishableKey}
+          guestToken={cardSession.guestToken}
           onResolved={() => {
             setCardSession(null);
             refreshOrder();

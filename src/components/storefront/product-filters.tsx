@@ -11,7 +11,6 @@ import { Drawer } from "@/components/ui/drawer";
 import { Input, Label, Select } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { PRODUCT_SORT_OPTIONS } from "@/lib/constants";
-import { COLOR_SWATCHES } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 import type { Brand, Category } from "@/types";
 
@@ -41,7 +40,6 @@ export function ProductFilters({
       q: params.get("q") ?? "",
       category: params.get("category") ?? "",
       brand: params.get("brand") ?? "",
-      color: params.get("color") ?? "",
       minPrice: min,
       maxPrice: max,
       rating: params.get("rating") ?? "",
@@ -89,7 +87,6 @@ export function ProductFilters({
     current.q,
     current.category,
     current.brand,
-    current.color,
     current.minPrice,
     current.maxPrice,
     current.rating,
@@ -141,38 +138,6 @@ export function ProductFilters({
           ) : null}
         </div>
       </form>
-
-      <fieldset>
-        <legend className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Colour
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {COLOR_SWATCHES.map((colour) => {
-            const active = current.color === colour.name;
-            return (
-              <button
-                key={colour.name}
-                type="button"
-                onClick={() => setParam("color", active ? null : colour.name)}
-                aria-label={colour.name}
-                aria-pressed={active}
-                title={colour.name}
-                className={cn(
-                  "inline-flex h-9 w-9 items-center justify-center border-2 transition-colors",
-                  active
-                    ? "border-foreground"
-                    : "border-border hover:border-foreground",
-                )}
-              >
-                <span
-                  className="h-6 w-6 border border-foreground/20"
-                  style={{ backgroundColor: colour.hex }}
-                />
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
 
       <Separator />
 
@@ -337,10 +302,10 @@ export function ProductFilters({
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:items-start">
+    <div className="grid gap-4 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:items-start">
       <aside className="hidden lg:sticky lg:top-24 lg:block">
-        <Card className="p-5">
-          <div className="mb-5 flex items-center justify-between gap-2">
+        <Card className="p-4">
+          <div className="mb-4 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SlidersHorizontal
                 className="h-4 w-4 text-foreground"
@@ -377,7 +342,7 @@ export function ProductFilters({
             ) : null}
           </Button>
 
-          <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          <label className="flex w-full min-w-0 items-center gap-2 text-xs text-muted-foreground sm:ml-auto sm:w-auto">
             <span className="hidden sm:inline">Sort</span>
             <Select
               value={current.sort}
@@ -387,7 +352,7 @@ export function ProductFilters({
                   event.target.value === "featured" ? null : event.target.value,
                 )
               }
-              className="h-10 w-44 text-xs sm:w-48"
+              className="h-10 min-w-0 flex-1 text-xs sm:w-48 sm:flex-none"
               aria-label="Sort products"
             >
               {PRODUCT_SORT_OPTIONS.map((option) => {

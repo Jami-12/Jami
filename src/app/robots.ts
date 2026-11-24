@@ -3,7 +3,8 @@ import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/constants";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = SITE.url.replace(/\/$/, "");
+  const base = SITE.url.replace(/\/+$/, "");
+
   return {
     rules: [
       {
@@ -12,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard", "/api", "/checkout", "/account"],
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
+    sitemap: base ? `${base}/sitemap.xml` : undefined,
   };
 }

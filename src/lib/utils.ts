@@ -151,12 +151,15 @@ export function discountPercent(price: number, compareAt?: number | null): numbe
 
 export function absoluteUrl(path = "/"): string {
   const base =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+
+  if (!base) return path;
+
   try {
     return new URL(path, base).toString();
   } catch {
-    return base;
+    return path;
   }
 }
 
@@ -231,22 +234,26 @@ export function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+// Must stay in sync with `images.remotePatterns` in `next.config.ts`.
 const OPTIMIZABLE_HOSTS = new Set([
  "images.unsplash.com",
  "res.cloudinary.com",
  "lh3.googleusercontent.com",
- "localhost",
- "127.0.0.1",
 ]);
 
 export function canOptimizeImage(src: string | null | undefined): boolean {
   if (!src) return false;
+
+  // Local paths are optimizable, but `//host` and `/\host` are protocol-relative
+  // URLs that are not covered by `remotePatterns`.
+  if (src.startsWith("/")) {
+    return !src.startsWith("//") && !src.startsWith("/\\");
+  }
+
   try {
-    const url = new URL(src, SITE_FALLBACK);
-    return OPTIMIZABLE_HOSTS.has(url.hostname);
+    const url = new URL(src);
+    return url.protocol === "https:" && OPTIMIZABLE_HOSTS.has(url.hostname);
   } catch {
     return false;
   }
 }
-
-const SITE_FALLBACK = "http://localhost:3000";

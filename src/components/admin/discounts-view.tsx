@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FlatDiscountSettings } from "@/components/admin/settings/flat-discount-settings";
 import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { FormField, Input, Select } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
@@ -60,6 +61,16 @@ function summaryStatus(discount: ProductDiscount | null): DiscountStatus {
   if (discount.startDate && new Date(discount.startDate).getTime() > now) return "SCHEDULED";
   if (discount.endDate && new Date(discount.endDate).getTime() < now) return "EXPIRED";
   return "ACTIVE";
+}
+
+/** Manual sale price set in the product form (independent of campaigns). */
+function hasFlagDiscount(product: Product): boolean {
+  return Boolean(
+    product.isDiscountActive &&
+      product.discountPrice !== null &&
+      product.discountPrice > 0 &&
+      product.discountPrice < product.price,
+  );
 }
 
 export function DiscountsView() {
@@ -120,11 +131,14 @@ export function DiscountsView() {
 
   const statusFor = (product: Product): DiscountStatus => {
     const detail = detailFor(product);
-    if (detail !== undefined) return detail?.status ?? "NONE";
-    return summaryStatus(product.discount);
+    if (detail !== undefined && detail) return detail.status;
+    if (hasFlagDiscount(product)) return "ACTIVE";
+    if (detail === undefined) return summaryStatus(product.discount);
+    return "NONE";
   };
 
   const hasDiscount = (product: Product): boolean => {
+    if (hasFlagDiscount(product)) return true;
     const detail = detailFor(product);
     return detail !== undefined ? Boolean(detail) : Boolean(product.discount);
   };
@@ -307,7 +321,8 @@ export function DiscountsView() {
       header: "",
       cell: (product) => {
         const discounted = hasDiscount(product);
-        const pending = detailFor(product) === undefined && !product.discount;
+        const pending =
+          detailFor(product) === undefined && !product.discount && !hasFlagDiscount(product);
         return (
           <div className="flex items-center justify-end gap-1">
             <Button variant="ghost" size="sm" onClick={() => openEdit(product)} disabled={pending}>
@@ -355,6 +370,8 @@ export function DiscountsView() {
           </Button>
         </CardHeader>
       </Card>
+
+      <FlatDiscountSettings compact />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
@@ -519,7 +536,9 @@ export function DiscountsView() {
         title="Remove this discount?"
         description={
           removing
-            ? `The discount on ${removing.title} is removed and the product returns to full price.`
+            ? hasFlagDiscount(removing)
+              ? `The scheduled campaign on ${removing.title} is removed. Its manual sale price stays active until disabled in the product form.`
+              : `The discount on ${removing.title} is removed and the product returns to full price.`
             : undefined
         }
         confirmLabel="Remove discount"

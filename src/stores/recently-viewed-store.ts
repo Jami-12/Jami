@@ -15,13 +15,17 @@ export const useRecentlyViewedStore = create<RecentlyViewedState>()(
   persist(
     (set, get) => ({
       ids: [],
-      add: (productId) =>
+      add: (productId) => {
+        const ids = get().ids;
+        // Re-visiting the same product must not rewrite (and re-persist) state.
+        if (ids[0] === productId) return;
         set({
-          ids: [productId, ...get().ids.filter((id) => id !== productId)].slice(
+          ids: [productId, ...ids.filter((id) => id !== productId)].slice(
             0,
             MAX_ITEMS,
           ),
-        }),
+        });
+      },
       clear: () => set({ ids: [] }),
     }),
     {

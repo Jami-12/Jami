@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import {
   AlertCircle,
   ArrowLeft,
@@ -27,13 +27,15 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  PAYMENT_OPTIONS,
+  isPaymentMethodAvailable,
   PaymentMethodSelector,
+  resolvePaymentMethod,
 } from "@/components/payments/payment-method-selector";
 import {
   preloadStripe,
   StripePaymentDialog,
 } from "@/components/payments/stripe-payment-dialog";
+import { useSiteSettings } from "@/components/providers/site-settings-provider";
 import {
   FormField,
   Input,
@@ -51,69 +53,29 @@ import {
   ordersApi,
   paymentsApi,
 } from "@/lib/api/services";
-import {
-  FREE_SHIPPING_THRESHOLD,
-  SHIPPING_FLAT_RATE,
-} from "@/lib/constants";
-import { relatedKeys } from "@/lib/query-keys";
+import { computeCartTotals } from "@/lib/commerce";
+import { rememberGuestOrder } from "@/lib/guest-orders";
+import { queryKeys, relatedKeys } from "@/lib/query-keys";
 import {
   ensureInitiatePaymentResult,
+  getPaymentRedirectUrl,
   getPaymentStartErrorMessage,
-  getSafePaymentRedirectUrl,
   isRedirectPaymentMethod,
 } from "@/lib/payments";
 import { cn, formatCurrency, getErrorMessage } from "@/lib/utils";
-import { addressSchema, type AddressValues } from "@/lib/validations";
+import {
+  addressSchema,
+  guestCheckoutContactSchema,
+  type AddressValues,
+  type GuestCheckoutContactValues,
+} from "@/lib/validations";
 import { useAuthStore } from "@/stores/auth-store";
 import { cartSubtotal, useCartStore } from "@/stores/cart-store";
 import type {
   CouponValidation,
+  Order,
   PaymentMethod,
 } from "@/types";
-
-/** Mirrors the server's `roundMoney` so the displayed total matches the charge. */
-function roundMoney(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-function computeCouponDiscount(coupon: CouponValidation["coupon"] | null, subtotal: number): number {
-  if (!coupon) return 0;
-  let discount = 0;
-  if (coupon.discountPercent !== null) {
-    discount = roundMoney((subtotal * coupon.discountPercent) / 100);
-  } else if (coupon.discountAmount !== null) {
-    discount = coupon.discountAmount;
-  }
-  if (coupon.maxDiscount !== null) discount = Math.min(discount, coupon.maxDiscount);
-  return roundMoney(Math.min(discount, subtotal));
-}
-
-
-
-function CheckoutGate() {
-  return (
-    <div className="mx-auto max-w-lg py-8">
-      <Card className="p-8 text-center">
-        <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-none border border-border bg-secondary text-foreground">
-          <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <h2 className="mt-4 font-display text-xl font-semibold">Sign in to check out</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Checkout is linked to your customer account so we can track delivery,
-          payments and returns.
-        </p>
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Button asChild>
-            <Link href="/login?next=%2Fcheckout">Sign in</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/register?next=%2Fcheckout">Create an account</Link>
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
 
 function AddressFormDialog({
   open,
@@ -227,13 +189,138 @@ function AddressFormDialog({
   );
 }
 
+function GuestDeliveryForm({
+  form,
+}: {
+  form: UseFormReturn<GuestCheckoutContactValues>;
+}) {
+  const {
+    register,
+    formState: { errors },
+  } = form;
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <div>
+        <h2 className="flex items-center gap-2 text-sm font-bold">
+          <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          Delivery details
+        </h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Check out as a guest — no account or password needed. We use these
+          details only for this delivery and its payment updates.
+        </p>
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <FormField label="Full name" htmlFor="guest-name" required error={errors.name?.message}>
+          <Input
+            id="guest-name"
+            autoComplete="name"
+            placeholder="Your name"
+            {...register("name")}
+            invalid={Boolean(errors.name)}
+          />
+        </FormField>
+        <FormField label="Phone" htmlFor="guest-phone" required error={errors.phone?.message}>
+          <Input
+            id="guest-phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="01XXXXXXXXX"
+            {...register("phone")}
+            invalid={Boolean(errors.phone)}
+          />
+        </FormField>
+        <FormField label="Email (optional)" htmlFor="guest-email" error={errors.email?.message}>
+          <Input
+            id="guest-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            {...register("email")}
+            invalid={Boolean(errors.email)}
+          />
+        </FormField>
+        <FormField label="District" htmlFor="guest-district" required error={errors.district?.message}>
+          <Input
+            id="guest-district"
+            autoComplete="address-level2"
+            {...register("district")}
+            invalid={Boolean(errors.district)}
+          />
+        </FormField>
+        <FormField label="Division" htmlFor="guest-division" error={errors.division?.message}>
+          <Input id="guest-division" autoComplete="address-level1" {...register("division")} />
+        </FormField>
+        <FormField label="Area" htmlFor="guest-area" error={errors.area?.message}>
+          <Input id="guest-area" autoComplete="address-level3" {...register("area")} />
+        </FormField>
+        <FormField label="Postal code" htmlFor="guest-postal" error={errors.postalCode?.message}>
+          <Input id="guest-postal" autoComplete="postal-code" {...register("postalCode")} />
+        </FormField>
+        <FormField
+          label="Full delivery address"
+          htmlFor="guest-address-line"
+          required
+          error={errors.addressLine?.message}
+          className="sm:col-span-2"
+        >
+          <Textarea
+            id="guest-address-line"
+            rows={3}
+            autoComplete="street-address"
+            placeholder="House, road, landmark…"
+            {...register("addressLine")}
+            invalid={Boolean(errors.addressLine)}
+          />
+        </FormField>
+      </div>
+
+      <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
+        Already have an account?{" "}
+        <Link
+          href="/login?next=%2Fcheckout"
+          className="border-b border-foreground font-semibold text-foreground"
+        >
+          Sign in
+        </Link>{" "}
+        to use a saved address.
+      </p>
+    </Card>
+  );
+}
+
 export function CheckoutView() {
   const router = useRouter();
   const hydrated = useHydrated();
   const user = useAuthStore((state) => state.user);
   const items = useCartStore((state) => state.items);
   const resetCart = useCartStore((state) => state.reset);
+  const refreshLocalPrices = useCartStore((state) => state.refreshLocalPrices);
   const queryClient = useQueryClient();
+  const { settings } = useSiteSettings();
+
+  React.useEffect(() => {
+    if (hydrated) void refreshLocalPrices();
+  }, [hydrated, refreshLocalPrices]);
+
+  const isGuest = hydrated && !user;
+  const isCustomer = user?.role === "CUSTOMER";
+
+  const guestForm = useForm<GuestCheckoutContactValues>({
+    resolver: zodResolver(guestCheckoutContactSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      email: "",
+      addressLine: "",
+      division: "",
+      district: "",
+      area: "",
+      postalCode: "",
+    },
+  });
 
   const [selectedAddress, setSelectedAddress] = React.useState<string>("");
   const [addressDialogOpen, setAddressDialogOpen] = React.useState(false);
@@ -243,9 +330,11 @@ export function CheckoutView() {
   const [notes, setNotes] = React.useState("");
   const [placing, setPlacing] = React.useState(false);
   const placingRef = React.useRef(false);
-  const [cardSession, setCardSession] = React.useState<{ orderId: string; clientSecret: string } | null>(null);
-
-  const isCustomer = user?.role === "CUSTOMER";
+  const [cardSession, setCardSession] = React.useState<{
+    orderId: string;
+    clientSecret: string;
+    guestToken: string | null;
+  } | null>(null);
 
   const addressesQuery = useQuery({
     queryKey: ["addresses"],
@@ -255,7 +344,7 @@ export function CheckoutView() {
   });
 
   const providersQuery = useQuery({
-    queryKey: ["payment-providers"],
+    queryKey: queryKeys.paymentProviders.all(),
     queryFn: paymentsApi.providers,
     staleTime: 60_000,
   });
@@ -279,33 +368,17 @@ export function CheckoutView() {
 
   React.useEffect(() => {
     if (!providers) return;
-    const option = PAYMENT_OPTIONS.find((item) => item.value === paymentMethod);
-    if (!option) {
-      setPaymentMethod("CASH_ON_DELIVERY");
-      return;
-    }
-
-    const enabled =
-      paymentMethod === "CARD"
-        ? Boolean(providers.card && providers.cardPublishableKey)
-        : Boolean(providers[option.providerKey]);
-
-    if (!enabled) {
-      setPaymentMethod("CASH_ON_DELIVERY");
+    const enabledMethod = resolvePaymentMethod(paymentMethod, providers);
+    if (enabledMethod && enabledMethod !== paymentMethod) {
+      setPaymentMethod(enabledMethod);
     }
   }, [providers, paymentMethod]);
 
   const subtotal = cartSubtotal(items);
-  const discount = computeCouponDiscount(coupon?.coupon ?? null, subtotal);
-  const discountedSubtotal = Math.max(0, subtotal - discount);
-  // Shipping is based on the PRODUCT SUBTOTAL only, exactly as on the server.
-  // Coupons and discounts never affect shipping, and the free-shipping
-  // threshold matches the cart estimate.
-  const shipping =
-    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD
-      ? 0
-      : SHIPPING_FLAT_RATE;
-  const total = discountedSubtotal + shipping;
+  // Dashboard shipping and flat-discount settings are the source of truth.
+  // This mirrors the server's calculation so the estimate matches checkout.
+  const totals = computeCartTotals(subtotal, settings, coupon?.coupon ?? null);
+  const { shipping, total } = totals;
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const couponMutation = useMutation({
@@ -321,10 +394,15 @@ export function CheckoutView() {
   });
 
   const goToOrder = React.useCallback(
-    (orderId: string) => {
+    (orderId: string, guestOrder = false) => {
       // The account route is the normal order view. The dashboard callback
-      // route is reserved for gateway redirects.
-      router.push(`/account/orders/${orderId}`);
+      // route is reserved for gateway redirects. The guest flag tells the
+      // order view to load its access token from this browser's storage.
+      router.push(
+        guestOrder
+          ? `/account/orders/${orderId}?guest=1`
+          : `/account/orders/${orderId}`,
+      );
     },
     [router],
   );
@@ -335,18 +413,19 @@ export function CheckoutView() {
     // stops the second submission immediately.
     if (placingRef.current) return;
 
-    if (!selectedAddress) {
+    if (!isGuest && !selectedAddress) {
       toast.error("Choose a delivery address before placing the order.");
       return;
     }
+    if (isGuest) {
+      const valid = await guestForm.trigger();
+      if (!valid) {
+        toast.error("Complete your delivery details to continue.");
+        return;
+      }
+    }
     if (items.length === 0) {
       toast.error("Your bag is empty.");
-      return;
-    }
-
-    const selectedOption = PAYMENT_OPTIONS.find((option) => option.value === paymentMethod);
-    if (!selectedOption) {
-      toast.error("Choose a payment method before placing the order.");
       return;
     }
 
@@ -355,13 +434,10 @@ export function CheckoutView() {
       return;
     }
 
-    const enabled =
-      paymentMethod === "CARD"
-        ? Boolean(providers.card && providers.cardPublishableKey)
-        : Boolean(providers[selectedOption.providerKey]);
-
-    if (!enabled) {
-      toast.error("That payment method is not available right now. Choose another.");
+    if (!isPaymentMethodAvailable(paymentMethod, providers)) {
+      const enabledMethod = resolvePaymentMethod(paymentMethod, providers);
+      if (enabledMethod) setPaymentMethod(enabledMethod);
+      toast.error("That payment method is no longer available. Choose another.");
       return;
     }
 
@@ -369,14 +445,46 @@ export function CheckoutView() {
     setPlacing(true);
 
     try {
-      let order;
+      let order: Order;
+      let guestToken: string | null = null;
       try {
-        order = await ordersApi.checkout({
-          addressId: selectedAddress,
-          paymentMethod,
-          couponCode: coupon?.coupon.code,
-          notes: notes.trim() || undefined,
-        });
+        if (isGuest) {
+          const contact = guestForm.getValues();
+          order = await ordersApi.guestCheckout({
+            customer: {
+              name: contact.name.trim(),
+              phone: contact.phone.trim(),
+              email: contact.email?.trim() || undefined,
+              addressLine: contact.addressLine.trim(),
+              division: contact.division?.trim() || undefined,
+              district: contact.district.trim(),
+              area: contact.area?.trim() || undefined,
+              postalCode: contact.postalCode?.trim() || undefined,
+            },
+            items: items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              size: item.selectedSize,
+              color: item.selectedColor,
+            })),
+            paymentMethod,
+            couponCode: coupon?.coupon.code,
+            notes: notes.trim() || undefined,
+          });
+
+          if (!order.guestToken) {
+            throw new Error("The guest order token was missing. Please try again.");
+          }
+          guestToken = order.guestToken;
+          rememberGuestOrder(order);
+        } else {
+          order = await ordersApi.checkout({
+            addressId: selectedAddress,
+            paymentMethod,
+            couponCode: coupon?.coupon.code,
+            notes: notes.trim() || undefined,
+          });
+        }
       } catch (error) {
         toast.error(getErrorMessage(error, "Could not place this order"));
         return;
@@ -389,16 +497,19 @@ export function CheckoutView() {
       // an online payment session or show a pending-payment prompt.
       if (paymentMethod === "CASH_ON_DELIVERY") {
         toast.success("Order placed. Pay the courier when it arrives.");
-        goToOrder(order.id);
+        goToOrder(order.id, isGuest);
         return;
       }
 
       let initiation;
       try {
-        initiation = ensureInitiatePaymentResult(
-          await paymentsApi.initiate({ orderId: order.id }),
-          paymentMethod,
-        );
+        const result = isGuest
+          ? await paymentsApi.guestInitiate({
+              orderId: order.id,
+              guestToken: guestToken as string,
+            })
+          : await paymentsApi.initiate({ orderId: order.id });
+        initiation = ensureInitiatePaymentResult(result, paymentMethod);
       } catch (error) {
         toast.error(
           getPaymentStartErrorMessage(
@@ -407,28 +518,32 @@ export function CheckoutView() {
  "Your order was saved, but the payment could not be started. Retry from the order page.",
           ),
         );
-        goToOrder(order.id);
+        goToOrder(order.id, isGuest);
         return;
       }
 
       if (initiation.paymentStatus === "PAID") {
         toast.success("Payment confirmed. Your order is being prepared.");
-        goToOrder(order.id);
+        goToOrder(order.id, isGuest);
         return;
       }
 
       if (paymentMethod === "CARD") {
         if (initiation.clientSecret) {
-          setCardSession({ orderId: order.id, clientSecret: initiation.clientSecret });
+          setCardSession({
+            orderId: order.id,
+            clientSecret: initiation.clientSecret,
+            guestToken,
+          });
         } else {
           toast.info(initiation.message || "Your card payment is already processing.");
-          goToOrder(order.id);
+          goToOrder(order.id, isGuest);
         }
         return;
       }
 
       if (isRedirectPaymentMethod(paymentMethod)) {
-        const redirectUrl = getSafePaymentRedirectUrl(initiation.redirectUrl, paymentMethod);
+        const redirectUrl = getPaymentRedirectUrl(initiation, paymentMethod);
 
         if (redirectUrl) {
           window.location.assign(redirectUrl);
@@ -445,7 +560,7 @@ export function CheckoutView() {
             : initiation.message ||
  "The payment provider did not return a checkout link. Your order was saved — retry from the order page.",
         );
-        goToOrder(order.id);
+        goToOrder(order.id, isGuest);
       }
     } finally {
       placingRef.current = false;
@@ -462,8 +577,7 @@ export function CheckoutView() {
     );
   }
 
-  if (!user) return <CheckoutGate />;
-  if (!isCustomer) {
+  if (user && !isCustomer) {
     return (
       <EmptyState
         icon={ShieldCheck}
@@ -499,6 +613,9 @@ export function CheckoutView() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-start">
       <div className="space-y-6">
+        {isGuest ? (
+          <GuestDeliveryForm form={guestForm} />
+        ) : (
         <Card className="p-5 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -579,6 +696,7 @@ export function CheckoutView() {
             </div>
           )}
         </Card>
+        )}
 
         <Card className="p-5 sm:p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold">
@@ -586,7 +704,7 @@ export function CheckoutView() {
             Payment method
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Choose a payment method enabled by the store. Disabled methods are unavailable.
+            Choose a payment method enabled by the store. Methods that are turned off are hidden.
           </p>
 
           <div className="mt-4">
@@ -606,7 +724,7 @@ export function CheckoutView() {
           {providersQuery.isError ? (
             <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <AlertCircle className="h-3 w-3" aria-hidden="true" />
-              Could not reach the payment provider status endpoint. Cash on delivery remains available.
+              Could not reach the payment provider status endpoint. No payment methods can be shown until it responds.
             </p>
           ) : null}
           {providers && !cardAvailable && providers.card ? (
@@ -666,7 +784,7 @@ export function CheckoutView() {
           {coupon ? (
             <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
-              {coupon.coupon.code} applied · saving {formatCurrency(computeCouponDiscount(coupon.coupon, subtotal))}
+              {coupon.coupon.code} applied · saving {formatCurrency(totals.couponDiscount)}
             </p>
           ) : null}
 
@@ -696,14 +814,22 @@ export function CheckoutView() {
           </div>
 
           <ul className="mt-4 max-h-72 space-y-3 overflow-y-auto pr-1">
-            {items.map((item) => (
-              <li key={item.productId} className="flex gap-3 border-b border-border pb-3 last:border-b-0 last:pb-0">
+            {items.map((item, index) => (
+              <li
+                key={`${item.productId}-${item.selectedSize ?? ""}-${item.selectedColor ?? ""}-${index}`}
+                className="flex gap-3 border-b border-border pb-3 last:border-b-0 last:pb-0"
+              >
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-none border border-border bg-muted">
                   <SmartImage src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-xs font-semibold leading-snug">{item.name}</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">Qty {item.quantity}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    Qty {item.quantity}
+                    {item.selectedSize || item.selectedColor
+                      ? ` · ${[item.selectedSize ? `Size: ${item.selectedSize}` : null, item.selectedColor ? `Color: ${item.selectedColor}` : null].filter(Boolean).join(" · ")}`
+                      : null}
+                  </p>
                 </div>
                 <Price amount={item.price * item.quantity} size="xs" className="shrink-0" />
               </li>
@@ -715,10 +841,16 @@ export function CheckoutView() {
               <dt className="text-muted-foreground">Product Subtotal · {count} item{count === 1 ? "" : "s"}</dt>
               <dd><Price amount={subtotal} size="sm" /></dd>
             </div>
-            {discount > 0 ? (
-              <div className="flex items-center justify-between gap-3 text-muted-foreground">
+            {totals.flatDiscount > 0 ? (
+              <div className="flex items-center justify-between gap-3 text-success">
+                <dt>Store discount</dt>
+                <dd className="font-semibold tabular-nums">−{formatCurrency(totals.flatDiscount)}</dd>
+              </div>
+            ) : null}
+            {totals.couponDiscount > 0 ? (
+              <div className="flex items-center justify-between gap-3 text-success">
                 <dt>Coupon discount</dt>
-                <dd className="font-semibold tabular-nums">−{formatCurrency(discount)}</dd>
+                <dd className="font-semibold tabular-nums">−{formatCurrency(totals.couponDiscount)}</dd>
               </div>
             ) : null}
             <div className="flex items-center justify-between gap-3">
@@ -734,7 +866,13 @@ export function CheckoutView() {
             <Price amount={total} size="lg" />
           </div>
 
-          <Button size="lg" className="mt-5 w-full" onClick={() => void placeOrder()} loading={placing}>
+          <Button
+            size="lg"
+            className="mt-5 w-full"
+            onClick={() => void placeOrder()}
+            loading={placing}
+            disabled={placing || !isPaymentMethodAvailable(paymentMethod, providers)}
+          >
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             {paymentMethod === "CASH_ON_DELIVERY" ? "Place order" : "Place order & pay"}
           </Button>
@@ -775,16 +913,19 @@ export function CheckoutView() {
           open={Boolean(cardSession)}
           onClose={() => {
             const orderId = cardSession.orderId;
+            const guestOrder = Boolean(cardSession.guestToken);
             setCardSession(null);
-            goToOrder(orderId);
+            goToOrder(orderId, guestOrder);
           }}
           orderId={cardSession.orderId}
           clientSecret={cardSession.clientSecret}
           publishableKey={providers.cardPublishableKey}
+          guestToken={cardSession.guestToken}
           onResolved={() => {
             const orderId = cardSession.orderId;
+            const guestOrder = Boolean(cardSession.guestToken);
             setCardSession(null);
-            goToOrder(orderId);
+            goToOrder(orderId, guestOrder);
           }}
         />
       ) : null}

@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { API_BASE_URL } from "@/lib/constants";
 import type {
   Banner,
@@ -187,7 +189,7 @@ export async function getActiveBanners(): Promise<Banner[]> {
  * request so an admin toggle is reflected on the next visit, and degrade to
  * `null` when the API is unavailable so every page still renders.
  */
-export async function getSiteSettings(): Promise<SiteSettings | null> {
+export const getSiteSettings = cache(async (): Promise<SiteSettings | null> => {
   try {
     const result = await publicRequest<{ settings: SiteSettings }>("/settings", {
       revalidate: false,
@@ -197,4 +199,4 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
   } catch {
     return null;
   }
-}
+});

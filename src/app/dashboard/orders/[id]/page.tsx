@@ -23,11 +23,16 @@ export default async function DashboardOrderCallbackPage({
     paymentStatus?: string;
     payment_intent?: string;
     redirect_status?: string;
+    guest?: string;
   }>;
 }) {
   const { id } = await params;
-  const { paymentStatus, payment_intent: paymentIntent, redirect_status: redirectStatus } =
-    await searchParams;
+  const {
+    paymentStatus,
+    payment_intent: paymentIntent,
+    redirect_status: redirectStatus,
+    guest,
+  } = await searchParams;
 
   return (
     <PaymentReturnView
@@ -35,6 +40,7 @@ export default async function DashboardOrderCallbackPage({
       paymentStatus={paymentStatus ?? null}
       paymentIntent={paymentIntent ?? null}
       redirectStatus={redirectStatus ?? null}
+      guest={guest === "1"}
     />
   );
 }

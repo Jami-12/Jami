@@ -119,11 +119,15 @@ export function ProductDetail({ product }: { product: Product }) {
     if (outOfStock || selectionIncomplete) return false;
     setAdding(true);
     try {
-      await addItem(product, quantity, { size, color });
-      return true;
+      return addItem(product, quantity, { size, color });
     } finally {
       setAdding(false);
     }
+  };
+
+  const handleAddToCart = async () => {
+    const added = await handleAdd();
+    if (added) router.push("/cart");
   };
 
   const handleBuyNow = async () => {
@@ -394,7 +398,7 @@ export function ProductDetail({ product }: { product: Product }) {
                       onClick={() => setSize(option)}
                       aria-pressed={active}
                       className={cn(
-                        "inline-flex h-11 w-11 items-center justify-center border p-0 text-xs font-semibold transition-colors",
+                        "inline-flex h-11 min-w-11 items-center justify-center border px-3 py-0 text-xs font-semibold transition-colors",
                         active
                           ? "border-foreground bg-foreground text-background"
                           : "border-border bg-card text-foreground hover:border-foreground",
@@ -441,7 +445,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <Button
               size="lg"
               className="min-w-40 flex-1 border border-foreground bg-foreground text-background hover:bg-background hover:text-foreground"
-              onClick={() => void handleAdd()}
+              onClick={() => void handleAddToCart()}
               loading={adding}
               disabled={outOfStock || selectionIncomplete}
             >

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, PRODUCT_STATUSES } from "./constants";
+import { PRODUCT_SIZES } from "./product-options";
 
 const email = z
   .string()
@@ -127,6 +128,28 @@ export const addressSchema = z.object({
 
 export type AddressValues = z.infer<typeof addressSchema>;
 
+/** Contact details collected from visitors who check out without signing in. */
+export const guestCheckoutContactSchema = z.object({
+  name: z.string().trim().min(2, "Enter your full name").max(120),
+  phone: z.string().trim().min(6, "Enter a reachable phone number").max(30),
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address")
+    .max(255)
+    .optional()
+    .or(z.literal("")),
+  addressLine: z.string().trim().min(5, "Enter the full street address").max(500),
+  division: optionalText(120),
+  district: z.string().trim().min(2, "District is required").max(120),
+  area: optionalText(120),
+  postalCode: optionalText(20),
+});
+
+export type GuestCheckoutContactValues = z.infer<
+  typeof guestCheckoutContactSchema
+>;
+
 /* ---------------------------- Checkout ---------------------------------- */
 
 export const checkoutSchema = z.object({
@@ -177,7 +200,6 @@ export const productQuerySchema = z.object({
   q: z.string().trim().max(200).optional(),
   category: z.string().trim().max(200).optional(),
   brand: z.string().trim().max(200).optional(),
-  color: z.string().trim().max(40).optional(),
   minPrice: optionalNumber,
   maxPrice: optionalNumber,
   rating: z.preprocess(
@@ -201,6 +223,7 @@ export const productFormSchema = z
     shortDescription: z.string().trim().max(500).optional().or(z.literal("")),
     price: z.coerce.number().min(0.01, "Price must be greater than zero"),
     discountPrice: z.coerce.number().min(0).optional().or(z.literal("")),
+    isDiscountActive: z.boolean().optional(),
     purchasePrice: z.coerce.number().min(0).optional().or(z.literal("")),
     stock: z.coerce.number().int().min(0),
     minimumStockLevel: z.coerce.number().int().min(0).optional(),
@@ -212,7 +235,7 @@ export const productFormSchema = z
     modelUrl: z.string().trim().max(2000).nullable().optional().or(z.literal("")),
     thumbnail: z.string().trim().max(2000).optional().or(z.literal("")),
     slug: z.string().trim().max(220).optional().or(z.literal("")),
-    sizes: z.array(z.string().trim().min(1).max(24)).max(30, "At most 30 sizes"),
+    sizes: z.array(z.enum(PRODUCT_SIZES)).max(PRODUCT_SIZES.length, "At most 12 sizes"),
     colors: z
       .array(
         z.object({

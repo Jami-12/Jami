@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { apiRequest } from "@/lib/api/client";
 import { cartApi } from "@/lib/api/services";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-import type { Cart, Product } from "@/types";
+import type { Cart, Paginated, Product } from "@/types";
 
 export interface CartLine {
   productId: string;
@@ -49,16 +50,42 @@ interface CartState {
     product: Product | CartLineInput,
     quantity?: number,
     variants?: CartVariantSelection,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   updateQuantity: (itemKey: string, quantity: number) => Promise<void>;
   removeItem: (itemKey: string) => Promise<void>;
   clear: () => Promise<void>;
   syncFromServer: () => Promise<void>;
+  refreshLocalPrices: () => Promise<void>;
   reset: () => void;
   setHydrated: (value: boolean) => void;
 }
 
 const MAX_QUANTITY = 99;
+const PRICE_REFRESH_TTL_MS = 60_000;
+const MAX_BATCH_IDS = 100;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+let lastPriceRefresh = 0;
+
+/**
+ * One request for a set of product ids instead of one GET per id. The API
+ * accepts a comma-separated `ids` query and caps the list at 100.
+ */
+export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
+  const unique = Array.from(
+    new Set(ids.filter((id) => UUID_PATTERN.test(id))),
+  ).slice(0, MAX_BATCH_IDS);
+
+  if (!unique.length) return [];
+
+  const result = await apiRequest<Paginated<Product>>({
+    method: "GET",
+    url: "/products",
+    params: { ids: unique.join(","), limit: unique.length },
+  });
+
+  return result.items;
+}
 
 function isCustomer(): boolean {
   return useAuthStore.getState().user?.role === "CUSTOMER";
@@ -80,7 +107,7 @@ export function cartLineKey(line: Pick<CartLine, "productId" | "selectedSize" | 
 
 function findLine(items: CartLine[], key: string): CartLine | undefined {
   return items.find(
-    (item) => item.cartItemId === key || cartLineKey(item) === key || item.productId === key,
+    (item) => item.cartItemId === key || cartLineKey(item) === key,
   );
 }
 
@@ -169,11 +196,11 @@ export const useCartStore = create<CartState>()(
             });
             set({ items: mapServerCart(cart), syncing: false });
             toast.success(`${line.name} added to your bag`);
-            return;
+            return true;
           } catch (error) {
             set({ syncing: false });
             toast.error(getErrorMessage(error, "Could not add this item to your bag"));
-            return;
+            return false;
           }
         }
 
@@ -190,6 +217,7 @@ export const useCartStore = create<CartState>()(
             : [...get().items, { ...line, quantity: requested }],
         });
         toast.success(`${line.name} added to your bag`);
+        return true;
       },
 
       updateQuantity: async (itemKey, quantity) => {
@@ -218,11 +246,12 @@ export const useCartStore = create<CartState>()(
 
       removeItem: async (itemKey) => {
         const line = findLine(get().items, itemKey);
+        if (!line) return;
 
         if (isCustomer()) {
           set({ syncing: true });
           try {
-            const cart = await cartApi.remove(line?.cartItemId ?? itemKey);
+            const cart = await cartApi.remove(line.cartItemId ?? cartLineKey(line));
             set({ items: mapServerCart(cart), syncing: false });
           } catch (error) {
             set({ syncing: false });
@@ -231,8 +260,12 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        set({ items: get().items.filter((item) => cartLineKey(item) !== cartLineKey(line ?? { productId: itemKey, selectedSize: null, selectedColor: null })) });
-        if (line) toast.success(`${line.name} removed from your bag`);
+        set({
+          items: get().items.filter(
+            (item) => cartLineKey(item) !== cartLineKey(line),
+          ),
+        });
+        toast.success(`${line.name} removed from your bag`);
       },
 
       clear: async () => {
@@ -263,6 +296,40 @@ export const useCartStore = create<CartState>()(
           set({ items: mapServerCart(cart), syncing: false });
         } catch {
           set({ syncing: false });
+        }
+      },
+
+      refreshLocalPrices: async () => {
+        // Logged-in customers use the server cart, which is already priced.
+        if (isCustomer() || !get().items.length) return;
+
+        const now = Date.now();
+        if (now - lastPriceRefresh < PRICE_REFRESH_TTL_MS) return;
+        lastPriceRefresh = now;
+
+        const ids = Array.from(new Set(get().items.map((item) => item.productId)));
+
+        try {
+          const products = await fetchProductsByIds(ids);
+          if (!products.length) return;
+
+          const byId = new Map(products.map((product) => [product.id, product]));
+
+          set({
+            items: get().items.map((item) => {
+              const product = byId.get(item.productId);
+              if (!product) return item;
+
+              return {
+                ...item,
+                price: product.finalPrice,
+                originalPrice: product.originalPrice,
+                stock: product.stock,
+              };
+            }),
+          });
+        } catch {
+          // A failed price refresh leaves the persisted prices untouched.
         }
       },
 

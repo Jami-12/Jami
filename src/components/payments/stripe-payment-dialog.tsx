@@ -31,9 +31,11 @@ export function preloadStripe(publishableKey: string): Promise<Stripe | null> {
 
 function CardForm({
   orderId,
+  guestToken,
   onResolved,
 }: {
   orderId: string;
+  guestToken: string | null;
   onResolved: (status: PaymentStatus) => void;
 }) {
   const stripe = useStripe();
@@ -51,12 +53,20 @@ function CardForm({
     setSubmitting(true);
     setError(null);
 
+    // The guest token stays in browser storage; only a flag is sent through
+    // Stripe so the callback page knows which credential to reload.
+    const returnUrl = new URL(
+      `/dashboard/orders/${encodeURIComponent(orderId)}`,
+      window.location.origin,
+    );
+    if (guestToken) returnUrl.searchParams.set("guest", "1");
+
     let result;
     try {
       result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/dashboard/orders/${orderId}`,
+          return_url: returnUrl.toString(),
         },
         redirect: "if_required",
       });
@@ -87,7 +97,9 @@ function CardForm({
     }
 
     try {
-      const payment = await paymentsApi.reconcileCard(orderId);
+      const payment = guestToken
+        ? await paymentsApi.guestReconcileCard(orderId, guestToken)
+        : await paymentsApi.reconcileCard(orderId);
 
       if (payment.status === "PAID") {
         toast.success("Payment confirmed. Your order is being prepared.");
@@ -154,6 +166,7 @@ export function StripePaymentDialog({
   orderId,
   clientSecret,
   publishableKey,
+  guestToken = null,
   title = "Secure card payment",
   description = "Your order is created. Complete the card payment to confirm it.",
   onResolved,
@@ -163,6 +176,8 @@ export function StripePaymentDialog({
   orderId: string;
   clientSecret: string;
   publishableKey: string;
+  /** Set for guest checkout; never sent in the Stripe return URL. */
+  guestToken?: string | null;
   title?: string;
   description?: string;
   onResolved: (status: PaymentStatus) => void;
@@ -199,7 +214,11 @@ export function StripePaymentDialog({
           },
         }}
       >
-        <CardForm orderId={orderId} onResolved={onResolved} />
+        <CardForm
+          orderId={orderId}
+          guestToken={guestToken}
+          onResolved={onResolved}
+        />
       </Elements>
     </Dialog>
   );

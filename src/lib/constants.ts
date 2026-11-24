@@ -20,7 +20,8 @@ export const SITE = {
   tagline: "Modern commerce, thoughtfully made",
   description:
  "A modern storefront for considered essentials — quality pieces, clear details and a smooth shopping experience.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  // Env-only: local (`.env.local`) and Vercel builds each supply their own URL.
+  url: process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "") ?? "",
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@example.com",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+880 1000 000000",
   address: process.env.NEXT_PUBLIC_STORE_ADDRESS ?? "Dhaka, Bangladesh",
@@ -31,8 +32,9 @@ export const SITE = {
   },
 } as const;
 
+// Env-only. The local and deployed API URLs live in .env* / Vercel variables.
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") ?? "";
 
 export const GOOGLE_AUTH_URL = `${API_BASE_URL}/auth/google`;
 

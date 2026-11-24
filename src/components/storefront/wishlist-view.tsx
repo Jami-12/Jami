@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,44 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProductCardSkeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/storefront/product-card";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { productsApi } from "@/lib/api/services";
+import { queryKeys } from "@/lib/query-keys";
+import { fetchProductsByIds } from "@/stores/cart-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
+import type { Product } from "@/types";
+
+/**
+ * Batched, order-preserving product lookup shared by the wishlist and the
+ * recently-viewed rail. Each result also seeds the canonical `["products",
+ * id]` detail key so product pages and cards reuse the same cached data.
+ */
+export function useProductsByIds(ids: string[]) {
+  const queryClient = useQueryClient();
+  const idsKey = ids.join("|");
+  const uniqueIds = React.useMemo(
+    () => (idsKey ? Array.from(new Set(idsKey.split("|"))) : []),
+    [idsKey],
+  );
+
+  return useQuery({
+    queryKey: ["products", "by-ids", uniqueIds] as const,
+    queryFn: async () => {
+      const products = await fetchProductsByIds(uniqueIds);
+      const byId = new Map<string, Product>();
+
+      for (const product of products) {
+        byId.set(product.id, product);
+        queryClient.setQueryData(queryKeys.products.detail(product.id), product);
+      }
+
+      return uniqueIds
+        .map((id) => byId.get(id))
+        .filter((product): product is Product => Boolean(product));
+    },
+    enabled: uniqueIds.length > 0,
+    staleTime: 60_000,
+    retry: 0,
+  });
+}
 
 export function WishlistView() {
   const hydrated = useHydrated();
@@ -20,23 +56,13 @@ export function WishlistView() {
   const reset = useWishlistStore((state) => state.reset);
   const [confirmClear, setConfirmClear] = React.useState(false);
 
-  const queries = useQueries({
-    queries: ids.map((id) => ({
-      queryKey: ["wishlist-product", id],
-      queryFn: () => productsApi.get(id),
-      staleTime: 60_000,
-      retry: 0,
-    })),
-  });
-
-  const loading = queries.some((query) => query.isLoading);
-  const products = queries
-    .map((query) => query.data)
-    .filter((product): product is NonNullable<typeof product> => Boolean(product));
+  const { isLoading, data } = useProductsByIds(ids);
+  const loading = isLoading;
+  const products = data ?? [];
 
   if (!hydrated) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
         {[0, 1, 2, 3].map((index) => (
           <ProductCardSkeleton key={index} />
         ))}
@@ -61,7 +87,7 @@ export function WishlistView() {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {products.length} saved piece{products.length === 1 ? "" : "s"}
         </p>
@@ -77,7 +103,7 @@ export function WishlistView() {
       </div>
 
       {loading && products.length === 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
           {ids.slice(0, 8).map((id) => (
             <ProductCardSkeleton key={id} />
           ))}
@@ -94,7 +120,7 @@ export function WishlistView() {
           }
         />
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

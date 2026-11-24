@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -12,15 +13,19 @@ import { catalog } from "@/services/catalog";
 import type { Product } from "@/types";
 import { productImage, productName, productImages } from "@/types";
 
-export const revalidate = 120;
+// Must stay a literal for Next's route segment config. Keep in sync with
+// DEFAULT_REVALIDATE in `services/catalog.ts` so page and fetch caches agree.
+export const revalidate = 60;
 
-async function loadProduct(slug: string): Promise<Product | null> {
+// `generateMetadata` and the page render both ask for the same product; React
+// `cache` deduplicates that request for the lifetime of the render.
+const loadProduct = cache(async (slug: string): Promise<Product | null> => {
   try {
     return await catalog.productBySlug(slug);
   } catch {
     return null;
   }
-}
+});
 
 export async function generateMetadata({
   params,
@@ -44,7 +49,7 @@ export async function generateMetadata({
       type: "website",
       title,
       description: product.shortDescription ?? product.description.slice(0, 160),
-      url: `${SITE.url}/products/${product.slug}`,
+      url: SITE.url ? `${SITE.url}/products/${product.slug}` : undefined,
       images: image ? [{ url: image, alt: title }] : undefined,
     },
   };
@@ -102,7 +107,7 @@ export default async function ProductPage({
       availability: available
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
-      url: `${SITE.url}/products/${product.slug}`,
+      url: SITE.url ? `${SITE.url}/products/${product.slug}` : undefined,
     },
   };
 

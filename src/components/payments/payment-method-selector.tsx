@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Banknote, CreditCard, Smartphone } from "lucide-react";
 
 import { PAYMENT_METHOD_META } from "@/lib/constants";
@@ -28,9 +29,7 @@ export function isPaymentMethodAvailable(
 ): boolean {
   const option = PAYMENT_OPTIONS.find((item) => item.value === method);
 
-  if (!option) return false;
-  if (!providers) return method === "CASH_ON_DELIVERY";
-
+  if (!option || !providers) return false;
   if (method === "CARD") {
     return Boolean(providers.card && providers.cardPublishableKey);
   }
@@ -38,10 +37,28 @@ export function isPaymentMethodAvailable(
   return Boolean(providers[option.providerKey]);
 }
 
+/** Only methods the backend says are live — no optimistic COD fallback. */
+export function getAvailablePaymentMethods(
+  providers: PaymentProviderStatus | null | undefined,
+): PaymentMethod[] {
+  if (!providers) return [];
+  return PAYMENT_OPTIONS.filter((option) =>
+    isPaymentMethodAvailable(option.value, providers),
+  ).map((option) => option.value);
+}
+
+/** Keep the user's choice when valid, otherwise choose the first live method. */
+export function resolvePaymentMethod(
+  requested: PaymentMethod,
+  providers: PaymentProviderStatus | null | undefined,
+): PaymentMethod | null {
+  if (providers && isPaymentMethodAvailable(requested, providers)) return requested;
+  return getAvailablePaymentMethods(providers)[0] ?? null;
+}
+
 /**
- * Shared provider-aware payment method radio grid. Used by storefront checkout
- * and the order-detail Retry Payment dialog so both surfaces hide/disable the
- * same methods when the dashboard or gateway configuration turns them off.
+ * Shared provider-aware payment method radio grid. Off methods are never
+ * rendered, so they cannot be seen or selected in checkout or retry payment.
  */
 export function PaymentMethodSelector({
   value,
@@ -54,17 +71,45 @@ export function PaymentMethodSelector({
   providers?: PaymentProviderStatus | null;
   disabled?: boolean;
 }) {
+  const enabledOptions = React.useMemo(
+    () =>
+      PAYMENT_OPTIONS.filter((option) =>
+        isPaymentMethodAvailable(option.value, providers),
+      ),
+    [providers],
+  );
+
+  const selectedIsAvailable = enabledOptions.some((option) => option.value === value);
+  const effectiveValue = selectedIsAvailable ? value : enabledOptions[0]?.value;
+
+  React.useEffect(() => {
+    if (effectiveValue && !selectedIsAvailable) onChange(effectiveValue);
+  }, [effectiveValue, selectedIsAvailable, onChange]);
+
+  if (enabledOptions.length === 0) {
+    return (
+      <div
+        role="radiogroup"
+        aria-label="Payment method"
+        className="border border-border bg-muted p-3.5 text-[11px] text-muted-foreground"
+      >
+        {providers
+          ? "No payment methods are currently enabled for checkout."
+          : "Checking available payment methods…"}
+      </div>
+    );
+  }
+
   return (
     <div
       className="grid gap-2.5 sm:grid-cols-2"
       role="radiogroup"
       aria-label="Payment method"
     >
-      {PAYMENT_OPTIONS.map((option) => {
+      {enabledOptions.map((option) => {
         const meta = PAYMENT_METHOD_META[option.value];
         const Icon = option.icon;
-        const enabled = isPaymentMethodAvailable(option.value, providers);
-        const active = value === option.value;
+        const active = effectiveValue === option.value;
 
         return (
           <button
@@ -72,7 +117,7 @@ export function PaymentMethodSelector({
             type="button"
             role="radio"
             aria-checked={active}
-            disabled={disabled || !enabled}
+            disabled={disabled}
             onClick={() => onChange(option.value)}
             className={cn(
               "flex items-start gap-3 rounded-none border p-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55",
@@ -99,9 +144,7 @@ export function PaymentMethodSelector({
                   active ? "text-background/70" : "text-muted-foreground",
                 )}
               >
-                {enabled
-                  ? meta.description
-                  : "Currently unavailable. Choose another method."}
+                {meta.description}
               </span>
             </span>
           </button>

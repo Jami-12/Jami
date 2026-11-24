@@ -240,7 +240,7 @@ export function ProductFinder({ products }: { products: Product[] }) {
         </div>
       </div>
 
-      <div className="mb-4 mt-7 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-3 mt-5 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           Showing{" "}
           <span className="font-semibold text-foreground">
@@ -263,7 +263,7 @@ export function ProductFinder({ products }: { products: Product[] }) {
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             {visibleProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

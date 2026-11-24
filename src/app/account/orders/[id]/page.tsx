@@ -12,9 +12,15 @@ export default async function AccountOrderDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ paymentStatus?: string }>;
+  searchParams: Promise<{ paymentStatus?: string; guest?: string }>;
 }) {
   const { id } = await params;
-  const { paymentStatus } = await searchParams;
-  return <OrderDetailView orderId={id} paymentStatusParam={paymentStatus ?? null} />;
+  const { paymentStatus, guest } = await searchParams;
+  return (
+    <OrderDetailView
+      orderId={id}
+      paymentStatusParam={paymentStatus ?? null}
+      guest={guest === "1"}
+    />
+  );
 }

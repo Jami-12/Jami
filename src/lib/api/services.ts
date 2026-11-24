@@ -37,6 +37,7 @@ import type {
   ExpenseInput,
   ExpenseSummary,
   ExecuteDataResetInput,
+  GuestCheckoutInput,
   FinancialReport,
   FinancialSummary,
   FinancialTransaction,
@@ -692,6 +693,39 @@ export const ordersApi = {
     return result.order;
   },
 
+  /** Public checkout for visitors without an account. */
+  guestCheckout: async (input: GuestCheckoutInput) => {
+    const { customer, items, ...rest } = input;
+    // The API vets guest details under `guest` (matching CheckoutInput).
+    const result = await apiRequest<{ order: Order }>({
+      method: "POST",
+      url: "/orders/guest-checkout",
+      data: clean({
+        ...rest,
+        guest: { customer, items },
+      } as unknown as Record<string, unknown>),
+    });
+    return result.order;
+  },
+
+  guestGet: async (id: string, guestToken: string) => {
+    const result = await apiRequest<{ order: Order }>({
+      method: "GET",
+      url: `/orders/guest/${id}`,
+      params: { guestToken },
+    });
+    return result.order;
+  },
+
+  guestReceipt: async (id: string, guestToken: string) => {
+    const result = await apiRequest<{ receipt: ReceiptData }>({
+      method: "GET",
+      url: `/orders/guest/${id}/receipt`,
+      params: { guestToken },
+    });
+    return result.receipt;
+  },
+
   myOrders: (params: OrderListParams = {}) =>
     apiRequest<Paginated<Order>>({
       method: "GET",
@@ -782,6 +816,26 @@ export const paymentsApi = {
       url: "/payments/initiate",
       data: input,
     }),
+
+  guestInitiate: (input: {
+    orderId: string;
+    guestToken: string;
+    method?: string;
+  }) =>
+    apiRequest<InitiatePaymentResult>({
+      method: "POST",
+      url: "/payments/guest/initiate",
+      data: input,
+    }),
+
+  guestReconcileCard: async (orderId: string, guestToken: string) => {
+    const result = await apiRequest<{ payment: Payment }>({
+      method: "POST",
+      url: "/payments/guest/card/reconcile",
+      data: { orderId, guestToken },
+    });
+    return result.payment;
+  },
 
   reconcileCard: async (orderId: string) => {
     const result = await apiRequest<{ payment: Payment }>({
@@ -1502,10 +1556,33 @@ function settingsFormData(input: UpdateSettingsInput): FormData {
     ["bkashEnabled", input.bkashEnabled],
     ["nagadEnabled", input.nagadEnabled],
     ["stripeEnabled", input.stripeEnabled],
+    ["shippingEnabled", input.shippingEnabled],
+    ["flatDiscountEnabled", input.flatDiscountEnabled],
   ];
 
   for (const [key, value] of toggles) {
     if (typeof value === "boolean") formData.append(key, String(value));
+  }
+
+  if (input.shippingFee !== undefined) {
+    formData.append("shippingFee", String(input.shippingFee));
+  }
+  if (input.freeShippingThreshold !== undefined) {
+    formData.append("freeShippingThreshold", String(input.freeShippingThreshold));
+  }
+  if (input.flatDiscountType !== undefined) {
+    formData.append("flatDiscountType", input.flatDiscountType ?? "null");
+  }
+  if (input.flatDiscountValue !== undefined) {
+    formData.append("flatDiscountValue", String(input.flatDiscountValue));
+  }
+  if (input.flatDiscountMinAmount !== undefined) {
+    formData.append(
+      "flatDiscountMinAmount",
+      input.flatDiscountMinAmount === null
+        ? "null"
+        : String(input.flatDiscountMinAmount),
+    );
   }
 
   if (input.categorySections) {

@@ -39,7 +39,7 @@ export function HeroBanner({
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-6 grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:gap-3 lg:grid-cols-4">
           {featured.map((product, index) => (
             <ProductCard key={product.id} product={product} priority={index < 4} />
           ))}

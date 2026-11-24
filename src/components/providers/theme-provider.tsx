@@ -21,14 +21,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored === "light" || stored === "dark") {
-        setThemeState(stored);
-      } else {
-        const prefersDark = window.matchMedia(
- "(prefers-color-scheme: dark)",
-        ).matches;
-        setThemeState(prefersDark ? "dark" : "light");
-      }
+      // Only an explicit, valid preference can turn dark mode on. A first-time
+      // visitor always gets the clean white theme.
+      setThemeState(stored === "dark" ? "dark" : "light");
     } catch {
       setThemeState("light");
     }
@@ -39,6 +34,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!ready) return;
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#09090b" : "#ffffff");
     try {
       window.localStorage.setItem(STORAGE_KEY, theme);
     } catch {
@@ -68,4 +66,5 @@ export function useTheme(): ThemeContextValue {
   return context;
 }
 
-export const THEME_SCRIPT = `(function(){try{var k='store-theme';var s=localStorage.getItem(k);var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`;
+/** Runs before paint: no dark flash on first load, no OS preference override. */
+export const THEME_SCRIPT = `(function(){try{var k='store-theme';var s=localStorage.getItem(k);if(s==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){document.documentElement.classList.remove('dark');}})();`;

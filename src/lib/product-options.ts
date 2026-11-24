@@ -1,10 +1,27 @@
 import type { Product } from "@/types";
 
+/** The only sizes an admin can assign and a customer can select. */
+export const PRODUCT_SIZES = [
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "36",
+  "38",
+  "40",
+  "42",
+  "44",
+  "Free Size",
+] as const;
+
+export type ProductSize = (typeof PRODUCT_SIZES)[number];
+
 /**
- * Colour and size options come from the product's explicit variant fields when
- * they are set in the admin, and otherwise fall back to options derived from
- * real product copy (title, description and image alt text). Nothing is
- * invented: if a product does not mention a colour, no swatches are shown.
+ * Colours use explicit admin values, falling back to colours mentioned in the
+ * product copy. Sizes never fall back: only values explicitly assigned in the
+ * admin and present in `PRODUCT_SIZES` are sellable.
  */
 
 /**
@@ -113,17 +130,16 @@ export function productColors(product: Product): ProductColor[] {
   return found.slice(0, 6);
 }
 
-const APPAREL =
-  /(fashion|apparel|cloth|shirt|tee|t-shirt|knit|outerwear|dress|trouser|pant|coat|jacket|hoodie|sweater|blouse|skirt|suit|blazer)/i;
-const FOOTWEAR = /(shoe|sneaker|boot|sandal|loafer|heel|footwear)/i;
-
-/** Explicit admin sizes first, then inferred runs for apparel and footwear. */
-export function productSizes(product: Product): string[] | null {
-  if (product.sizes?.length) return product.sizes.slice(0, 30);
-  const haystack = `${product.category?.name ?? ""} ${product.category?.slug ?? ""} ${product.title}`;
-  if (FOOTWEAR.test(haystack)) return ["38", "39", "40", "41", "42", "43", "44"];
-  if (APPAREL.test(haystack)) return ["XS", "S", "M", "L", "XL", "XXL"];
-  return null;
+/**
+ * Only the sizes explicitly configured in the admin are sellable. No inferred
+ * or guesswork sizes are shown on cards or detail pages.
+ */
+export function productSizes(product: Product): string[] {
+  if (!Array.isArray(product.sizes)) return [];
+  const allowed = new Set<string>(PRODUCT_SIZES);
+  return product.sizes
+    .filter((size): size is string => typeof size === "string" && allowed.has(size))
+    .slice(0, PRODUCT_SIZES.length);
 }
 
 export function isNewProduct(product: Product, days = 30): boolean {

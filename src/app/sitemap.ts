@@ -6,7 +6,11 @@ import { catalog } from "@/services/catalog";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = SITE.url.replace(/\/$/, "");
+  const base = SITE.url.replace(/\/+$/, "");
+
+  // NEXT_PUBLIC_SITE_URL is required for absolute sitemap entries.
+  if (!base) return [];
+
   const now = new Date();
 
   const staticRoutes = [

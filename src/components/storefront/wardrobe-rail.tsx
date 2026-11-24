@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   animate,
   motion,
@@ -29,6 +30,7 @@ import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { SmartImage } from "@/components/ui/smart-image";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { productSizes } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
@@ -612,7 +614,9 @@ function WardrobePreview({
 }
 
 function WardrobePreviewBody({ product }: { product: Product }) {
+  const router = useRouter();
   const [quantity, setQuantity] = React.useState(1);
+  const [selectedSize, setSelectedSize] = React.useState<string | null>(null);
   const [adding, setAdding] = React.useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggle);
@@ -628,12 +632,20 @@ function WardrobePreviewBody({ product }: { product: Product }) {
   const saved = wishlistIds.includes(product.id);
   const outOfStock = product.stock <= 0 || product.status === "OUT_OF_STOCK";
   const maxQuantity = Math.max(1, Math.min(product.stock, 10));
+  const sizes = React.useMemo(() => productSizes(product), [product]);
+  const needsSize = sizes.length > 0 && !selectedSize;
+
+  React.useEffect(() => setSelectedSize(null), [product.id]);
 
   const handleAdd = async () => {
-    if (outOfStock) return;
+    if (outOfStock || needsSize) return;
     setAdding(true);
-    await addItem(product, quantity);
-    setAdding(false);
+    try {
+      const added = await addItem(product, quantity, { size: selectedSize });
+      if (added) router.push("/cart");
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -744,17 +756,50 @@ function WardrobePreviewBody({ product }: { product: Product }) {
           </div>
 
           <div>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                Size
-              </p>
-              <span className="text-[10px] text-muted-foreground">Set by the studio</span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="inline-flex min-w-11 items-center justify-center rounded-none border border-foreground bg-foreground px-3 py-1.5 text-[11px] font-bold text-background">
-                One size
-              </span>
-            </div>
+            {sizes.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                    Size
+                  </p>
+                  <span className="text-[10px] text-muted-foreground">
+                    {selectedSize ?? "Select a size"}
+                  </span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Product size">
+                  {sizes.map((size) => {
+                    const active = selectedSize === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setSelectedSize(size)}
+                        className={cn(
+                          "inline-flex min-h-10 min-w-11 items-center justify-center rounded-none border px-3 py-1.5 text-[11px] font-bold transition-colors",
+                          active
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border bg-background text-foreground hover:border-foreground",
+                        )}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  Size
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="inline-flex min-w-11 items-center justify-center rounded-none border border-border px-3 py-1.5 text-[11px] font-semibold">
+                    One size
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           <div>
@@ -796,7 +841,7 @@ function WardrobePreviewBody({ product }: { product: Product }) {
             size="lg"
             onClick={handleAdd}
             loading={adding}
-            disabled={outOfStock}
+            disabled={outOfStock || needsSize}
             className="min-w-0"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
